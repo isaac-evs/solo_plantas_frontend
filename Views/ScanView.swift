@@ -9,22 +9,21 @@ import SwiftUI
 
 struct ScanView : View {
     
-    // Connect to Mission Control
     @EnvironmentObject var viewModel: CameraViewModel
     
     var body: some View {
         ZStack {
-            // Layer 1: Live Camera Feed
+            // Live Camera Feed
             CameraPreview(session: viewModel.cameraService.session)
                 .ignoresSafeArea()
             
-            // Layer 2: Targeting Reticle
+            // Targeting Reticle
             Circle()
                 .strokeBorder(Color.white, lineWidth: 2)
                 .frame(width: 30, height: 30)
                 .shadow(radius: 4)
             
-            // Layer 3: Dashboard
+            // Dashboard
             VStack {
                 Spacer()
                 
@@ -45,7 +44,7 @@ struct ScanView : View {
     var scanDashboard: some View {
         VStack(spacing: 20) {
             
-            // 1. Color Indicator
+            // Color Indicator
             HStack{
                 Text("Detected Color:")
                     .fontWeight(.semibold)
@@ -59,7 +58,7 @@ struct ScanView : View {
                 Spacer()
             }
             
-            // 2. Height Input
+            // Height Input
             VStack(alignment: .leading){
                 Text("Height: \(String(format: "%.2f", viewModel.measuredHeight)) m")
                     .foregroundColor(.white)
@@ -70,7 +69,7 @@ struct ScanView : View {
             }
             
             
-            // 3. Shape Input
+            // Shape Input
             VStack(alignment: .leading){
                 HStack {
                     Text("Shape:")
@@ -86,7 +85,7 @@ struct ScanView : View {
                     .accentColor(viewModel.liveColor)
             }
             
-            // 4. Generate Button
+            // Generate Button
             Button(action: {
                 viewModel.generatePlant()
             }){

@@ -72,18 +72,18 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
         queue.async { [weak self] in
             guard let self = self else { return }
             
-            // 1. Configure it
+            // Configure it
             if !self.isConfigured {
                 self.configureSession()
                 self.isAuthorized = true
             }
             
-            // 2. Update UI
+            // Update UI
             DispatchQueue.main.async {
                 self.isAuthorized = true
             }
             
-            // 3. Start Running
+            // Start Running
             if !self.session.isRunning {
                 self.session.startRunning()
             }
@@ -101,7 +101,7 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
             
         if self.session.canAddInput(input){ self.session.addInput(input) }
             
-        // 2. Output
+        // Output
         self.output.setSampleBufferDelegate(self, queue: self.queue)
         self.output.alwaysDiscardsLateVideoFrames = true
         self.output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
@@ -118,14 +118,14 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection){
         
-        // 1. Skip Frames to save battery
+        // Skip Frames to save battery
         frameCounter += 1
         if frameCounter % frameSkip != 0 { return }
         
-        // 2. Get Raw Pixel Buffer
+        // Get Raw Pixel Buffer
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         
-        // 3. Lock memory address to read it
+        // Lock memory address to read it
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
         
         // Unlock when we are done
@@ -133,7 +133,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
         }
         
-        // 4. Calculate Center Region
+        // Calculate Center Region
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         
@@ -142,7 +142,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         let startX = (width - sampleSize) / 2
         let startY = (height - sampleSize) / 2
         
-        // 5. Read Pixels
+        // Read Pixels
         guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else { return }
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
         let buffer = baseAddress.assumingMemoryBound(to: UInt8.self)
@@ -172,7 +172,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
             }
         }
         
-        // 6. Average
+        // Average
         let pixelCount = sampleSize * sampleSize
         let rAvg = CGFloat(rTotal / pixelCount) / 255.0
         let gAvg = CGFloat(gTotal / pixelCount) / 255.0
@@ -180,7 +180,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         let newColor = CGColor(srgbRed: rAvg, green: gAvg, blue: bAvg, alpha: 1.0)
         
-        // 7. Update UI (Main Thread)
+        // Update UI (Main Thread)
         DispatchQueue.main.async {
             self.extractedColor = newColor
         }

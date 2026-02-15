@@ -25,7 +25,7 @@ struct PlantDNA: Codable, Identifiable {
     let timestamp: Date
     
     /// Helper Methods
-    var switfUIColor: Color {
+    var swiftUIColor: Color {
         guard colorComponents.count >= 3 else { return .green }
         return Color(
             red: Double(colorComponents[0]),
