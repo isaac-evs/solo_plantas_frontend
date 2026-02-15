@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     // Connect to Mission Control
-    @StateObject private var viewModel = CameraViewModel()
+    @EnvironmentObject var viewModel: CameraViewModel
     
     var body: some View {
         Group {
