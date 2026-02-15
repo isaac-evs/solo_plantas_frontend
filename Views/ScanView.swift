@@ -30,6 +30,13 @@ struct ScanView : View {
                 
                 scanDashboard
             }
+            
+            .onAppear {
+                viewModel.cameraService.start()
+            }
+            .onDisappear {
+                viewModel.cameraService.stop()
+            }
         }
     }
     

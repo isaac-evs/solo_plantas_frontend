@@ -13,11 +13,9 @@ import CoreVideo
 final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
     
     // --- Published Propierties ---
-    
-    // Live Color
+    /// Live Color
     @Published var extractedColor : CGColor? = nil
-    
-    // Publish authorization status
+    /// Publish authorization status
     @Published var isAuthorized = false
     
     
@@ -26,73 +24,91 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
     let session = AVCaptureSession()
     private let output = AVCaptureVideoDataOutput()
     private let queue = DispatchQueue(label: "camera.queue")
+    private var isConfigured = false
     
     private var frameCounter = 0
     private let frameSkip = 10
     
     
-    // --- Setup ---
+    // --- Init ---
     override init() {
         super.init()
-        checkPermissions()
     }
     
-    // Checks if the user has granted camera access
-    private func checkPermissions(){
+    // --- Lyfecycle Control ---
+    
+    func start() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
+            
         case .authorized:
-            // Already authorized, so setup inmediatly
-            setupSession()
-            // Update UI on Main Thread
-            DispatchQueue.main.async {
-                 self.isAuthorized = true
-            }
+            self.setupAndStart()
+            
         case .notDetermined:
-            // Request permission
+            // Ask for permission
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 if granted {
-                    DispatchQueue.main.async {
-                        self?.setupSession()
-                        self?.isAuthorized = true
-                    }
+                    self?.setupAndStart()
                 }
             }
-        default:
+            
+        case .denied, .restricted:
+            print("Camera Access Denied")
+            
+        @unknown default:
             break
         }
     }
     
-    // Configure the input (Camera) and output (Data)
-    private func setupSession(){
-        // Configuration on background queue
+    func stop() {
+        queue.async {
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+        }
+    }
+    
+    // --- Initialization Logic ---
+    private func setupAndStart(){
         queue.async { [weak self] in
-            guard let self = self else {return }
+            guard let self = self else { return }
             
-            self.session.beginConfiguration()
+            // 1. Configure it
+            if !self.isConfigured {
+                self.configureSession()
+                self.isAuthorized = true
+            }
             
-            // 1. Input
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-                  let input = try? AVCaptureDeviceInput(device: device) else { return }
-            
-            if self.session.canAddInput(input){ self.session.addInput(input) }
-            
-            // 2. Output
-            self.output.setSampleBufferDelegate(self, queue: self.queue)
-            self.output.alwaysDiscardsLateVideoFrames = true
-            
-            // BGRA Format
-            self.output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
-
-            if self.session.canAddOutput(self.output){ self.session.addOutput(self.output)}
-            
-            self.session.commitConfiguration()
+            // 2. Update UI
+            DispatchQueue.main.async {
+                self.isAuthorized = true
+            }
             
             // 3. Start Running
             if !self.session.isRunning {
                 self.session.startRunning()
             }
-            
         }
+    }
+    
+    
+    // Configure the input (Camera) and output (Data)
+    private func configureSession(){
+        self.session.beginConfiguration()
+            
+        // Input
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+            let input = try? AVCaptureDeviceInput(device: device) else { return }
+            
+        if self.session.canAddInput(input){ self.session.addInput(input) }
+            
+        // 2. Output
+        self.output.setSampleBufferDelegate(self, queue: self.queue)
+        self.output.alwaysDiscardsLateVideoFrames = true
+        self.output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
+
+        if self.session.canAddOutput(self.output){ self.session.addOutput(self.output)}
+            
+        self.session.commitConfiguration()
         
     }
 }
