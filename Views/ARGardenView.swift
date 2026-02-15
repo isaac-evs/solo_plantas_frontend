@@ -24,13 +24,13 @@ struct ARGardenView: View{
                 
                 VStack {
                     Text("Growth Stage: \(Int(growthStage))")
-                        .foregroundStyle(.white)
+                        .foregroundColor(.white)
                     
                     Slider(value : $growthStage, in: 1...4, step: 1)
                         .accentColor(plant.swiftUIColor)
                         .padding(.horizontal)
                         .onChange(of: growthStage){ newValue in
-                            print("Slider Moved to \(Int(newValue))") // DEBUG
+                            print("Slider: Snapped to \(Int(newValue))") // DEBUG
                         }
                 }
                 .padding()
@@ -60,14 +60,14 @@ struct ARViewContainer: UIViewRepresentable {
             arView.session.run(config)
         }
         
-        // Add Coaching Overlay
+        // Coaching Overlay
         let coachingOverlay = ARCoachingOverlayView()
         coachingOverlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         coachingOverlay.session = arView.session
         coachingOverlay.goal = .horizontalPlane
         arView.addSubview(coachingOverlay)
         
-        // Handle Taps
+        // Handle Gestures
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         arView.addGestureRecognizer(tapGesture)
     
@@ -102,51 +102,40 @@ struct ARViewContainer: UIViewRepresentable {
             let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
             
             if let firstResult = results.first {
-                print("Handle Tap: Placing initial plant.") // DEBUG
-                self.lastRenderedIterations = 1
-                placePlant(at: firstResult.worldTransform, iterations: 1)
-            } else {
-                print("Handle Tap: No Surface Found.") // DEBUG
+                print("Handle Tap: Valid Surface Found.") // DEBUG
+                
+                // Manage Anchor
+                if let existingAnchor = plantAnchor {
+                    // If we already have an anchor just move it
+                    existingAnchor.move(to: firstResult.worldTransform, relativeTo: nil)
+                } else {
+                    // If not, create a new anchor
+                    let newAnchor = AnchorEntity(world: firstResult.worldTransform)
+                    arView.scene.addAnchor(newAnchor)
+                    self.plantAnchor = newAnchor
+                }
+                
+                // Force Redraw
+                self.lastRenderedIterations = -1
+                updateGrowth(iterations: 1)
             }
-        }
-        
-        func placePlant(at transform: simd_float4x4, iterations: Int) {
-            guard let arView = arView else { return }
-            
-            print("Place Plant: Placing plant at Iteration \(iterations).") // DEBUG
-            
-            // Remove old plant
-            if let oldAnchor = plantAnchor {
-                arView.scene.removeAnchor(oldAnchor)
-            }
-            
-            let anchor = AnchorEntity(world: transform)
-            
-            // Create Plant Model
-            let plantModel = LSystemGenerator.generateModel(dna: plant, iterations: iterations)
-            
-            anchor.addChild(plantModel)
-            arView.scene.addAnchor(anchor)
-            
-            self.plantAnchor = anchor
-            self.lastRenderedIterations = iterations
         }
         
         func updateGrowth(iterations: Int){
-            guard let currentAnchor = plantAnchor else {
-                print("Update Growth: No plant anchor found yet.") // DEBUG
-                return
-            }
+            guard let anchor = plantAnchor else { return }
             
-            if iterations == lastRenderedIterations {
-                print("Update Growth: Skipping update (Duplicate).") // DEBUG
-                return
-            }
+            if iterations == lastRenderedIterations { return }
             
-            print("Update Growth: Growth Changing: \(lastRenderedIterations) -> \(iterations)")
+            print("Update Growth: Updating to Stage: \(iterations).") // DEBUG
             
-            // Keep position but replace model
-            placePlant(at: currentAnchor.transform.matrix, iterations: iterations )
+            anchor.children.removeAll()
+            
+            // Generate Plant
+            let plantModel = LSystemGenerator.generateModel(dna: plant, iterations: iterations)
+            
+            anchor.addChild(plantModel)
+                        
+            self.lastRenderedIterations = iterations
         }
     }
 }
