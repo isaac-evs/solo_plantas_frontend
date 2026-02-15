@@ -86,7 +86,11 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
             if self.session.canAddOutput(self.output){ self.session.addOutput(self.output)}
             
             self.session.commitConfiguration()
-            self.session.startRunning()
+            
+            // 3. Start Running
+            if !self.session.isRunning {
+                self.session.startRunning()
+            }
             
         }
         
@@ -110,7 +114,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // Unlock when we are done
         defer {
-            CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
         }
         
         // 4. Calculate Center Region
@@ -129,7 +133,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         var rTotal: Int = 0
         var gTotal: Int = 0
-        var bYotal: Int = 0
+        var bTotal: Int = 0
         
         // Loop trough center square
         for y in startY..<(startY + sampleSize) {
@@ -148,7 +152,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                 
                 rTotal += r
                 gTotal += g
-                bYotal += b
+                bTotal += b
             }
         }
         
@@ -156,7 +160,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         let pixelCount = sampleSize * sampleSize
         let rAvg = CGFloat(rTotal / pixelCount) / 255.0
         let gAvg = CGFloat(gTotal / pixelCount) / 255.0
-        let bAvg = CGFloat(bYotal / pixelCount) / 255.0
+        let bAvg = CGFloat(bTotal / pixelCount) / 255.0
         
         let newColor = CGColor(srgbRed: rAvg, green: gAvg, blue: bAvg, alpha: 1.0)
         

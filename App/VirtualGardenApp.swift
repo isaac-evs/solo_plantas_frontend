@@ -7,8 +7,8 @@ struct VirtualGardenApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(ViewModel)
+            RootView()
+                .environmentObject(viewModel)
         }
     }
 }
