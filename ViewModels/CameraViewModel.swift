@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 // Coordinates the scanning process and the final PlantDNA generation
+@MainActor
 class CameraViewModel: ObservableObject {
     
     // --- Dependencies ---
@@ -34,6 +35,7 @@ class CameraViewModel: ObservableObject {
         // Subscribe Camera Color update
         cameraService.$extractedColor
             .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] cgColor in
                 guard let self = self else { return }
         
@@ -62,6 +64,9 @@ class CameraViewModel: ObservableObject {
     
     /// Finalizes the data collection and generates the PlantDNA object
     func generatePlant(){
+        
+        cameraService.stop()
+        
         let newPlant = PlantDNA(
             colorComponents: currentRGB,
             height: measuredHeight,
@@ -69,8 +74,10 @@ class CameraViewModel: ObservableObject {
             timestamp: Date()
         )
         
-        // Trigger to switch UI to AR
-        self.capturePlant = newPlant
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+            // Trigger to switch UI to AR
+            self.capturePlant = newPlant
+        }
     }
 }
 

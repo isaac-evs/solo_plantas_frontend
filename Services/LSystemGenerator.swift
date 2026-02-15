@@ -71,18 +71,31 @@ class LSystemGenerator {
     // Convert String into RealityKit Model
     @MainActor
     static func generateModel(dna: PlantDNA, iterations: Int) -> Entity {
-        let lSystemString = generateString(dna: dna, iterations: iterations)
-        let rules = getRules(for: dna)
         
-        ///Root of the Plant
+        print("3D Generation: Startin from Iteration: \(iterations).") // DEBUG
+        
+        if iterations == 0 {
+            print(("3D Generation: Iteration is 0, returning empty root.")) // DEBUG
+            return Entity()
+        }
+        
+        let lSystemString = generateString(dna: dna, iterations: iterations)
+        print("3D Generation: String Length is \(lSystemString.count) characters.") // DEBUG
+        
+        let rules = getRules(for: dna)
         let rootEntity = Entity()
         
         var nodeStack: [Entity] = []
         var currentNode: Entity = rootEntity
+        
         let branchLength: Float = 0.05
         let branchRadius: Float = 0.005
         
-        let material = SimpleMaterial(
+        // --- Mesh Instancing ---
+        
+        let sharedMesh = MeshResource.generateBox(size: [branchRadius, branchLength, branchRadius])
+        
+        let sharedmaterial = SimpleMaterial(
                     color: UIColor(
                         red: CGFloat(dna.colorComponents[0]),
                         green: CGFloat(dna.colorComponents[1]),
@@ -91,13 +104,16 @@ class LSystemGenerator {
                     ),
                     isMetallic: false
                 )
+        // -----------------------
+        
+
+        var branchCount = 0 // DEBUG
         
         for char in lSystemString {
             switch char {
             case "F":
                 // Create Mesh
-                let mesh = MeshResource.generateBox(size: [branchRadius, branchLength, branchRadius])
-                let branch = ModelEntity(mesh: mesh, materials: [material])
+                let branch = ModelEntity(mesh: sharedMesh, materials: [sharedmaterial])
                 
                 // Move it up half its length
                 branch.position.y = branchLength / 2
@@ -110,6 +126,8 @@ class LSystemGenerator {
                 tip.position.y = branchLength / 2
                 branch.addChild(tip)
                 currentNode = tip
+                
+                branchCount += 1 // DEBUG
                 
             case "X":
                 break
@@ -137,6 +155,7 @@ class LSystemGenerator {
             }
         }
         
+        print("3D Generation: Finished. Created \(branchCount) branches.") // DEBUG
         return rootEntity
     }
 }

@@ -29,6 +29,9 @@ struct ARGardenView: View{
                     Slider(value : $growthStage, in: 1...4, step: 1)
                         .accentColor(plant.swiftUIColor)
                         .padding(.horizontal)
+                        .onChange(of: growthStage){ newValue in
+                            print("Slider Moved to \(Int(newValue))") // DEBUG
+                        }
                 }
                 .padding()
                 .background(Color.black.opacity(0.6))
@@ -73,6 +76,7 @@ struct ARViewContainer: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: ARView, context: Context) {
+        print("View: updateUIView called with stage \(growthStage)")
         context.coordinator.updateGrowth(iterations: growthStage)
     }
     
@@ -98,14 +102,20 @@ struct ARViewContainer: UIViewRepresentable {
             let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
             
             if let firstResult = results.first {
+                print("Handle Tap: Placing initial plant.") // DEBUG
                 self.lastRenderedIterations = 1
                 placePlant(at: firstResult.worldTransform, iterations: 1)
+            } else {
+                print("Handle Tap: No Surface Found.") // DEBUG
             }
         }
         
         func placePlant(at transform: simd_float4x4, iterations: Int) {
             guard let arView = arView else { return }
             
+            print("Place Plant: Placing plant at Iteration \(iterations).") // DEBUG
+            
+            // Remove old plant
             if let oldAnchor = plantAnchor {
                 arView.scene.removeAnchor(oldAnchor)
             }
@@ -119,13 +129,21 @@ struct ARViewContainer: UIViewRepresentable {
             arView.scene.addAnchor(anchor)
             
             self.plantAnchor = anchor
+            self.lastRenderedIterations = iterations
         }
         
         func updateGrowth(iterations: Int){
-            guard let currentAnchor = plantAnchor else { return }
-            if iterations == lastRenderedIterations { return }
+            guard let currentAnchor = plantAnchor else {
+                print("Update Growth: No plant anchor found yet.") // DEBUG
+                return
+            }
             
-            lastRenderedIterations = iterations
+            if iterations == lastRenderedIterations {
+                print("Update Growth: Skipping update (Duplicate).") // DEBUG
+                return
+            }
+            
+            print("Update Growth: Growth Changing: \(lastRenderedIterations) -> \(iterations)")
             
             // Keep position but replace model
             placePlant(at: currentAnchor.transform.matrix, iterations: iterations )
