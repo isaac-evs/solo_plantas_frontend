@@ -35,10 +35,11 @@ void handDrawnGeometry(realitykit::geometry_parameters params){
     float3 pos = params.geometry().model_position();
     
     // Calculate random offset
-    float wobble = sin(pos.y * 20.0) * sin(pos.x * 20.0) * 0.002;
+    float wobbleX = sin(pos.y * 50.0) * 0.002;
+    float wobbleZ = cos(pos.y * 40.0) * 0.002;
     
     // Apply offset
-    params.geometry().set_model_position_offset(float3(wobble, 0.0, wobble));
+    params.geometry().set_model_position_offset(float3(wobbleX, 0.0, wobbleZ));
 }
 
 // --- Surface Shader ---
@@ -46,27 +47,33 @@ void handDrawnGeometry(realitykit::geometry_parameters params){
 void watercolorSurface(realitykit::surface_parameters params) {
     
     // Get base color
-    half3 baseColor = params.material_constants().base_color_tint();
+    float3 baseColor = params.material_constants().base_color_tint();
     
     // Calculate fresnel
-    float3 viewDir = normalize(params.geometry().world_position() - params.uniforms().camera_position());
-    float3 normal = normalize(params.geometry().normal());
-    float NdotV = 1.0 - abs(dot(normal, -viewDir));
+    float3 viewDir = params.geometry().view_direction();
+    float3 normal = params.geometry().normal();
+    
+    // NdotV : 1.0 = Center, 0.0 = Edge
+    float NdotV = abs(dot(normal, viewDir));
+    float edgeFactor = smoothstep(0.1, 0.5, NdotV);
     
     // Generate Noise (Grain)
-    float2 uv = params.geometry().uv0() * 5.0;
+    float2 uv = params.geometry().uv0() * 200.0;
     float grain = noise(uv);
     
     // Mix colors
-    half3 centerColor = baseColor + (half3(grain) * 0.1);
-    half3 edgeColor = baseColor * 0.5;
-    float edgeFactor = smoothstep(0.5, 0.8, NdotV);
-    half3 finalColor = mix(centerColor, edgeColor, half(edgeFactor));
+    float3 centerColor = baseColor + (float3(grain) * 0.1);
+    float3 edgeColor = float3(0.05, 0.05, 0.05);
+    float3 finalColor = mix(edgeColor, centerColor, edgeFactor);
+    
+    // finalColor = float3(1.0, 0.0, 1.0); // DEBUG
+    
+    params.surface().set_base_color(half3(0.0));
+    params.surface().set_emissive_color(half3(finalColor));
     
     // Output
-    params.surface().set_base_color(finalColor);
     params.surface().set_roughness(1.0);
     params.surface().set_metallic(0.0);
     params.surface().set_specular(0.0);
-    
+    params.surface().set_opacity(1.0);
 }

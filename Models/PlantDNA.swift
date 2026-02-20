@@ -8,29 +8,11 @@
 import Foundation
 import SwiftUI
 
-struct PlantDNA: Codable, Identifiable {
-    
-    var id: UUID = UUID()
-    
-    /// Average RGB Color of the Plant
+struct PlantDNA: Identifiable, Codable {
+    let id: UUID
+    let speciesID: String 
+    let datePlanted: Date
     let colorComponents: [Float]
-    
-    /// Physical height of the plant in meters
     let height: Float
-    
-    /// Ratio of Height/Width
     let shapeRatio: Float
-    
-    /// Time the plant was created
-    let timestamp: Date
-    
-    /// Helper Methods
-    var swiftUIColor: Color {
-        guard colorComponents.count >= 3 else { return .green }
-        return Color(
-            red: Double(colorComponents[0]),
-            green: Double(colorComponents[1]),
-            blue: Double(colorComponents[2])
-        )
-    }
 }

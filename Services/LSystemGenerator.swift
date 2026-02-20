@@ -114,7 +114,8 @@ class LSystemGenerator {
                     blue: CGFloat(dna.colorComponents[2]),
                     alpha: 1.0
                 )
-        let plantMaterial = SimpleMaterial(color: plantColor, isMetallic: false)
+       
+        let plantMaterial = WatercolorMaterialFactory.create(color: plantColor)
         
         // Rotation Matrices
         let angleRad = rules.angle * .pi / 180
@@ -142,7 +143,7 @@ class LSystemGenerator {
                 // --- Draw Branch ---
                 let branch = ModelEntity(mesh: branchMesh, materials: [plantMaterial])
                 branch.scale = currentScale
-                
+    
                 // Position the Branch
                 var geometryOffset = matrix_identity_float4x4
                 geometryOffset.columns.3.y = branchLength / 2
