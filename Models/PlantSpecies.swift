@@ -5,7 +5,15 @@
 //  Created by Isaac Vazquez Sandoval on 19/02/26.
 //
 
-struct PlantSpecies: Identifiable, Codable {
+import Foundation
+
+enum GrowthType: String, Codable, Equatable {
+    case tall
+    case wide
+    case balanced
+}
+
+struct PlantSpecies: Identifiable, Codable, Equatable {
     let id: String
     let name: String
     let scientificName: String
@@ -13,7 +21,6 @@ struct PlantSpecies: Identifiable, Codable {
     let ecologicalRole: String
     let careInstructions: [String]
     let season : String
-    let IllustrationName: String
-    let lSystemType: PlantType
-    let isLocked: Bool
+    let illustrationName: String
+    let growthType: GrowthType
 }

@@ -21,24 +21,19 @@ class LSystemGenerator {
     
     // --- Logic ---
     ///Converts PlantDNA into specific set of growth rules
-    static func getRules(for dna: PlantDNA) -> Rules {
-        /// Tall Plants
-        if dna.shapeRatio < 0.8 {
-            return Rules (
+    static func getRules(for type: GrowthType) -> Rules {
+        switch type {
+        case .tall:
+            return Rules(
                 axiom: "X",
                 rule: ["X": "F-[[X]+X]+F[+FX]-X", "F": "FF"],
                 angle: 25.0)
-        }
-        
-        /// Wide Plants
-        else if dna.shapeRatio > 1.2 {
+        case .wide:
             return Rules(
                 axiom: "X",
                 rule: ["X": "F[+X]F[-X]+X", "F": "F"],
-                angle: 20.0)
-        }
-        /// Balanced
-        else {
+                angle: 35.0)
+        case .balanced:
             return Rules(
                 axiom: "X",
                 rule: ["X": "F-[[X]+X]+F[+FX]-X", "F": "FF"],
@@ -47,8 +42,8 @@ class LSystemGenerator {
     }
 
     // Recursive function for generating sequence
-    static func generateString(dna: PlantDNA, iterations: Int) -> String {
-        let rules = getRules(for: dna)
+    static func generateString(type: GrowthType, iterations: Int) -> String {
+        let rules = getRules(for: type)
         var currentString = rules.axiom
         
         for _ in 0..<iterations {
@@ -76,7 +71,7 @@ class LSystemGenerator {
     
     // Convert String into RealityKit Model
     @MainActor
-    static func generateModel(dna: PlantDNA, iterations: Int) -> Entity {
+    static func generateModel(species: PlantSpecies, iterations: Int) -> Entity {
 
         
         if iterations == 0 {
@@ -84,10 +79,10 @@ class LSystemGenerator {
             return Entity()
         }
         
-        let lSystemString = generateString(dna: dna, iterations: iterations)
+        let lSystemString = generateString(type: species.growthType, iterations: iterations)
         print("3D Generation:: Iteration \(iterations) | String Length: \(lSystemString.count)") // DEBUG
         
-        let rules = getRules(for: dna)
+        let rules = getRules(for: species.growthType)
         
         let rootEntity = Entity()
         
@@ -108,13 +103,13 @@ class LSystemGenerator {
         // Leaf Mesh
         let leafMesh = MeshResource.generateSphere(radius: 0.015)
         
-        let plantColor = UIColor(
-                    red: CGFloat(dna.colorComponents[0]),
-                    green: CGFloat(dna.colorComponents[1]),
-                    blue: CGFloat(dna.colorComponents[2]),
-                    alpha: 1.0
-                )
-       
+        // Hardcore Colors
+        var r : CGFloat = 0.3, g: CGFloat = 0.6, b: CGFloat = 0.2
+        if species.id == "salvia" { r = 0.6; g = 0.2; b = 0.6 }
+        if species.id == "agave" { r = 0.3; g = 0.5; b = 0.6 }
+        if species.id == "primavera" { r = 0.9; g = 0.8; b = 0.2 }
+        
+        let plantColor = UIColor(red: r, green: g, blue: b, alpha: 1.0)
         let plantMaterial = WatercolorMaterialFactory.create(color: plantColor)
         
         // Rotation Matrices

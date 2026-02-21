@@ -17,12 +17,13 @@ struct WatercolorMaterialFactory {
             print("Metal : Device creation failed") // DEBUG
             return nil;
         }
-        do {
-            return device.makeDefaultLibrary()
-        } catch {
-            print("Metal : Library creation failed: \(error)")
-            return nil
+        let defaultLibrary = device.makeDefaultLibrary()
+        
+        if defaultLibrary == nil {
+            print("Metal: Library not found ") // DEBUG
         }
+        
+        return defaultLibrary
     }()
     
     static func create(color: UIColor) -> Material {

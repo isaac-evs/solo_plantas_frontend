@@ -1,18 +1,35 @@
+//
+//  RootView.swift
+//  VirtualGarden
+//
+//  Created by Isaac Vazquez Sandoval on 13/02/26.
+//
+
 import SwiftUI
 
 struct RootView: View {
-    // Connect to Mission Control
-    @EnvironmentObject var viewModel: CameraViewModel
+
+    @StateObject private var appState = AppState()
     
     var body: some View {
         Group {
-            if let plant = viewModel.capturePlant {
-                // If we have DNA, show the AR Garden
-                ARGardenView(plant: plant)
-            } else {
-                // If not keep scanning
-                ScanView()
+            switch appState.currentScreen {
+            case .opening:
+                OpeningView()
+            case .selection:
+                PlantSelectionView()
+            case .arGrowth(let plant):
+                ARGrowthView(plant: plant)
+            case .bridge(let plant):
+                Text("Bridge MapKit View Placeholder for: \(plant.name)")
+            case .plantHome(let plant):
+                Text("Home Placeholder for: \(plant.name)")
+            case .catalog:
+                Text("Catalog Placeholder")
             }
         }
+        
+        .environmentObject(appState)
+        .animation(.easeInOut, value: appState.currentScreen)
     }
 }

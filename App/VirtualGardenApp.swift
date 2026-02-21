@@ -1,15 +1,18 @@
+//
+//  RootView.swift
+//  VirtualGarden
+//
+//  Created by Isaac Vazquez Sandoval on 13/02/26.
+//
+
 import SwiftUI
 
 @main
 struct VirtualGardenApp: App {
-    // Initiliaze Mission Control
-    @StateObject private var viewModel = CameraViewModel()
     
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environmentObject(viewModel)
         }
     }
 }
-
