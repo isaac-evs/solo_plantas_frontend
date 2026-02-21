@@ -6,14 +6,38 @@
 //
 
 import Foundation
+import MapKit
+
+// Map Pin
+struct Nursery: Identifiable {
+    let id = UUID()
+    let name: String
+    let address: String
+    let description: String
+    let coordinate: CLLocationCoordinate2D
+}
 
 @MainActor
 class DataService {
     
     static let shared = DataService()
     
-    // Hold Catalog
     var catalog: [PlantSpecies] = []
+    
+    let localNurseries: [Nursery] = [
+        Nursery(name: "Vivero Los Colomos",
+                address: "Bosque Los Colomos, Guadalajara",
+                description: "Carries Damiana, Salvia, and 12 other natives.",
+                coordinate: CLLocationCoordinate2D(latitude: 20.7075, longitude: -103.3948)),
+        Nursery(name: "Nativas de Jalisco",
+                address: "Zapopan Centro",
+                description: "Specializes in drought-tolerant native species.",
+                coordinate: CLLocationCoordinate2D(latitude: 20.7196, longitude: -103.3892)),
+        Nursery(name: "Jardín Botánico Vivero",
+                address: "Tlaquepaque",
+                description: "Carries Agave and native pollinator plants.",
+                coordinate: CLLocationCoordinate2D(latitude: 20.6397, longitude: -103.3130))
+    ]
     
     private init() {
         loadCatalog()

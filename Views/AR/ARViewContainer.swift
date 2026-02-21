@@ -44,7 +44,9 @@ struct ARViewContainer: UIViewRepresentable {
         }
         
         func updateUIView(_ uiView: ARView, context: Context){
-            context.coordinator.updateGrowth(iterations: growthStage)
+            if isPlanted {
+                context.coordinator.updateGrowth(iterations: growthStage)
+            }
         }
         
         func makeCoordinator() -> Coordinator {
@@ -72,19 +74,20 @@ struct ARViewContainer: UIViewRepresentable {
                 let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
                 
                 if let firstResult = results.first {
+                    print("Handle Tap: Valid Surface Found.")
                     
                     // If we have a pot, move it, if not, create it
-                    if let existingAnchor = plantAnchor {
-                        existingAnchor.move(to: firstResult.worldTransform, relativeTo: nil)
-                    } else {
-                        let newAnchor = AnchorEntity(world: firstResult.worldTransform)
-                        arView.scene.addAnchor(newAnchor)
-                        self.plantAnchor = newAnchor
-                        
-                        // Tell SwiftUI is on the floor to show slider
-                        DispatchQueue.main.async {
-                            self.isPlanted.wrappedValue = true
-                        }
+                    if let oldAnchor = plantAnchor {
+                        arView.scene.removeAnchor(oldAnchor)
+                    }
+                    
+                    let newAnchor = AnchorEntity(raycastResult: firstResult)
+                    arView.scene.addAnchor(newAnchor)
+                    self.plantAnchor = newAnchor
+                    
+                    // Plant is in the floor
+                    DispatchQueue.main.async {
+                        self.isPlanted.wrappedValue = true
                     }
                     
                     self.lastRenderedIterations = -1
@@ -93,12 +96,20 @@ struct ARViewContainer: UIViewRepresentable {
             }
             
             func updateGrowth(iterations: Int) {
+                
+                // Dont accept values below 0
+                let safeIterations = max(1, iterations)
+                
                 guard let anchor = plantAnchor else { return }
+                
+                // Prevent duplicate
                 if iterations == lastRenderedIterations { return }
                 
+                // Remove old branches
                 anchor.children.removeAll()
                 
-                let plantModel = LSystemGenerator.generateModel(species: species, iterations: iterations)
+                // Generate new plant
+                let plantModel = LSystemGenerator.generateModel(species: species, iterations: safeIterations)
                 
                 anchor.addChild(plantModel)
                 

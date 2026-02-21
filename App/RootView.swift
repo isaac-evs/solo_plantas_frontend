@@ -21,7 +21,7 @@ struct RootView: View {
             case .arGrowth(let plant):
                 ARGrowthView(plant: plant)
             case .bridge(let plant):
-                Text("Bridge MapKit View Placeholder for: \(plant.name)")
+                BridgeTransitionView(plant: plant)
             case .plantHome(let plant):
                 Text("Home Placeholder for: \(plant.name)")
             case .catalog:
