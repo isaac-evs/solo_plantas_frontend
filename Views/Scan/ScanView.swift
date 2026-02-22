@@ -1,134 +1,117 @@
-////
-////  ScanView.swift
-////  VirtualGarden
-////
-////  Created by Isaac Vazquez Sandoval on 14/02/26.
-////
 //
-//import SwiftUI
+//  ScanView.swift
+// VirtualGarden
 //
-//struct ScanView : View {
-//    
-//    @EnvironmentObject var viewModel: CameraViewModel
-//    
-//    var body: some View {
-//        ZStack {
-//            // Live Camera Feed
-//            CameraPreview(session: viewModel.cameraService.session)
-//                .ignoresSafeArea()
-//            
-//            // Targeting Reticle
-//            Circle()
-//                .strokeBorder(Color.white, lineWidth: 2)
-//                .frame(width: 30, height: 30)
-//                .shadow(radius: 4)
-//            
-//            // Dashboard
-//            VStack {
-//                Spacer()
-//                
-//                scanDashboard
-//            }
-//            
-//            .onAppear {
-//                viewModel.cameraService.start()
-//            }
-//            .onDisappear {
-//                viewModel.cameraService.stop()
-//            }
-//        }
-//    }
-//    
-//    // --- Subviews ---
-//    
-//    var scanDashboard: some View {
-//        VStack(spacing: 20) {
-//            
-//            // Color Indicator
-//            HStack{
-//                Text("Detected Color:")
-//                    .fontWeight(.semibold)
-//                    .foregroundColor(.white)
-//                
-//                Circle()
-//                    .fill(viewModel.liveColor) // Live Camera Color
-//                    .frame(width: 30, height: 30)
-//                    .overlay(Circle().stroke(Color.white, lineWidth:  2))
-//                
-//                Spacer()
-//            }
-//            
-//            // Height Input
-//            VStack(alignment: .leading){
-//                Text("Height: \(String(format: "%.2f", viewModel.measuredHeight)) m")
-//                    .foregroundColor(.white)
-//                    .font(.caption)
-//                
-//                Slider(value: $viewModel.measuredHeight, in: 0.1...2.0)
-//                    .accentColor(viewModel.liveColor)
-//            }
-//            
-//            
-//            // Shape Input
-//            VStack(alignment: .leading){
-//                HStack {
-//                    Text("Shape:")
-//                        .foregroundColor(.white)
-//                        .font(.caption)
-//                    Spacer()
-//                    Text(shapeDescription)
-//                        .foregroundColor(.white.opacity(0.8))
-//                        .font(.caption)
-//                }
-//                
-//                Slider(value: $viewModel.measuredShapeRatio, in: 0.5...2.0)
-//                    .accentColor(viewModel.liveColor)
-//            }
-//            
-//            // Generate Button
-//            Button(action: {
-//                viewModel.generatePlant()
-//            }){
-//                Text("Generate Garden")
-//                    .font(.headline)
-//                    .foregroundColor(.black)
-//                    .frame(maxWidth: .infinity)
-//                    .padding()
-//                    .background(Color.white)
-//                    .cornerRadius(12)
-//            }
-//            .padding(.top, 10)
-//        }
-//        .padding(24)
-//        .background(
-//            Color.black.opacity(0.6)
-//                .cornerRadius(20, corners: [.topLeft, .topRight])
-//                .ignoresSafeArea(edges: .bottom)
-//            
-//        )
-//    }
-//    
-//    var shapeDescription: String {
-//        if viewModel.measuredShapeRatio < 0.8 { return "Tall (Tree)"}
-//        if viewModel.measuredShapeRatio > 1.2 { return "Wide (Bush)"}
-//        return "Balanced"
-//    }
-//    
-//}
+// Created by Isaac Vazquez Sandoval on 14/02/26.
 //
-//// Round Corners
-//extension View {
-//    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View{
-//            clipShape(RoundedCorner(radius: radius, corners: corners))
-//    }
-//}
-//    
-//struct RoundedCorner: Shape {
-//    var radius: CGFloat = .infinity
-//    var corners:  UIRectCorner = .allCorners
-//        
-//    func path(in rect: CGRect) -> Path {
-//        let path  = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
-//        return Path(path.cgPath)
-//    }
-//}
+
+import SwiftUI
+import AVFoundation
+
+struct ScanView: View {
+    @EnvironmentObject var appState: AppState
+    
+    @State private var session = AVCaptureSession()
+    @State private var isScanning = false
+    @State private var scanComplete = false
+    @State private var showMatchSheet = false
+    
+    var body: some View {
+        ZStack {
+            // Camera feed
+            CameraPreview(session: session)
+                .ignoresSafeArea()
+                .onAppear{ startCamera() }
+                .onDisappear { session.stopRunning() }
+            
+            // UI Overlay
+            VStack {
+                HStack {
+                    Button(action: {
+                        AppState.currentScreen = .catalog
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 30))
+                            .foregroundColor(.white)
+                            .shadow(radius: 5)
+                    }
+                    Spacer()
+                }
+                .padding()
+                
+                Spacer()
+                
+                // Scanner Frame
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isScanning ? Color.green : Color.white, lineWidth: 3)
+                        .frame(width: 250, height: 350)
+                        .shadow(color: isScanning ? .green : .clear, radius: 10)
+                    if isScanning {
+                        Rectangle()
+                            .fill(Color.green.opacity(0.5))
+                            .frame(width: 250, height: 2)
+                            .offset(y: -170)
+                            .allignmentGuide(VerticalAlignment.center) { _ in 0 }
+                            .modifier(ScannerAnimationModifier())
+                    }
+                }
+                
+                Spacer()
+                
+                // Bottom Panel
+                VStack(spacing: 15) {
+                    Text(isScanning ? "Anlyzing leaves and structure..." : "Scan a leaf")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    
+                    Button(action: startScan) {
+                        Text (isScanning ? "Scanning..." : "Identify Plant")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(12)
+                    }
+                    .disables(isScanning)
+                }
+                .padding(24)
+                .background(Color.black.opacity(0.6))
+                .cornerRadius(20)
+                .padding()
+            }
+        }
+        // Match Sheet
+        .sheet(is Presented: $showMatchSheet){
+            MatchPlantView()
+        }
+    }
+    
+    // Camera Setup
+    private func startCamera(){
+        DispatchQueue.global(qos: .userInitiated).async{
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .vide, position: .back),
+                  let input = try? AVCaptureDeviceInput(device: device) else { return }
+            
+            if session.canAddInput(input){
+                session.addInput(input)
+                session.startRunning()
+            }
+        }
+    }
+    
+    private func startScan(){
+        isScanning = true
+        DispatchQueue.main.asyncAfter( deadline: .now() + 2.5){
+            isScanning = false
+            scanComplete = true
+            showMatchSheet = true
+        }
+    }
+}
+
+// Scan Animation mofifier
+struct ScannerAnimationModifier: ViewModifier {
+    @State private var offset: CGFloat = -170
+}
