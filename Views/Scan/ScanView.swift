@@ -11,24 +11,22 @@ import AVFoundation
 struct ScanView: View {
     @EnvironmentObject var appState: AppState
     
-    @State private var session = AVCaptureSession()
-    @State private var isScanning = false
-    @State private var scanComplete = false
+    @StateObject private var viewModel = ScanViewModel()
     @State private var showMatchSheet = false
     
     var body: some View {
         ZStack {
             // Camera feed
-            CameraPreview(session: session)
+            CameraPreview(session: viewModel.cameraService.session)
                 .ignoresSafeArea()
-                .onAppear{ startCamera() }
-                .onDisappear { session.stopRunning() }
+                .onAppear{ viewModel.startCamera() }
+                .onDisappear { viewModel.stopCamera() }
             
             // UI Overlay
             VStack {
                 HStack {
                     Button(action: {
-                        AppState.currentScreen = .catalog
+                        appState.currentScreen = .catalog
                     }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 30))
@@ -41,18 +39,26 @@ struct ScanView: View {
                 
                 Spacer()
                 
-                // Scanner Frame
+                // Scanner
                 ZStack {
+                    // Frame
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(isScanning ? Color.green : Color.white, lineWidth: 3)
+                        .stroke(viewModel.isScanning ? Color.green : Color.white, lineWidth: 3)
                         .frame(width: 250, height: 350)
-                        .shadow(color: isScanning ? .green : .clear, radius: 10)
-                    if isScanning {
+                        .shadow(color: viewModel.isScanning ? .green : .clear, radius: 10)
+                    
+                    Circle()
+                        .fill(viewModel.liveColor)
+                        .frame(width: 30, height: 30)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .shadow(radius: 5)
+                    
+                    if viewModel.isScanning {
                         Rectangle()
                             .fill(Color.green.opacity(0.5))
                             .frame(width: 250, height: 2)
                             .offset(y: -170)
-                            .allignmentGuide(VerticalAlignment.center) { _ in 0 }
+                            .alignmentGuide(VerticalAlignment.center) { _ in 0 }
                             .modifier(ScannerAnimationModifier())
                     }
                 }
@@ -61,12 +67,14 @@ struct ScanView: View {
                 
                 // Bottom Panel
                 VStack(spacing: 15) {
-                    Text(isScanning ? "Anlyzing leaves and structure..." : "Scan a leaf")
+                    Text(viewModel.isScanning ? "Exctracting dominant color.." : "Center a leaf or flower")
                         .font(.headline)
                         .foregroundStyle(.white)
                     
-                    Button(action: startScan) {
-                        Text (isScanning ? "Scanning..." : "Identify Plant")
+                    Button(action: {
+                        viewModel.performScan(unlockedIDs: appState.unlockedPlantIDs)
+                    }) {
+                        Text (viewModel.isScanning ? "Scanning..." : "Identify Plant")
                             .font(.headline)
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
@@ -74,7 +82,7 @@ struct ScanView: View {
                             .background(Color.white)
                             .cornerRadius(12)
                     }
-                    .disables(isScanning)
+                    .disabled(viewModel.isScanning)
                 }
                 .padding(24)
                 .background(Color.black.opacity(0.6))
@@ -83,35 +91,23 @@ struct ScanView: View {
             }
         }
         // Match Sheet
-        .sheet(is Presented: $showMatchSheet){
-            MatchPlantView()
-        }
-    }
-    
-    // Camera Setup
-    private func startCamera(){
-        DispatchQueue.global(qos: .userInitiated).async{
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .vide, position: .back),
-                  let input = try? AVCaptureDeviceInput(device: device) else { return }
-            
-            if session.canAddInput(input){
-                session.addInput(input)
-                session.startRunning()
-            }
-        }
-    }
-    
-    private func startScan(){
-        isScanning = true
-        DispatchQueue.main.asyncAfter( deadline: .now() + 2.5){
-            isScanning = false
-            scanComplete = true
-            showMatchSheet = true
+        .sheet(isPresented: $viewModel.scanComplete, onDismiss:{
+            viewModel.isScanning = false
+        }){
+            MatchPlantView(matchedPlants: viewModel.matchedPlants)
         }
     }
 }
 
-// Scan Animation mofifier
 struct ScannerAnimationModifier: ViewModifier {
     @State private var offset: CGFloat = -170
+    func body(content: Content) -> some View {
+        content
+            .offset(y: offset)
+            .onAppear{
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: true)) {
+                    offset = 170
+                }
+            }
+    }
 }

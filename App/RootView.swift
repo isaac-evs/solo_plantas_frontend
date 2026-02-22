@@ -22,10 +22,14 @@ struct RootView: View {
                 ARGrowthView(plant: plant)
             case .bridge(let plant):
                 BridgeTransitionView(plant: plant)
+            case .arGarden(let plant):
+                ARGardenView(plant: plant)
             case .plantHome(let plant):
-                Text("Home Placeholder for: \(plant.name)")
+                PlantHomeView(plant: plant)
             case .catalog:
-                Text("Catalog Placeholder")
+                CatalogGridView()
+            case .scan:
+                ScanView()
             }
         }
         

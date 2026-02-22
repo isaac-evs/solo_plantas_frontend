@@ -12,8 +12,10 @@ enum AppScreen: Equatable {
     case selection
     case arGrowth(PlantSpecies)
     case bridge(PlantSpecies)
+    case arGarden(PlantSpecies)
     case plantHome(PlantSpecies)
     case catalog
+    case scan
 }
 
 @MainActor

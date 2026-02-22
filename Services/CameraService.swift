@@ -14,18 +14,16 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
     
     // --- Published Propierties ---
     /// Live Color
-    @Published var extractedColor : CGColor? = nil
-    /// Publish authorization status
-    @Published var isAuthorized = false
+    @Published var extractedColor : UIColor = .clear
     
     
     // --- Internal Propierties ---
-    
     let session = AVCaptureSession()
     private let output = AVCaptureVideoDataOutput()
-    private let queue = DispatchQueue(label: "camera.queue")
+    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     private var isConfigured = false
     
+    // Performance limiter
     private var frameCounter = 0
     private let frameSkip = 10
     
@@ -36,31 +34,36 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
     }
     
     // --- Lyfecycle Control ---
-    
     func start() {
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
-            
-        case .authorized:
-            self.setupAndStart()
-            
-        case .notDetermined:
-            // Ask for permission
-            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                if granted {
-                    self?.setupAndStart()
+            switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized:
+                internalStart()
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                    if granted { self?.internalStart() }
+                }
+            default:
+                print("Camera : Access Denied")
+            }
+        }
+        
+        private func internalStart() {
+            sessionQueue.async { [weak self] in
+                guard let self = self else { return }
+                
+                if !self.isConfigured {
+                    self.configureSession()
+                    self.isConfigured = true
+                }
+                
+                if !self.session.isRunning {
+                    self.session.startRunning()
                 }
             }
-            
-        case .denied, .restricted:
-            print("Camera Access Denied")
-            
-        @unknown default:
-            break
         }
-    }
-    
     func stop() {
-        queue.async {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
             if self.session.isRunning {
                 self.session.stopRunning()
             }
@@ -68,48 +71,27 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
     }
     
     // --- Initialization Logic ---
-    private func setupAndStart(){
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            
-            // Configure it
-            if !self.isConfigured {
-                self.configureSession()
-                self.isAuthorized = true
-            }
-            
-            // Update UI
-            DispatchQueue.main.async {
-                self.isAuthorized = true
-            }
-            
-            // Start Running
-            if !self.session.isRunning {
-                self.session.startRunning()
-            }
-        }
-    }
-    
-    
-    // Configure the input (Camera) and output (Data)
     private func configureSession(){
         self.session.beginConfiguration()
-            
-        // Input
+        
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-            let input = try? AVCaptureDeviceInput(device: device) else { return }
-            
-        if self.session.canAddInput(input){ self.session.addInput(input) }
-            
-        // Output
-        self.output.setSampleBufferDelegate(self, queue: self.queue)
+              let input = try? AVCaptureDeviceInput(device: device) else { return }
+        
+        if self.session.canAddInput(input) {
+            self.session.addInput(input)
+        }
+                
+        // Output config
+        self.output.setSampleBufferDelegate(self, queue: self.sessionQueue)
         self.output.alwaysDiscardsLateVideoFrames = true
         self.output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
-
-        if self.session.canAddOutput(self.output){ self.session.addOutput(self.output)}
-            
+                
+        if self.session.canAddOutput(self.output) {
+            self.session.addOutput(self.output)
+        }
+                
         self.session.commitConfiguration()
-        
+       
     }
 }
 
@@ -162,13 +144,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                 // offset + 0 = Red
                 // offset + 0 = Alpha
                 
-                let b = Int(buffer[offset])
-                let g = Int(buffer[offset + 1])
-                let r = Int(buffer[offset + 2])
-                
-                rTotal += r
-                gTotal += g
-                bTotal += b
+                bTotal += Int(buffer[offset])
+                gTotal += Int(buffer[offset + 1])
+                rTotal += Int(buffer[offset + 2])
             }
         }
         
@@ -178,7 +156,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         let gAvg = CGFloat(gTotal / pixelCount) / 255.0
         let bAvg = CGFloat(bTotal / pixelCount) / 255.0
         
-        let newColor = CGColor(srgbRed: rAvg, green: gAvg, blue: bAvg, alpha: 1.0)
+        let newColor = UIColor(red: rAvg, green: gAvg, blue: bAvg, alpha: 1.0)
         
         // Update UI (Main Thread)
         DispatchQueue.main.async {

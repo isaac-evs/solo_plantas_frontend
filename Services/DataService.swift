@@ -8,15 +8,6 @@
 import Foundation
 import MapKit
 
-// Map Pin
-struct Nursery: Identifiable {
-    let id = UUID()
-    let name: String
-    let address: String
-    let description: String
-    let coordinate: CLLocationCoordinate2D
-}
-
 @MainActor
 class DataService {
     
@@ -60,7 +51,8 @@ class DataService {
                     ],
                     "season": "Blooms April–June",
                     "illustrationName": "Card_Damiana",
-                    "growthType": "balanced"
+                    "growthType": "balanced",
+                    "dominantColor": "yellow"
                   },
                   {
                     "id": "salvia",
@@ -75,7 +67,8 @@ class DataService {
                     ],
                     "season": "Blooms Late Summer–Fall",
                     "illustrationName": "Card_Salvia",
-                    "growthType": "tall"
+                    "growthType": "tall",
+                    "dominantColor": "purple"
                   },
                   {
                     "id": "agave",
@@ -90,7 +83,24 @@ class DataService {
                     ],
                     "season": "Blooms once after 5-10 years",
                     "illustrationName": "Card_Agave",
-                    "growthType": "wide"
+                    "growthType": "wide",
+                    "dominantColor": "blue"
+                  },
+                  {
+                    "id": "primavera",
+                    "name": "Primavera",
+                    "scientificName": "Roseodendron donnell-smithii",
+                    "description": "A majestic tree that explodes with golden-yellow trumpet flowers, signaling the coming of spring.",
+                    "ecologicalRole": "Provides canopy shelter and early-season nectar for native insects.",
+                    "careInstructions": [
+                      "Needs ample space to grow",
+                      "Full sun",
+                      "Drought tolerant once established"
+                    ],
+                    "season": "Blooms March-April",
+                    "illustrationName": "Card_Primavera",
+                    "growthType": "tall",
+                    "dominantColor": "yellow"
                   }
                 ]
                 """

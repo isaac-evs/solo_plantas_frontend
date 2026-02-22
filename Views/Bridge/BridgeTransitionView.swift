@@ -27,28 +27,25 @@ struct BridgeTransitionView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                 
-                VStack(spacing: 16){
-                    // Map button
-                    ActionButton(icon: "mappin.circle.fill", text: "Find seeds or plants nearby"){
+                VStack(spacing: 16) {
+                    // Map Button
+                    PrimaryButton(title: "Find seeds or plants nearby", icon: "mappin.circle.fill") {
                         showMap = true
                     }
                     
-                    // Guide button
-                    ActionButton(icon: "book.fill", text: "Learn how to plant it"){
+                    // Guide Button
+                    PrimaryButton(title: "Learn how to plant it", icon: "book.fill") {
                         showGuide = true
                     }
                     
-                    // Skip button
-                    Button(action: {
-                        appState.currentScreen = .plantHome(plant)
-                    }) {
-                        HStack {
-                            Image(systemName: "leaf.arrow.circlepath")
-                            Text("I'll get it later")
-                        }
-                        .font(.headline)
-                        .foregroundColor(.gray)
-                        .padding()
+                    // Skip Button
+                    PrimaryButton(
+                        title: "I'll get it later",
+                        icon: "leaf.arrow.circlepath",
+                        backgroundColor: .clear,
+                        textColor: .gray
+                    ) {
+                        appState.currentScreen = .arGarden(plant)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -61,9 +58,7 @@ struct BridgeTransitionView: View {
                     .padding(.bottom)
             }
         }
-        
-        // Map sheet
-        .sheet(isPresented: $showMap){
+        .sheet(isPresented: $showMap) {
             NurseryMapView()
         }
         .sheet(isPresented: $showGuide) {
@@ -71,29 +66,3 @@ struct BridgeTransitionView: View {
         }
     }
 }
-        
-struct ActionButton: View {
-    let icon: String
-    let text: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action){
-            HStack(spacing: 15){
-                Image(systemName: icon)
-                    .font(.title2)
-                Text(text)
-                    .font(.headline)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .opacity(0.5)
-            }
-            .foregroundColor(.white)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color(red: 0.3, green: 0.5, blue: 0.3))
-            .cornerRadius(12)
-        }
-    }
-}
-

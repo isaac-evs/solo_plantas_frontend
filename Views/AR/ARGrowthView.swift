@@ -6,29 +6,30 @@
 //
 
 import SwiftUI
-import RealityKit
 
 struct ARGrowthView: View {
-    @EnvironmentObject var appState : AppState
-    let plant: PlantSpecies
-
-    @State private var growthStage: Float = 0
-    @State private var isPlanted: Bool = false
+    @EnvironmentObject var appState: AppState
+    
+    @StateObject private var viewModel: ARGardenViewModel
+    
+    init(plant: PlantSpecies) {
+        _viewModel = StateObject(wrappedValue: ARGardenViewModel(plant: plant, isFullyGrown: false))
+    }
     
     var body: some View {
-        ZStack{
-            ARViewContainer(species: plant, growthStage: Int(growthStage), isPlanted: $isPlanted)
+        ZStack {
+            ARViewContainer(viewModel: viewModel)
                 .edgesIgnoringSafeArea(.all)
             
             VStack {
-                if isPlanted {
-                    VStack(spacing: 8){
-                        Text("Meet your \(plant.name)")
+                if viewModel.isPlanted {
+                    VStack(spacing: 8) {
+                        Text("Meet your \(viewModel.plant.name)")
                             .font(.system(size: 28, weight: .bold, design: .serif))
                             .foregroundColor(.white)
                             .shadow(radius: 4)
                         
-                        Text(plant.ecologicalRole)
+                        Text(viewModel.plant.ecologicalRole)
                             .font(.system(size: 16, design: .serif))
                             .foregroundColor(.white)
                             .padding(.horizontal)
@@ -45,36 +46,26 @@ struct ARGrowthView: View {
                         .cornerRadius(10)
                         .padding(.top, 50)
                 }
+                
                 Spacer()
                 
-                if isPlanted {
-                    VStack{
-                        Slider(value: $growthStage, in: 1...4, step: 1)
+                if viewModel.isPlanted {
+                    VStack {
+                        Slider(value: $viewModel.growthStage, in: 1...4, step: 1)
                             .accentColor(.green)
                             .padding(.horizontal)
                         
-                        Text("Stage \(Int(growthStage))")
+                        Text("Stage \(viewModel.currentStageInt)")
                             .foregroundColor(.white)
                             .font(.caption)
                         
-                        if growthStage == 4 {
-                            Button(action: {
-                                appState.unlockedPlantIDs.insert(plant.id)
-                                appState.currentScreen = .bridge(plant)
-                            }) {
-                                HStack{
-                                    Image(systemName: "camera.fill")
-                                    Text("Capture & Add to Garden")
-                                }
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(red: 0.3, green: 0.5, blue: 0.3))
-                                .cornerRadius(12)
+                        if viewModel.currentStageInt == 4 {
+                            PrimaryButton(title: "Capture & Add to Garden", icon: "camera.fill") {
+                                appState.unlockedPlantIDs.insert(viewModel.plant.id)
+                                appState.currentScreen = .bridge(viewModel.plant)
                             }
                             .padding(.top, 10)
-                            .transition(.move(edge: . bottom))
+                            .transition(.move(edge: .bottom))
                         }
                     }
                     .padding()
@@ -84,7 +75,7 @@ struct ARGrowthView: View {
                 }
             }
         }
-        .animation(.easeInOut, value: isPlanted)
-        .animation(.easeInOut, value: growthStage)
+        .animation(.easeInOut, value: viewModel.isPlanted)
+        .animation(.easeInOut, value: viewModel.growthStage)
     }
 }

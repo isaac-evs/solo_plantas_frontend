@@ -11,40 +11,35 @@ import MapKit
 struct NurseryMapView: View {
     @Environment(\.dismiss) var dismiss
     
-    // Center map in Guadalajara Jalisco
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 20.6795, longitude: -103.3915),
-        span: MKCoordinateSpan(latitudeDelta: 0.15, longitudeDelta: 0.15)
-    )
-    
-    @State private var selectedNursery: Nursery?
-    
+    @StateObject private var viewModel = MapViewModel()
     
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
-                Map(coordinateRegion: $region, annotationItems: DataService.shared.localNurseries){ nursery in
+                //  Map
+                Map(coordinateRegion: $viewModel.region, annotationItems: viewModel.nurseries) { nursery in
                     MapAnnotation(coordinate: nursery.coordinate) {
                         Image(systemName: "leaf.circle.fill")
                             .resizable()
                             .foregroundColor(.green)
                             .frame(width: 30, height: 30)
                             .background(Circle().fill(Color.white))
+                            .shadow(radius: 3)
                             .onTapGesture {
-                                withAnimation { selectedNursery = nursery }
+                                viewModel.selectNursery(nursery)
                             }
                     }
                 }
                 .ignoresSafeArea()
                 
-                // Popup Card
-                if let nursery = selectedNursery {
-                    VStack(alignment: .leading, spacing: 10){
-                        HStack{
+                // Bottom Popup Card
+                if let nursery = viewModel.selectedNursery {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
                             Text(nursery.name)
                                 .font(.headline)
                             Spacer()
-                            Button(action: { selectedNursery = nil }){
+                            Button(action: { viewModel.clearSelection() }) {
                                 Image(systemName: "xmark.circle.fill").foregroundColor(.gray)
                             }
                         }
@@ -57,16 +52,9 @@ struct NurseryMapView: View {
                             .font(.caption)
                             .padding(.bottom, 5)
                         
-                        Button(action: {
-                            openInAppleMaps(nursery: nursery)
-                        }) {
-                            Text("Get Directions")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(10)
-                                .background(Color.blue)
-                                .cornerRadius(8)
+                        // Button
+                        PrimaryButton(title: "Get Directions", icon: "map.fill", backgroundColor: .blue) {
+                            viewModel.openInAppleMaps(nursery: nursery)
                         }
                     }
                     .padding()
@@ -79,18 +67,11 @@ struct NurseryMapView: View {
             }
             .navigationTitle("Local Nurseries")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar{
-                ToolbarItem(placement: .navigationBarTrailing){
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
                 }
             }
         }
-    }
-    
-    func openInAppleMaps(nursery: Nursery){
-        let placemark = MKPlacemark(coordinate: nursery.coordinate)
-        let mapItem = MKMapItem(placemark: placemark)
-        mapItem.name = nursery.name
-        mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
     }
 }

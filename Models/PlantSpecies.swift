@@ -13,6 +13,13 @@ enum GrowthType: String, Codable, Equatable {
     case balanced
 }
 
+enum PlantColorCategory: String, Codable {
+    case blue
+    case yellow
+    case purple
+    case green
+}
+
 struct PlantSpecies: Identifiable, Codable, Equatable {
     let id: String
     let name: String
@@ -23,4 +30,5 @@ struct PlantSpecies: Identifiable, Codable, Equatable {
     let season : String
     let illustrationName: String
     let growthType: GrowthType
+    let dominantColor: PlantColorCategory
 }
