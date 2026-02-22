@@ -140,9 +140,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                 
                 // BGRA format:
                 // offset + 0 = Blue
-                // offset + 0 = Green
-                // offset + 0 = Red
-                // offset + 0 = Alpha
+                // offset + 1 = Green
+                // offset + 2 = Red
+                // offset + 3 = Alpha
                 
                 bTotal += Int(buffer[offset])
                 gTotal += Int(buffer[offset + 1])

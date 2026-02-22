@@ -21,5 +21,13 @@ enum AppScreen: Equatable {
 @MainActor
 class AppState: ObservableObject {
     @Published var currentScreen: AppScreen = .opening
-    @Published var unlockedPlantIDs : Set<String> = []
+    @Published var unlockedPlantIDs : Set<String> = []{
+        didSet{
+            PersistenceService.shared.saveGarden(plantIDs: unlockedPlantIDs)
+        }
+    }
+    
+    init(){
+        self.unlockedPlantIDs = PersistenceService.shared.loadGarden()
+    }
 }

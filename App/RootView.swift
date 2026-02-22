@@ -17,7 +17,11 @@ struct RootView: View {
             case .opening:
                 OpeningView()
             case .selection:
-                PlantSelectionView()
+                if appState.unlockedPlantIDs.isEmpty {
+                    PlantSelectionView()
+                } else {
+                    CatalogGridView()
+                }
             case .arGrowth(let plant):
                 ARGrowthView(plant: plant)
             case .bridge(let plant):
