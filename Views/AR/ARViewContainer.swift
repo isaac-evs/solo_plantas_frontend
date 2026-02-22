@@ -37,7 +37,9 @@ struct ARViewContainer: UIViewRepresentable {
         
     func updateUIView(_ uiView: ARView, context: Context){
         if viewModel.isPlanted {
-            context.coordinator.updateGrowth(iterations: viewModel.currentStageInt)
+            Task {
+                await context.coordinator.updateGrowth(iterations: viewModel.currentStageInt)
+            }
         }
     }
         
@@ -79,20 +81,28 @@ struct ARViewContainer: UIViewRepresentable {
                 }
                     
                 self.lastRenderedIterations = -1
-                updateGrowth(iterations: viewModel.currentStageInt)
+                Task {
+                    await updateGrowth(iterations: viewModel.currentStageInt)
+                }
             }
         }
+        
+        private var growthTask: Task<Void, Never>?
             
-        func updateGrowth(iterations: Int) {
+        func updateGrowth(iterations: Int) async {
             let safeIterations = max(1, iterations)
             guard let anchor = plantAnchor else { return }
             if safeIterations == lastRenderedIterations { return }
-                
-            anchor.children.removeAll()
-            let plantModel = LSystemGenerator.generateModel(species: viewModel.plant, iterations: safeIterations)
-            anchor.addChild(plantModel)
-                
-            self.lastRenderedIterations = safeIterations
+            lastRenderedIterations = safeIterations
+            
+            growthTask?.cancel()
+            growthTask = Task {
+                let plantModel = await LSystemGenerator.generateModel(species: viewModel.plant, iterations: safeIterations)
+                guard !Task.isCancelled else { return }
+                anchor.children.removeAll()
+                anchor.addChild(plantModel)
+            }
+            
         }
     }
 }

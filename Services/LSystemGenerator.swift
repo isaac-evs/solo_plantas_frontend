@@ -11,7 +11,7 @@ import UIKit
 import simd
 
 class LSystemGenerator {
-    
+
     struct Rules {
         let axiom : String
         let rule : [Character: String]
@@ -38,102 +38,135 @@ class LSystemGenerator {
                 next += rules.rule[ch].map { String($0) } ?? String(ch)
             }
             current = next
-            if current.count > 150_0000 {break}
+            if current.count > 150_000 {break}
         }
         return current
     }
     
+    // --- Cache Materials ---
+    
+    @MainActor private static var branchMaterial: (any RealityKit.Material)?
+    @MainActor private static var leafMaterials: [String: (any RealityKit.Material)] = [:]
+    
     @MainActor
-    static func generateModel(species: PlantSpecies, iterations: Int) -> Entity {
+    private static func getBranchMaterial() -> any RealityKit.Material {
+        if let cached = branchMaterial { return cached }
+        let mat = WatercolorMaterialFactory.create(
+            color: UIColor(red: 0.38, green: 0.28, blue: 0.18, alpha: 1))
+        branchMaterial = mat
+        return mat
+    }
+
+    @MainActor
+    private static func getLeafMaterial(for speciesID: String, r: CGFloat, g: CGFloat, b: CGFloat) -> any RealityKit.Material {
+        if let cached = leafMaterials[speciesID] { return cached }
+        let mat = WatercolorMaterialFactory.create(
+            color: UIColor(red: r, green: g, blue: b, alpha: 1))
+        leafMaterials[speciesID] = mat
+        return mat
+    }
+    
+    // --- Generate Model ---
+    
+    @MainActor
+    static func generateModel(species: PlantSpecies, iterations: Int) async -> Entity {
         guard iterations > 0 else { return Entity() }
         
-        let LString = generateString(type: species.growthType, iterations: iterations)
         let rules = getRules(for: species.growthType)
         let angleRad = rules.angle * .pi / 180.0
         
-        let branchBuilder = MeshBuilder()
-        let leafBuilder = MeshBuilder()
-        
-        struct TurtleState {
-            var transform: simd_float4x4   // orientiation matrix
-            var radiusTaper: Float
-            var lengthTaper: Float
-        }
-        
-        var stack: [TurtleState] = []
-        var state = TurtleState(
-            transform: matrix_identity_float4x4,
-            radiusTaper: 1.0,
-            lengthTaper: 1.0
-        )
-        
-        let baseRadius: Float = 0.012
-        let baseLength: Float = 0.055
-        let sides = 7
-        
-        // Rotation Axes
-        let rotZ_pos = simd_float4x4(rotationAngle:  angleRad, axis: [0, 0, 1])
-        let rotZ_neg = simd_float4x4(rotationAngle: -angleRad, axis: [0, 0, 1])
-        let rotX_pos = simd_float4x4(rotationAngle:  angleRad, axis: [1, 0, 0])
-        let rotX_neg = simd_float4x4(rotationAngle: -angleRad, axis: [1, 0, 0])
-        
-        for ch in LString {
-            switch ch {
-                
-                
-            case "F":
-                let r = baseRadius * state.radiusTaper
-                let l = baseLength * state.lengthTaper
-                
-                branchBuilder.addTube(
-                    transform: state.transform,
-                    bottomRadius : r,
-                    topRadius: r *  0.82,
-                    length: l,
-                    sides: sides
-                )
-                
-                var advance = matrix_identity_float4x4
-                advance.columns.3.y = l
-                state.transform = state.transform * advance
-                state.radiusTaper *= 0.88
-                state.lengthTaper *= 0.94
-                
-            case "X":
-                let leafSize = 0.025 * state.radiusTaper
-                leafBuilder.addLeaf(
-                    transform: state.transform,
-                    size: leafSize
-                )
-                
-            case "+":
-                state.transform = state.transform * rotZ_pos
-                
-            case "-":
-                state.transform = state.transform * rotZ_neg
+        // --- Offload from the main thread ---
+        let (branchBuilder, leafBuilder) = await Task.detached(priority: .userInitiated){
             
-            case "^":
-                state.transform = state.transform * rotX_pos
-                
-            case "&":
-                state.transform = state.transform * rotX_neg
+            let LString = generateString(type: species.growthType, iterations: iterations)
             
-            case "[":
-                stack.append(state)
-                
-                // Randomiza azimuth
-                let yaw = Float.random(in: 0 ..< 2 * .pi)
-                let yawMat = simd_float4x4(rotationAngle: yaw, axis: [0, 1, 0])
-                state.transform = state.transform * yawMat
+            let branchBuilder = MeshBuilder()
+            let leafBuilder   = MeshBuilder()
             
-            case "]":
-                if let saved = stack.popLast() { state = saved }
-            
-            default:
-                break
-                
+            struct TurtleState {
+                var transform: simd_float4x4   // orientiation matrix
+                var radiusTaper: Float
+                var lengthTaper: Float
             }
-        }
+            
+            var stack: [TurtleState] = []
+            var state = TurtleState(
+                transform: matrix_identity_float4x4,
+                radiusTaper: 1.0,
+                lengthTaper: 1.0
+            )
+            
+            let baseRadius: Float = 0.012
+            let baseLength: Float = 0.055
+            let sides = 7
+            
+            // Rotation Axes
+            let rotZ_pos = simd_float4x4(rotationAngle:  angleRad, axis: [0, 0, 1])
+            let rotZ_neg = simd_float4x4(rotationAngle: -angleRad, axis: [0, 0, 1])
+            let rotX_pos = simd_float4x4(rotationAngle:  angleRad, axis: [1, 0, 0])
+            let rotX_neg = simd_float4x4(rotationAngle: -angleRad, axis: [1, 0, 0])
+            
+            for ch in LString {
+                switch ch {
+                    
+                    
+                case "F":
+                    let r = baseRadius * state.radiusTaper
+                    let l = baseLength * state.lengthTaper
+                    
+                    branchBuilder.addTube(
+                        transform: state.transform,
+                        bottomRadius : r,
+                        topRadius: r *  0.82,
+                        length: l,
+                        sides: sides
+                    )
+                    
+                    var advance = matrix_identity_float4x4
+                    advance.columns.3.y = l
+                    state.transform = state.transform * advance
+                    state.radiusTaper *= 0.88
+                    state.lengthTaper *= 0.94
+                    
+                case "X":
+                    let leafSize = 0.025 * state.radiusTaper
+                    leafBuilder.addLeaf(
+                        transform: state.transform,
+                        size: leafSize
+                    )
+                    
+                case "+":
+                    state.transform = state.transform * rotZ_pos
+                    
+                case "-":
+                    state.transform = state.transform * rotZ_neg
+                
+                case "^":
+                    state.transform = state.transform * rotX_pos
+                    
+                case "&":
+                    state.transform = state.transform * rotX_neg
+                
+                case "[":
+                    stack.append(state)
+                    
+                    // Randomiza azimuth
+                    let yaw = Float.random(in: 0 ..< 2 * .pi)
+                    let yawMat = simd_float4x4(rotationAngle: yaw, axis: [0, 1, 0])
+                    state.transform = state.transform * yawMat
+                
+                case "]":
+                    if let saved = stack.popLast() { state = saved }
+                
+                default:
+                    break
+                }
+            }
+            
+            return (branchBuilder, leafBuilder)
+        }.value
+        
+        // --- Main Actor ---
         
         // Leaf Colors
         let (r, g, b):  (CGFloat, CGFloat, CGFloat) = {
@@ -144,11 +177,9 @@ class LSystemGenerator {
             default:          return (0.28, 0.62, 0.22)
             }
         }()
-        
-        let branchMat = WatercolorMaterialFactory.create(
-            color: UIColor(red: 0.38, green: 0.28, blue: 0.18, alpha: 1))
-        let leafMat = WatercolorMaterialFactory.create(
-            color: UIColor(red: r, green: g, blue: b, alpha: 1))
+
+        let branchMat = getBranchMaterial()
+        let leafMat   = getLeafMaterial(for: species.id, r: r, g: g, b: b)
         
         let root = Entity()
         if let bm = branchBuilder.build() { root.addChild(ModelEntity(mesh: bm, materials: [branchMat])) }
@@ -161,7 +192,7 @@ class LSystemGenerator {
 
 // --- Mesh Builder --
 
-class MeshBuilder {
+final class MeshBuilder: @unchecked Sendable {
     
     // Buffers
     var positions: [SIMD3<Float>] = []
@@ -307,7 +338,7 @@ class MeshBuilder {
         }
         
         //Front face
-        indices.append(contentsOf: [base+0, base+1, base+2, base+0, base+0, base+2, base+3])
+        indices.append(contentsOf: [base+0, base+1, base+2, base+0, base+2, base+3])
                        
         //Back face
         let b2 = base + 4
@@ -349,3 +380,6 @@ extension simd_float4x4 {
         self = simd_float4x4(simd_quatf(angle: angle, axis: normalize(axis)))
     }
 }
+
+// Async call:
+// let plant = await LSystemGenerator.generateModel(species: species, iterations: iterations)
