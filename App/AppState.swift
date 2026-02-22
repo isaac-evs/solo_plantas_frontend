@@ -28,6 +28,13 @@ class AppState: ObservableObject {
     }
     
     init(){
+        
+        // --------- TESTING ONLY -------- //
+        
+        UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
+        
+        // ------------------------------- //
+        
         self.unlockedPlantIDs = PersistenceService.shared.loadGarden()
     }
 }
