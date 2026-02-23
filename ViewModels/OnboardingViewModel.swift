@@ -19,6 +19,6 @@ class OnboardingViewModel: ObservableObject {
     private func loadStarterPlants() {
         // Fetch the first 3 plants
         let allPlants = DataService.shared.catalog
-        self.starterPlants = Array(allPlants.prefix(3))
+        self.starterPlants = Array(allPlants.prefix(6))
     }
 }

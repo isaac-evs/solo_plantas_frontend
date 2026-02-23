@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 enum GrowthType: String, Codable, Equatable {
     case tall
@@ -18,6 +19,21 @@ enum PlantColorCategory: String, Codable {
     case yellow
     case purple
     case green
+    case white
+    case orange
+}
+
+struct LSystemDNA: Codable, Equatable {
+    let axiom: String
+    let rules: [String: String]
+    let branchAngle: Float
+    let baseThickness: Float
+    let lengthMultiplier: Float
+    let leafScale: Float
+    let flowerScale: Float
+    let stemColor: String
+    let leafColor: String
+    let flowerColor: String
 }
 
 struct PlantSpecies: Identifiable, Codable, Equatable {
@@ -31,4 +47,21 @@ struct PlantSpecies: Identifiable, Codable, Equatable {
     let illustrationName: String
     let growthType: GrowthType
     let dominantColor: PlantColorCategory
+    let lsystem: LSystemDNA 
+}
+
+extension String {
+    func toRGB() -> (r: CGFloat, g: CGFloat, b: CGFloat) {
+        var hexSanitized = self.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+        var rgb: UInt64 = 0
+        Scanner(string: hexSanitized).scanHexInt64(&rgb)
+
+        let r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
+        let g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
+        let b = CGFloat(rgb & 0x0000FF) / 255.0
+
+        return (r, g, b)
+    }
 }

@@ -12,79 +12,66 @@ import simd
 
 class LSystemGenerator {
 
-    struct Rules {
-        let axiom : String
-        let rule : [Character: String]
-        let angle : Float
-    }
-    
-    static func getRules(for type: GrowthType) -> Rules {
-        switch type {
-        case .tall:
-            return Rules(axiom: "X", rule: ["X": "F-[[X]+X]+F[+FX]-X", "F": "FF"], angle: 25.0)
-        case .wide:
-            return Rules(axiom: "X", rule: ["X": "F[+X]F[-X]+X", "F": "F"], angle: 35.0)
-        case .balanced:
-            return Rules(axiom: "X", rule: ["X": "F-[[X]+X]+F[+FX]-X", "F": "FF"], angle: 22.5)
-        }
-    }
-    
-    static func generateString(type: GrowthType, iterations: Int) -> String {
-        let rules = getRules(for:type)
-        var current = rules.axiom
+    // --- String Generator ---
+
+    static func generateString(dna: LSystemDNA, iterations: Int) -> String {
+        var current = dna.axiom
         for _ in 0..<iterations {
             var next = ""
             for ch in current {
-                next += rules.rule[ch].map { String($0) } ?? String(ch)
+                let charString = String(ch)
+                if let replacement = dna.rules[charString] {
+                    next += replacement
+                } else {
+                    next += charString
+                }
             }
             current = next
-            if current.count > 150_000 {break}
+            if current.count > 150_000 { break }
         }
         return current
     }
     
     // --- Cache Materials ---
     
-    @MainActor private static var branchMaterial: (any RealityKit.Material)?
-    @MainActor private static var leafMaterials: [String: (any RealityKit.Material)] = [:]
+    @MainActor private static var materialCache: [String: (any RealityKit.Material)] = [:]
     
     @MainActor
-    private static func getBranchMaterial() -> any RealityKit.Material {
-        if let cached = branchMaterial { return cached }
+    private static func getMaterial(hexColor: String) -> any RealityKit.Material {
+        if let cached = materialCache[hexColor] { return cached }
+        
+        let rgb = hexColor.toRGB()
         let mat = WatercolorMaterialFactory.create(
-            color: UIColor(red: 0.38, green: 0.28, blue: 0.18, alpha: 1))
-        branchMaterial = mat
+            color: UIColor(red: rgb.r, green: rgb.g, blue: rgb.b, alpha: 1)
+        )
+        materialCache[hexColor] = mat
         return mat
     }
 
-    @MainActor
-    private static func getLeafMaterial(for speciesID: String, r: CGFloat, g: CGFloat, b: CGFloat) -> any RealityKit.Material {
-        if let cached = leafMaterials[speciesID] { return cached }
-        let mat = WatercolorMaterialFactory.create(
-            color: UIColor(red: r, green: g, blue: b, alpha: 1))
-        leafMaterials[speciesID] = mat
-        return mat
-    }
-    
     // --- Generate Model ---
     
     @MainActor
     static func generateModel(species: PlantSpecies, iterations: Int) async -> Entity {
         guard iterations > 0 else { return Entity() }
         
-        let rules = getRules(for: species.growthType)
-        let angleRad = rules.angle * .pi / 180.0
+        let dna = species.lsystem
+        let angleRad = dna.branchAngle * .pi / 180.0
+        
+        let growthScale = Float(iterations - 2) / Float(4 - 2)
+        let thicknessScale = 0.5 + 0.5 * growthScale
         
         // --- Offload from the main thread ---
-        let (branchBuilder, leafBuilder) = await Task.detached(priority: .userInitiated){
+        let (branchBuilder, leafBuilder, flowerBuilder) = await Task.detached(priority: .userInitiated) {
             
-            let LString = generateString(type: species.growthType, iterations: iterations)
+            // Pass the DNA to the string generator
+            let LString = generateString(dna: dna, iterations: iterations)
             
             let branchBuilder = MeshBuilder()
             let leafBuilder   = MeshBuilder()
+            let flowerBuilder = MeshBuilder()
             
             struct TurtleState {
-                var transform: simd_float4x4   // orientiation matrix
+                var transform: simd_float4x4
                 var radiusTaper: Float
                 var lengthTaper: Float
             }
@@ -96,8 +83,8 @@ class LSystemGenerator {
                 lengthTaper: 1.0
             )
             
-            let baseRadius: Float = 0.012
-            let baseLength: Float = 0.055
+            let baseRadius: Float = dna.baseThickness *  thicknessScale
+            let baseLength: Float = dna.baseThickness * 4.5
             let sides = 7
             
             // Rotation Axes
@@ -108,16 +95,15 @@ class LSystemGenerator {
             
             for ch in LString {
                 switch ch {
-                    
-                    
                 case "F":
-                    let r = baseRadius * state.radiusTaper
+                    let clampedRadius = max(state.radiusTaper, 0.35)
+                    let r = baseRadius * clampedRadius
                     let l = baseLength * state.lengthTaper
                     
                     branchBuilder.addTube(
                         transform: state.transform,
-                        bottomRadius : r,
-                        topRadius: r *  0.82,
+                        bottomRadius: r,
+                        topRadius: r * 0.88,
                         length: l,
                         sides: sides
                     )
@@ -125,67 +111,47 @@ class LSystemGenerator {
                     var advance = matrix_identity_float4x4
                     advance.columns.3.y = l
                     state.transform = state.transform * advance
+                    
                     state.radiusTaper *= 0.88
-                    state.lengthTaper *= 0.94
+                    state.lengthTaper *= dna.lengthMultiplier
                     
                 case "X":
-                    let leafSize = 0.025 * state.radiusTaper
-                    leafBuilder.addLeaf(
-                        transform: state.transform,
-                        size: leafSize
-                    )
+                    let leafSize = dna.leafScale * max(state.radiusTaper, 0.4)
+                    leafBuilder.addLeaf(transform: state.transform, size: leafSize)
+
+                case "O":
+                    let flowerSize = dna.flowerScale * max(state.radiusTaper, 0.4)
+                    flowerBuilder.addFlower(transform: state.transform, size: flowerSize)
                     
-                case "+":
-                    state.transform = state.transform * rotZ_pos
-                    
-                case "-":
-                    state.transform = state.transform * rotZ_neg
-                
-                case "^":
-                    state.transform = state.transform * rotX_pos
-                    
-                case "&":
-                    state.transform = state.transform * rotX_neg
-                
+                case "+": state.transform = state.transform * rotZ_pos
+                case "-": state.transform = state.transform * rotZ_neg
+                case "^": state.transform = state.transform * rotX_pos
+                case "&": state.transform = state.transform * rotX_neg
                 case "[":
                     stack.append(state)
-                    
-                    // Randomiza azimuth
                     let yaw = Float.random(in: 0 ..< 2 * .pi)
                     let yawMat = simd_float4x4(rotationAngle: yaw, axis: [0, 1, 0])
                     state.transform = state.transform * yawMat
-                
                 case "]":
                     if let saved = stack.popLast() { state = saved }
-                
-                default:
-                    break
+                default: break
                 }
             }
-            
-            return (branchBuilder, leafBuilder)
+            return (branchBuilder, leafBuilder, flowerBuilder)
         }.value
         
         // --- Main Actor ---
         
-        // Leaf Colors
-        let (r, g, b):  (CGFloat, CGFloat, CGFloat) = {
-            switch species.id {
-            case "salvia": return (0.60, 0.20, 0.65)
-            case "agave":     return (0.25, 0.52, 0.58)
-            case "primavera": return (0.92, 0.80, 0.18)
-            default:          return (0.28, 0.62, 0.22)
-            }
-        }()
-
-        let branchMat = getBranchMaterial()
-        let leafMat   = getLeafMaterial(for: species.id, r: r, g: g, b: b)
+        // DELETED the hardcoded switch statements! We just ask the JSON for the hex colors.
+        let branchMat = getMaterial(hexColor: dna.stemColor)
+        let leafMat   = getMaterial(hexColor: dna.leafColor)
+        let flowerMat = getMaterial(hexColor: dna.flowerColor)
         
         let root = Entity()
         if let bm = branchBuilder.build() { root.addChild(ModelEntity(mesh: bm, materials: [branchMat])) }
         if let lm = leafBuilder.build()   { root.addChild(ModelEntity(mesh: lm, materials: [leafMat])) }
+        if let fm = flowerBuilder.build() { root.addChild(ModelEntity(mesh: fm, materials: [flowerMat])) }
         
-        print("L System: branch tris: \(branchBuilder.indices.count / 3), leaf tris: \(leafBuilder.indices.count / 3)") // DEBUG
         return root
     }
 }
@@ -352,6 +318,90 @@ final class MeshBuilder: @unchecked Sendable {
         case 2: return [1,1]
         default: return [0,1]
         }
+    }
+    
+    // --- Flower: central disc + radiating petals ---
+
+    func addFlower(transform: simd_float4x4, size: Float) {
+        addFlowerDisc(transform: transform, radius: size * 0.25)
+        let petalCount = 6
+        for i in 0..<petalCount {
+            let angle = Float(i) / Float(petalCount) * 2 * .pi
+            addPetal(transform: transform, petalAngle: angle, size: size)
+        }
+    }
+
+    private func addFlowerDisc(transform: simd_float4x4, radius: Float) {
+        let base = UInt32(positions.count)
+        let sides = 8
+        let worldN = normalize(rotateVector([0, 1, 0], by: transform))
+
+        // Centre
+        let centerW = transform * SIMD4<Float>(0, 0, 0, 1)
+        positions.append(SIMD3(centerW.x, centerW.y, centerW.z))
+        normals.append(worldN)
+        uvs.append([0.5, 0.5])
+
+        for i in 0..<sides {
+            let theta = Float(i) / Float(sides) * 2 * .pi
+            let lp = SIMD4<Float>(radius * cos(theta), 0, radius * sin(theta), 1)
+            let wp = transform * lp
+            positions.append(SIMD3(wp.x, wp.y, wp.z))
+            normals.append(worldN)
+            uvs.append(SIMD2(0.5 + 0.5 * cos(theta), 0.5 + 0.5 * sin(theta)))
+        }
+
+        for i in 0..<UInt32(sides) {
+            let curr = base + 1 + i
+            let next = base + 1 + (i + 1) % UInt32(sides)
+            indices.append(contentsOf: [base, curr, next])
+            indices.append(contentsOf: [base, next, curr]) // back face
+        }
+    }
+
+    private func addPetal(transform: simd_float4x4, petalAngle: Float, size: Float) {
+        let base = UInt32(positions.count)
+
+        let cosA = cos(petalAngle)
+        let sinA = sin(petalAngle)
+        let outward  = SIMD3<Float>(cosA, 0, sinA)
+        let sideways = SIMD3<Float>(-sinA, 0, cosA)
+
+        let petalLength = size
+        let petalWidth  = size * 0.45
+        let petalLift   = size * 0.15
+
+        // base-left, base-right, tip-right, tip-left
+        let localCorners: [SIMD3<Float>] = [
+            outward * size * 0.2 - sideways * petalWidth * 0.4,          // base left
+            outward * size * 0.2 + sideways * petalWidth * 0.4,          // base right
+            outward * (size * 0.2 + petalLength) + sideways * petalWidth * 0.2 + [0, petalLift, 0], // tip right
+            outward * (size * 0.2 + petalLength) - sideways * petalWidth * 0.2 + [0, petalLift, 0], // tip left
+        ]
+
+        let worldN     = normalize(rotateVector([0, 1, 0], by: transform))
+        let worldNBack = -worldN
+
+        // Front face vertices
+        for (idx, c) in localCorners.enumerated() {
+            let wp = transform * SIMD4<Float>(c.x, c.y, c.z, 1)
+            positions.append(SIMD3(wp.x, wp.y, wp.z))
+            normals.append(worldN)
+            uvs.append(leafUV(idx))
+        }
+        // Back face vertices
+        for (idx, c) in localCorners.enumerated() {
+            let wp = transform * SIMD4<Float>(c.x, c.y, c.z, 1)
+            positions.append(SIMD3(wp.x, wp.y, wp.z))
+            normals.append(worldNBack)
+            uvs.append(leafUV(idx))
+        }
+
+        // Front
+        indices.append(contentsOf: [base+0, base+1, base+2, base+0, base+2, base+3])
+        // Back
+        let b2 = base + 4
+        indices.append(contentsOf: [b2+0, b2+2, b2+1, b2+0, b2+3, b2+2])
     }
     
     // --- Build ---
