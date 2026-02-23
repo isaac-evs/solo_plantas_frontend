@@ -15,17 +15,17 @@
     "growthType": "tall",
     "dominantColor": "yellow",
     "lsystem": {
-        "axiom": "X",
-        "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
-        "branchAngle": 22.5,
-        "baseThickness": 0.035,
-        "lengthMultiplier": 0.95,
-        "leafScale": 0.2,
-        "flowerScale": 0.2,
-        "stemColor": "#4A3B2C",
-        "leafColor": "#EBE02E",
-        "flowerColor": "#EBE02E"
-      }
+      "axiom": "X",
+      "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
+      "branchAngle": 22.5,
+      "baseThickness": 0.035,
+      "lengthMultiplier": 0.95,
+      "leafScale": 0.2,
+      "flowerScale": 0.2,
+      "stemColor": "#4A3B2C",
+      "leafColor": "#EBE02E",
+      "flowerColor": "#EBE02E"
+    }
   },
   {
     "id": "guachumil",
@@ -43,17 +43,17 @@
     "growthType": "wide",
     "dominantColor": "white",
     "lsystem": {
-        "axiom": "X",
-        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
-        "branchAngle": 35.0,
-        "baseThickness": 0.010,
-        "lengthMultiplier": 0.92,
-        "leafScale": 0.022,
-        "flowerScale": 0.030,
-        "stemColor": "#5C4A3D",
-        "leafColor": "#3B7A2E",
-        "flowerColor": "#FFFFFF"
-      }
+      "axiom": "X",
+      "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
+      "branchAngle": 35.0,
+      "baseThickness": 0.030,
+      "lengthMultiplier": 0.94,
+      "leafScale": 0.19,
+      "flowerScale": 0.18,
+      "stemColor": "#5C4A3D",
+      "leafColor": "#3B7A2E",
+      "flowerColor": "#FFFFFF"
+    }
   },
   {
     "id": "mezquite",
@@ -71,17 +71,17 @@
     "growthType": "wide",
     "dominantColor": "yellow",
     "lsystem": {
-        "axiom": "X",
-        "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "F"},
-        "branchAngle": 40.0,
-        "baseThickness": 0.014,
-        "lengthMultiplier": 0.90,
-        "leafScale": 0.022,
-        "flowerScale": 0.028,
-        "stemColor": "#3E362E",
-        "leafColor": "#556B2F",
-        "flowerColor": "#F5F5DC"
-      }
+      "axiom": "X",
+      "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
+      "branchAngle": 38.0,
+      "baseThickness": 0.040,
+      "lengthMultiplier": 0.93,
+      "leafScale": 0.17,
+      "flowerScale": 0.16,
+      "stemColor": "#3E362E",
+      "leafColor": "#556B2F",
+      "flowerColor": "#F5F5DC"
+    }
   },
   {
     "id": "salvia",
@@ -98,18 +98,18 @@
     "illustrationName": "Card_Salvia",
     "growthType": "tall",
     "dominantColor": "purple",
-   "lsystem": {
-       "axiom": "X",
-       "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "F"},
-       "branchAngle": 15.0,
-       "baseThickness": 0.008,
-       "lengthMultiplier": 0.95,
-       "leafScale": 0.018,
-       "flowerScale": 0.025,
-       "stemColor": "#6B8E23",
-       "leafColor": "#4B5320",
-       "flowerColor": "#4B0082"
-     }
+    "lsystem": {
+      "axiom": "X",
+      "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
+      "branchAngle": 18.0,
+      "baseThickness": 0.010,
+      "lengthMultiplier": 0.96,
+      "leafScale": 0.06,
+      "flowerScale": 0.06,
+      "stemColor": "#6B8E23",
+      "leafColor": "#4B5320",
+      "flowerColor": "#4B0082"
+    }
   },
   {
     "id": "tronadora",
@@ -126,18 +126,18 @@
     "illustrationName": "Card_Tronadora",
     "growthType": "balanced",
     "dominantColor": "yellow",
-     "lsystem": {
-       "axiom": "X",
-       "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
-       "branchAngle": 30.0,
-       "baseThickness": 0.010,
-       "lengthMultiplier": 0.92,
-       "leafScale": 0.022,
-       "flowerScale": 0.032,
-       "stemColor": "#8B7355",
-       "leafColor": "#32CD32",
-       "flowerColor": "#FFD700"
-     }
+    "lsystem": {
+      "axiom": "X",
+      "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
+      "branchAngle": 28.0,
+      "baseThickness": 0.022,
+      "lengthMultiplier": 0.93,
+      "leafScale": 0.15,
+      "flowerScale": 0.17,
+      "stemColor": "#8B7355",
+      "leafColor": "#32CD32",
+      "flowerColor": "#FFD700"
+    }
   },
   {
     "id": "cempasuchil",
@@ -154,14 +154,14 @@
     "illustrationName": "Card_Cempasuchil",
     "growthType": "balanced",
     "dominantColor": "orange",
-   "lsystem": {
+    "lsystem": {
       "axiom": "X",
       "rules": {"X": "F[+X][-X]F[-X]+X", "F": "FF"},
-      "branchAngle": 45.0,
-      "baseThickness": 0.008,
-      "lengthMultiplier": 0.88,
-      "leafScale": 0.020,
-      "flowerScale": 0.035,
+      "branchAngle": 42.0,
+      "baseThickness": 0.012,
+      "lengthMultiplier": 0.91,
+      "leafScale": 0.10,
+      "flowerScale": 0.16,
       "stemColor": "#228B22",
       "leafColor": "#006400",
       "flowerColor": "#FFA500"

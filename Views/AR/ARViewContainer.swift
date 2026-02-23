@@ -14,10 +14,10 @@ struct ARViewContainer: UIViewRepresentable {
     
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
-        
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = [.horizontal]
         config.environmentTexturing = .automatic
+        
         if ARWorldTrackingConfiguration.isSupported {
             arView.session.run(config)
         }
@@ -35,11 +35,9 @@ struct ARViewContainer: UIViewRepresentable {
         return arView
     }
         
-    func updateUIView(_ uiView: ARView, context: Context){
-        if viewModel.isPlanted {
-            Task {
-                await context.coordinator.updateGrowth(iterations: viewModel.currentStageInt)
-            }
+    func updateUIView(_ uiView: ARView, context: Context) {
+        Task {
+            await context.coordinator.syncPlantMesh(iteration: viewModel.currentIteration)
         }
     }
         
@@ -47,62 +45,89 @@ struct ARViewContainer: UIViewRepresentable {
         Coordinator(viewModel: viewModel)
     }
         
-    // --- Coordinator ---
     @MainActor
     class Coordinator: NSObject {
         var arView: ARView?
         let viewModel: ARGardenViewModel
             
-        var plantAnchor: AnchorEntity?
-        var lastRenderedIterations: Int = -1
+        var baseAnchor: AnchorEntity?
+        var potEntity: ModelEntity?
+        var currentPlantEntity: Entity?
+        
+        var lastRenderedIteration: Int = -1
+        private var growthTask: Task<Void, Never>?
             
         init(viewModel: ARGardenViewModel){
             self.viewModel = viewModel
         }
             
-        @objc func handleTap(_ sender: UITapGestureRecognizer){
+        // --- Tap Logic ---
+        @objc func handleTap(_ sender: UITapGestureRecognizer) {
             guard let arView = arView else { return }
-            let tapLocation = sender.location(in: arView)
-            let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
+            
+            if viewModel.state == .scanning {
+                // Raycast and Place Pot
+                let tapLocation = sender.location(in: arView)
+                let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
                 
-            if let firstResult = results.first {
-                print("Handle Tap: Valid Surface Found.")
+                if let result = results.first {
+                    let anchor = AnchorEntity(raycastResult: result)
+                    arView.scene.addAnchor(anchor)
+                    self.baseAnchor = anchor
                     
-                if let oldAnchor = plantAnchor {
-                    arView.scene.removeAnchor(oldAnchor)
+                    loadPot()
+                    viewModel.markPotPlaced()
                 }
-                    
-                let newAnchor = AnchorEntity(raycastResult: firstResult)
-                arView.scene.addAnchor(newAnchor)
-                self.plantAnchor = newAnchor
-                    
-                DispatchQueue.main.async {
-                    self.viewModel.markAsPlanted()
-                }
-                    
-                self.lastRenderedIterations = -1
-                Task {
-                    await updateGrowth(iterations: viewModel.currentStageInt)
-                }
+            } else if viewModel.state == .placed {
+                // Plant Seed
+                viewModel.plantSeed()
             }
         }
         
-        private var growthTask: Task<Void, Never>?
-            
-        func updateGrowth(iterations: Int) async {
-            let safeIterations = max(1, iterations)
-            guard let anchor = plantAnchor else { return }
-            if safeIterations == lastRenderedIterations { return }
-            lastRenderedIterations = safeIterations
-            
-            growthTask?.cancel()
-            growthTask = Task {
-                let plantModel = await LSystemGenerator.generateModel(species: viewModel.plant, iterations: safeIterations)
-                guard !Task.isCancelled else { return }
-                anchor.children.removeAll()
-                anchor.addChild(plantModel)
-            }
-            
-        }
+        // --- Mesh  ---
+        
+                private func loadPot() {
+                    guard let anchor = baseAnchor else { return }
+                    
+                    if let url = Bundle.main.url(forResource: "pot1", withExtension: "usdz"),
+                       let pot = try? ModelEntity.loadModel(contentsOf: url) {
+                        
+                        let targetHeightMeters: Float = 0.20
+                        let originalHeight: Float     = 1.9902356
+                        let uniformScale              = targetHeightMeters / originalHeight
+                        pot.scale                     = SIMD3<Float>(repeating: uniformScale)
+                        
+                        let bounds = pot.visualBounds(relativeTo: nil)
+                        pot.position.y = -bounds.min.y
+                        
+                        anchor.addChild(pot)
+                        self.potEntity = pot
+                    }
+                }
+                
+                func syncPlantMesh(iteration: Int) async {
+                    guard let anchor = baseAnchor, iteration > 0 else { return }
+                    if iteration == lastRenderedIteration { return }
+                    lastRenderedIteration = iteration
+                    
+                    growthTask?.cancel()
+                    growthTask = Task {
+                        let newPlant = await LSystemGenerator.generateModel(species: viewModel.plant, iterations: iteration)
+                        guard !Task.isCancelled else { return }
+                        
+                        if let oldPlant = currentPlantEntity {
+                            anchor.removeChild(oldPlant)
+                        }
+
+                        if let pot = potEntity {
+                            let potBoundsInWorld = pot.visualBounds(relativeTo: anchor)
+                            
+                            newPlant.position.y = potBoundsInWorld.max.y - 0.01
+                        }
+                        
+                        anchor.addChild(newPlant)
+                        currentPlantEntity = newPlant
+                    }
+                }
     }
 }

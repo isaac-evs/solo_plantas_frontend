@@ -9,35 +9,106 @@ import SwiftUI
 
 @MainActor
 class ARGardenViewModel: ObservableObject {
-    
-    // Data
-    let plant: PlantSpecies
-    
-    // State
-    @Published var isPlanted: Bool
-    @Published var growthStage: Float
-    
-    var currentStageInt: Int {
-        return Int(growthStage)
+
+    enum GrowthState: Equatable {
+        case scanning
+        case placed
+        case seeded
+        case growing(day: Int)
+        case blooming
     }
-    
-    // Slect view
+
+    let plant: PlantSpecies
+    @Published var state: GrowthState
+    @Published var currentIteration: Int = 0
+    @Published var showPlantingFlash: Bool = false
+
+    private var timeTask: Task<Void, Never>?
+
+    // Haptics
+    private let impactHeavy  = UIImpactFeedbackGenerator(style: .heavy)
+    private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let impactLight  = UIImpactFeedbackGenerator(style: .light)
+    private let notification = UINotificationFeedbackGenerator()
+
     init(plant: PlantSpecies, isFullyGrown: Bool = false) {
         self.plant = plant
-        
         if isFullyGrown {
-            self.isPlanted = true
-            self.growthStage = 4.0
+            self.state = .blooming
+            self.currentIteration = 4
         } else {
-            self.isPlanted = false
-            self.growthStage = 1.0
+            self.state = .scanning
+            self.currentIteration = 0
         }
     }
-    
-    // AR Coordinator
-    func markAsPlanted() {
-        if !isPlanted {
-            isPlanted = true
+
+    func markPotPlaced() {
+        guard state == .scanning else { return }
+        impactHeavy.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            self.impactMedium.impactOccurred()
         }
+        state = .placed
+    }
+
+    func plantSeed() {
+        guard state == .placed else { return }
+        // Pulses
+        impactLight.impactOccurred()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { self.impactMedium.impactOccurred() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { self.impactHeavy.impactOccurred() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.notification.notificationOccurred(.success) }
+
+        showPlantingFlash = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            self.showPlantingFlash = false
+        }
+
+        state = .seeded
+        startTimer()
+    }
+
+    private func startTimer() {
+        timeTask?.cancel()
+        timeTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                guard !Task.isCancelled else { break }
+                advanceTime()
+            }
+        }
+    }
+
+    private func advanceTime() {
+        var currentDay = 0
+        if case .growing(let day) = state { currentDay = day }
+        else if state == .seeded { currentDay = 0 }
+        else { return }
+
+        currentDay += 1
+
+        let previousIteration = currentIteration
+
+        if currentDay >= 30 {
+            state = .blooming
+            currentIteration = 4
+            timeTask?.cancel()
+            notification.notificationOccurred(.success)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { self.impactHeavy.impactOccurred() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.impactMedium.impactOccurred() }
+        } else {
+            state = .growing(day: currentDay)
+            if currentDay == 5  { currentIteration = 2 }
+            if currentDay == 14 { currentIteration = 3 }
+        }
+
+        if currentIteration != previousIteration && currentIteration > 0 {
+            impactMedium.impactOccurred()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.impactLight.impactOccurred() }
+        }
+    }
+
+    func cleanUp() {
+        timeTask?.cancel()
     }
 }

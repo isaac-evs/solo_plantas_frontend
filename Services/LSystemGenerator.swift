@@ -152,51 +152,6 @@ class LSystemGenerator {
         if let lm = leafBuilder.build()   { root.addChild(ModelEntity(mesh: lm, materials: [leafMat])) }
         if let fm = flowerBuilder.build() { root.addChild(ModelEntity(mesh: fm, materials: [flowerMat])) }
         
-        // --- Pot ---
-        print("LSystem: Looking for pot1.usdz in bundle...")
-
-        guard let potURL = Bundle.main.url(forResource: "pot1", withExtension: "usdz") else {
-            print("LSystem: FAIL - pot1.usdz not found in bundle. Resources may not be registered in Package.swift")
-            return root
-        }
-
-        print("LSystem: Found at \(potURL.path)")
-
-        // --- Pot ---
-        print("LSystem: Looking for pot1.usdz in bundle...")
-
-        guard let potURL = Bundle.main.url(forResource: "pot1", withExtension: "usdz") else {
-            print("LSystem: FAIL - pot1.usdz not found in bundle.")
-            return root
-        }
-
-        print("LSystem: Found at \(potURL.path)")
-
-        do {
-            let potEntity: ModelEntity = try await MainActor.run {
-                try ModelEntity.loadModel(contentsOf: potURL)
-            }
-
-            print("LSystem: Pot parsed successfully by RealityKit")
-
-            let targetHeightMeters: Float = 0.20
-            let originalHeight: Float     = 1.9902356
-            let uniformScale              = targetHeightMeters / originalHeight
-            potEntity.scale               = SIMD3<Float>(repeating: uniformScale)
-
-            let potBounds = potEntity.visualBounds(relativeTo: nil)
-            let potBottom = potBounds.min.y
-            let potHeight = potBounds.extents.y
-
-            potEntity.position.y = -potBottom
-            root.children.forEach { $0.position.y += potHeight + potBottom - 0.01 }
-            root.addChild(potEntity)
-            print("LSystem: Pot added at scale \(uniformScale)")
-
-        } catch {
-            print("LSystem: FAIL - \(error)")
-        }
-        
         return root
     }
 }

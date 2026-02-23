@@ -8,20 +8,17 @@
 import SwiftUI
 
 struct RootView: View {
-
     @StateObject private var appState = AppState()
     
     var body: some View {
         Group {
             switch appState.currentScreen {
-            case .opening:
-                OpeningView()
-            case .selection:
-                if appState.unlockedPlantIDs.isEmpty {
-                    PlantSelectionView()
-                } else {
-                    CatalogGridView()
-                }
+            case .splash:
+                SplashView()
+            case .onboarding:
+                PlantSelectionView()
+            case .catalog:
+                CatalogGridView()
             case .arGrowth(let plant):
                 ARGrowthView(plant: plant)
             case .bridge(let plant):
@@ -30,14 +27,11 @@ struct RootView: View {
                 ARGardenView(plant: plant)
             case .plantHome(let plant):
                 PlantHomeView(plant: plant)
-            case .catalog:
-                CatalogGridView()
             case .scan:
                 ScanView()
             }
         }
-        
         .environmentObject(appState)
-        .animation(.easeInOut, value: appState.currentScreen)
+        .animation(.easeInOut(duration: 0.5), value: appState.currentScreen)
     }
 }

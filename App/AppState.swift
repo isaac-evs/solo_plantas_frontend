@@ -8,19 +8,19 @@
 import SwiftUI
 
 enum AppScreen: Equatable {
-    case opening
-    case selection
+    case splash
+    case onboarding
+    case catalog
     case arGrowth(PlantSpecies)
     case bridge(PlantSpecies)
     case arGarden(PlantSpecies)
     case plantHome(PlantSpecies)
-    case catalog
     case scan
 }
 
 @MainActor
 class AppState: ObservableObject {
-    @Published var currentScreen: AppScreen = .opening
+    @Published var currentScreen: AppScreen = .splash
     @Published var unlockedPlantIDs : Set<String> = []{
         didSet{
             PersistenceService.shared.saveGarden(plantIDs: unlockedPlantIDs)
@@ -36,5 +36,13 @@ class AppState: ObservableObject {
         // ------------------------------- //
         
         self.unlockedPlantIDs = PersistenceService.shared.loadGarden()
+    }
+    
+    func routeAfterSplash() {
+        if unlockedPlantIDs.isEmpty {
+            currentScreen = .onboarding
+        } else {
+            currentScreen = .catalog
+        }
     }
 }
