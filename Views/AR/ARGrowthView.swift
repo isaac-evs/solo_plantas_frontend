@@ -51,7 +51,7 @@ struct ARGrowthView: View {
                 
                 if viewModel.isPlanted {
                     VStack {
-                        Slider(value: $viewModel.growthStage, in: 2...6, step: 1)
+                        Slider(value: $viewModel.growthStage, in: 1...4, step: 1)
                             .accentColor(.green)
                             .padding(.horizontal)
                         

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Vivero Los Colomos",
+    "address": "Bosque Los Colomos, Guadalajara",
+    "description": "Carries Damiana, Salvia, and 12 other natives.",
+    "latitude": 20.7075,
+    "longitude": -103.3948
+  },
+  {
+    "name": "Nativas de Jalisco",
+    "address": "Zapopan Centro",
+    "description": "Specializes in drought-tolerant native species.",
+    "latitude": 20.7196,
+    "longitude": -103.3892
+  },
+  {
+    "name": "Jardín Botánico Vivero",
+    "address": "Tlaquepaque",
+    "description": "Carries Agave and native pollinator plants.",
+    "latitude": 20.6397,
+    "longitude": -103.3130
+  }
+]
