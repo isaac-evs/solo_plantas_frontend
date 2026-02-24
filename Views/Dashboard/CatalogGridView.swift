@@ -29,7 +29,7 @@ struct CatalogGridView: View {
                         Text("Your Garden")
                             .font(.system(size: 36, weight: .bold, design: .serif))
                         Spacer()
-                        Text("\(appState.unlockedPlantIDs.count) / \(viewModel.totalCatalogSize)")
+                        Text("\(appState.plantedDates.count) / \(viewModel.totalCatalogSize)")
                             .font(.headline)
                             .foregroundColor(.gray)
                     }
@@ -44,64 +44,64 @@ struct CatalogGridView: View {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(viewModel.allPlants) { plant in
                             
-                            let unlocked = viewModel.isUnlocked(plant: plant, in: appState.unlockedPlantIDs)
+                            let unlocked = appState.plantedDates[plant.id] != nil
                             
                             CatalogCell(plant: plant, isUnlocked: unlocked) {
                                 if unlocked {
-                                    appState.currentScreen = .plantHome(plant)
+                                    appState.currentScreen = .plantHome
                                 } else {
                                     print("Locked: \(plant.name) teaser tapped.")
                                 }
                             }
                         }
+                        .padding(.horizontal, 24)
+                        
+                        // Button
+                        PrimaryButton(title: "Already growing a native plant?", backgroundColor: .black) {
+                            appState.currentScreen = .scan
+                        }
+                        .padding(24)
                     }
-                    .padding(.horizontal, 24)
-                    
-                    // Button
-                    PrimaryButton(title: "Already growing a native plant?", backgroundColor: .black) {
-                        appState.currentScreen = .scan
-                    }
-                    .padding(24)
                 }
             }
         }
     }
-}
-
-struct CatalogCell: View {
-    let plant: PlantSpecies
-    let isUnlocked: Bool
-    let action: () -> Void
     
-    var body: some View {
-        Button(action: action) {
-            VStack {
-                Rectangle()
-                    .fill(isUnlocked ? Color.white : Color.gray.opacity(0.2))
-                    .frame(height: 140)
-                    .overlay(
-                        Group {
-                            if !isUnlocked {
-                                Image(systemName: "lock.fill")
-                                    .foregroundColor(.gray)
-                                    .font(.title)
-                            } else {
-                                Text(plant.name.prefix(1))
-                                    .font(.system(size: 50, design: .serif))
-                                    .foregroundColor(.green.opacity(0.3))
+    struct CatalogCell: View {
+        let plant: PlantSpecies
+        let isUnlocked: Bool
+        let action: () -> Void
+        
+        var body: some View {
+            Button(action: action) {
+                VStack {
+                    Rectangle()
+                        .fill(isUnlocked ? Color.white : Color.gray.opacity(0.2))
+                        .frame(height: 140)
+                        .overlay(
+                            Group {
+                                if !isUnlocked {
+                                    Image(systemName: "lock.fill")
+                                        .foregroundColor(.gray)
+                                        .font(.title)
+                                } else {
+                                    Text(plant.name.prefix(1))
+                                        .font(.system(size: 50, design: .serif))
+                                        .foregroundColor(.green.opacity(0.3))
+                                }
                             }
-                        }
-                    )
-                
-                Text(isUnlocked ? plant.name : "Unknown")
-                    .font(.system(size: 16, weight: .bold, design: .serif))
-                    .foregroundColor(isUnlocked ? .black : .gray)
-                    .padding(.bottom, 8)
+                        )
+                    
+                    Text(isUnlocked ? plant.name : "Unknown")
+                        .font(.system(size: 16, weight: .bold, design: .serif))
+                        .foregroundColor(isUnlocked ? .black : .gray)
+                        .padding(.bottom, 8)
+                }
+                .background(isUnlocked ? Color.white : Color.clear)
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(isUnlocked ? 0.05 : 0), radius: 5, y: 5)
             }
-            .background(isUnlocked ? Color.white : Color.clear)
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(isUnlocked ? 0.05 : 0), radius: 5, y: 5)
+            .buttonStyle(PlainButtonStyle())
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }

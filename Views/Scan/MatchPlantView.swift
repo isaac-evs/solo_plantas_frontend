@@ -51,7 +51,7 @@ struct MatchPlantView: View {
                                 ForEach(matchedPlants) { plant in
                                     Button(action: {
                                         // Unlock it
-                                        appState.unlockedPlantIDs.insert(plant.id)
+                                        appState.plantSeed(for: plant.id)
                                         dismiss()
                                         // Return to catalog
                                         appState.currentScreen = .catalog

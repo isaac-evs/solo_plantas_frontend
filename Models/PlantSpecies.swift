@@ -8,13 +8,13 @@
 import Foundation
 import CoreGraphics
 
-enum GrowthType: String, Codable, Equatable {
+enum GrowthType: String, Codable, Equatable, Sendable {
     case tall
     case wide
     case balanced
 }
 
-enum PlantColorCategory: String, Codable {
+enum PlantColorCategory: String, Codable, Sendable {
     case blue
     case yellow
     case purple
@@ -23,7 +23,7 @@ enum PlantColorCategory: String, Codable {
     case orange
 }
 
-struct LSystemDNA: Codable, Equatable {
+struct LSystemDNA: Codable, Equatable, Sendable {
     let axiom: String
     let rules: [String: String]
     let branchAngle: Float
@@ -36,7 +36,7 @@ struct LSystemDNA: Codable, Equatable {
     let flowerColor: String
 }
 
-struct PlantSpecies: Identifiable, Codable, Equatable {
+struct PlantSpecies: Identifiable, Codable, Equatable, Sendable {
     let id: String
     let name: String
     let scientificName: String
@@ -47,7 +47,8 @@ struct PlantSpecies: Identifiable, Codable, Equatable {
     let illustrationName: String
     let growthType: GrowthType
     let dominantColor: PlantColorCategory
-    let lsystem: LSystemDNA 
+    let growthMilestones: [Int]
+    let lsystem: LSystemDNA
 }
 
 extension String {

@@ -259,7 +259,7 @@ struct ARGrowthView: View {
             }
 
             Button {
-                appState.unlockedPlantIDs.insert(viewModel.plant.id)
+                appState.plantSeed(for: viewModel.plant.id)
                 appState.currentScreen = .bridge(viewModel.plant)
             } label: {
                 HStack(spacing: 10) {

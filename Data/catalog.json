@@ -14,6 +14,7 @@
     "illustrationName": "Card_Primavera",
     "growthType": "tall",
     "dominantColor": "yellow",
+    "growthMilestones": [5, 20, 40, 70],
     "lsystem": {
       "axiom": "X",
       "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
@@ -42,6 +43,7 @@
     "illustrationName": "Card_Guachumil",
     "growthType": "wide",
     "dominantColor": "white",
+    "growthMilestones": [4, 15, 30, 60],
     "lsystem": {
       "axiom": "X",
       "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
@@ -70,6 +72,7 @@
     "illustrationName": "Card_Mezquite",
     "growthType": "wide",
     "dominantColor": "yellow",
+    "growthMilestones": [6, 25, 45, 80],
     "lsystem": {
       "axiom": "X",
       "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
@@ -98,6 +101,7 @@
     "illustrationName": "Card_Salvia",
     "growthType": "tall",
     "dominantColor": "purple",
+    "growthMilestones": [2, 7, 14, 30],
     "lsystem": {
       "axiom": "X",
       "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
@@ -126,6 +130,7 @@
     "illustrationName": "Card_Tronadora",
     "growthType": "balanced",
     "dominantColor": "yellow",
+    "growthMilestones": [3, 10, 20, 45],
     "lsystem": {
       "axiom": "X",
       "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
@@ -154,6 +159,7 @@
     "illustrationName": "Card_Cempasuchil",
     "growthType": "balanced",
     "dominantColor": "orange",
+    "growthMilestones": [2, 5, 12, 25],
     "lsystem": {
       "axiom": "X",
       "rules": {"X": "F[+X][-X]F[-X]+X", "F": "FF"},

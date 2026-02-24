@@ -62,7 +62,12 @@ class DataService {
             print("Data: Failed to decode nurseries.json: \(error)")
         }
     }
+    
+    func getPlant(by id: String) -> PlantSpecies? {
+        return catalog.first { $0.id == id }
+    }
 }
+
 
 fileprivate struct NurseryDTO: Decodable {
     let name: String

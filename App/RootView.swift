@@ -25,8 +25,8 @@ struct RootView: View {
                 BridgeTransitionView(plant: plant)
             case .arGarden(let plant):
                 ARGardenView(plant: plant)
-            case .plantHome(let plant):
-                PlantHomeView(plant: plant)
+            case .plantHome:
+                PlantHomeView()
             case .scan:
                 ScanView()
             }

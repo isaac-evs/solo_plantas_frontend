@@ -17,32 +17,32 @@ final class PersistenceService: Sendable {
     private init() {}
     
     // -- Save Data ---
-    func saveGarden(plantIDs: Set<String>){
-        let garden = UserGarden(unlockedPlantIDs: plantIDs, lastUpdated: Date())
+    func saveGarden(plantedDates: [String: Date]){
+        let garden = UserGarden(plantedDates: plantedDates, lastUpdated: Date())
         
         do {
             let data = try JSONEncoder().encode(garden)
             UserDefaults.standard.set(data, forKey: storageKey)
-            print("Persistence: Saved \(plantIDs.count) plants to device.")
+            print("Persistence: Saved \(plantedDates.count) plants to device.")
         } catch {
             print("Persistence: Failed to encode garden. Error: \(error)")
         }
     }
     
     // -- Load Data --
-    func loadGarden() -> Set<String> {
+    func loadGarden() -> [String: Date] {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else {
             print("Persistence: No previous save file found. Starting a new one.")
-            return []
+            return [:]
         }
         
         do {
             let garden = try JSONDecoder().decode(UserGarden.self, from: data)
-            print("Persistence: Loaded \(garden.unlockedPlantIDs.count) plants.")
-            return garden.unlockedPlantIDs
+            print("Persistence: Loaded \(garden.plantedDates.count) plants.")
+            return garden.plantedDates
         } catch {
-            print("Persitence: Failed to decode garden. Error: \(error)")
-            return []
+            print("Persistence: Failed to decode garden. Error: \(error)")
+            return [:]
         }
     }
 }

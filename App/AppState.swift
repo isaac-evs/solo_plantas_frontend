@@ -14,35 +14,39 @@ enum AppScreen: Equatable {
     case arGrowth(PlantSpecies)
     case bridge(PlantSpecies)
     case arGarden(PlantSpecies)
-    case plantHome(PlantSpecies)
+    case plantHome
     case scan
 }
 
 @MainActor
 class AppState: ObservableObject {
     @Published var currentScreen: AppScreen = .splash
-    @Published var unlockedPlantIDs : Set<String> = []{
-        didSet{
-            PersistenceService.shared.saveGarden(plantIDs: unlockedPlantIDs)
+    @Published var plantedDates: [String: Date] = [:] {
+        didSet {
+            PersistenceService.shared.saveGarden(plantedDates: plantedDates)
         }
     }
     
-    init(){
+    init() {
         
         // --------- TESTING ONLY -------- //
-        
-        UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
-        
+        // UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
         // ------------------------------- //
         
-        self.unlockedPlantIDs = PersistenceService.shared.loadGarden()
+        self.plantedDates = PersistenceService.shared.loadGarden()
     }
     
     func routeAfterSplash() {
-        if unlockedPlantIDs.isEmpty {
+        if plantedDates.isEmpty {
             currentScreen = .onboarding
         } else {
-            currentScreen = .catalog
+            currentScreen = .plantHome
+        }
+    }
+    
+    func plantSeed(for speciesID: String) {
+        if plantedDates[speciesID] == nil {
+            plantedDates[speciesID] = Date()
         }
     }
 }

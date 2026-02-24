@@ -8,6 +8,6 @@
 import Foundation
 
 struct UserGarden: Codable {
-    var unlockedPlantIDs: Set<String>
+    var plantedDates: [String: Date]
     var lastUpdated: Date
 }

@@ -72,7 +72,8 @@ struct ScanView: View {
                         .foregroundStyle(.white)
                     
                     Button(action: {
-                        viewModel.performScan(unlockedIDs: appState.unlockedPlantIDs)
+                        let ownedIDs = Set(appState.plantedDates.keys)
+                        viewModel.performScan(unlockedIDs: ownedIDs)
                     }) {
                         Text (viewModel.isScanning ? "Scanning..." : "Identify Plant")
                             .font(.headline)

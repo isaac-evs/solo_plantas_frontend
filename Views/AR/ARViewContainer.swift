@@ -111,22 +111,26 @@ struct ARViewContainer: UIViewRepresentable {
                     lastRenderedIteration = iteration
                     
                     growthTask?.cancel()
-                    growthTask = Task {
-                        let newPlant = await LSystemGenerator.generateModel(species: viewModel.plant, iterations: iteration)
-                        guard !Task.isCancelled else { return }
+                    
+                    let plantToGrow = viewModel.plant
+                    
+                    growthTask = Task { [weak self] in
                         
-                        if let oldPlant = currentPlantEntity {
+                        let newPlant = await LSystemGenerator.generateModel(species: plantToGrow, iterations: iteration)
+                    
+                        guard !Task.isCancelled, let self = self else { return }
+                        
+                        if let oldPlant = self.currentPlantEntity {
                             anchor.removeChild(oldPlant)
                         }
-
-                        if let pot = potEntity {
+                        
+                        if let pot = self.potEntity {
                             let potBoundsInWorld = pot.visualBounds(relativeTo: anchor)
-                            
                             newPlant.position.y = potBoundsInWorld.max.y - 0.01
                         }
                         
                         anchor.addChild(newPlant)
-                        currentPlantEntity = newPlant
+                        self.currentPlantEntity = newPlant
                     }
                 }
     }

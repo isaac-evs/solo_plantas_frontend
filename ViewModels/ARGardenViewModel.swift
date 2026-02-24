@@ -88,8 +88,10 @@ class ARGardenViewModel: ObservableObject {
         currentDay += 1
 
         let previousIteration = currentIteration
+        let milestones = plant.growthMilestones
+        guard milestones.count >= 4 else { return }
 
-        if currentDay >= 30 {
+        if currentDay >= milestones[3] {
             state = .blooming
             currentIteration = 4
             timeTask?.cancel()
@@ -98,8 +100,9 @@ class ARGardenViewModel: ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.impactMedium.impactOccurred() }
         } else {
             state = .growing(day: currentDay)
-            if currentDay == 5  { currentIteration = 2 }
-            if currentDay == 14 { currentIteration = 3 }
+            if currentDay == milestones[0] { currentIteration = 1 }
+            if currentDay == milestones[1] { currentIteration = 2 }
+            if currentDay == milestones[1] { currentIteration = 3 }
         }
 
         if currentIteration != previousIteration && currentIteration > 0 {
