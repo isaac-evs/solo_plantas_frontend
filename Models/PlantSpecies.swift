@@ -2,8 +2,6 @@
 //  PlantSpecies.swift
 //  VirtualGarden
 //
-//  Created by Isaac Vazquez Sandoval on 19/02/26.
-//
 
 import Foundation
 import CoreGraphics
@@ -15,12 +13,11 @@ enum GrowthType: String, Codable, Equatable, Sendable {
 }
 
 enum PlantColorCategory: String, Codable, Sendable {
-    case blue
-    case yellow
-    case purple
-    case green
-    case white
-    case orange
+    case blue, yellow, purple, green, white, orange
+}
+
+enum SeasonCategory: String, Codable, Sendable {
+    case spring, summer, fall, winter
 }
 
 struct LSystemDNA: Codable, Equatable, Sendable {
@@ -43,7 +40,9 @@ struct PlantSpecies: Identifiable, Codable, Equatable, Sendable {
     let description: String
     let ecologicalRole: String
     let careInstructions: [String]
-    let season : String
+    let season: String
+    let seasonCategory: SeasonCategory
+    let riddle: String
     let illustrationName: String
     let growthType: GrowthType
     let dominantColor: PlantColorCategory
@@ -53,16 +52,14 @@ struct PlantSpecies: Identifiable, Codable, Equatable, Sendable {
 
 extension String {
     func toRGB() -> (r: CGFloat, g: CGFloat, b: CGFloat) {
-        var hexSanitized = self.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
-
+        var hex = self.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "#", with: "")
         var rgb: UInt64 = 0
-        Scanner(string: hexSanitized).scanHexInt64(&rgb)
-
-        let r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
-        let g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
-        let b = CGFloat(rgb & 0x0000FF) / 255.0
-
-        return (r, g, b)
+        Scanner(string: hex).scanHexInt64(&rgb)
+        return (
+            CGFloat((rgb & 0xFF0000) >> 16) / 255.0,
+            CGFloat((rgb & 0x00FF00) >> 8)  / 255.0,
+            CGFloat(rgb & 0x0000FF)          / 255.0
+        )
     }
 }

@@ -145,9 +145,16 @@ struct PlantHomeView: View {
         }
         .onAppear {
             viewModel.loadGarden(from: appState.plantedDates)
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.78).delay(0.15)) {
-                appeared = true
-            }
+
+              if let focusedID = appState.focusedPlantID,
+                 let index = viewModel.userGarden.firstIndex(where: { $0.plant.id == focusedID }) {
+                  currentIndex = index
+                  appState.focusedPlantID = nil
+              }
+
+              withAnimation(.spring(response: 0.6, dampingFraction: 0.78).delay(0.15)) {
+                  appeared = true
+              }
         }
     }
 

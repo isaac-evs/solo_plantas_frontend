@@ -69,47 +69,53 @@ class ARGardenViewModel: ObservableObject {
     }
 
     private func startTimer() {
-        timeTask?.cancel()
-        timeTask = Task { @MainActor in
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                guard !Task.isCancelled else { break }
-                advanceTime()
+            timeTask?.cancel()
+            
+            // THE FIX: Calculate dynamic speed so the whole sequence takes ~15 seconds
+            let totalDays = plant.growthMilestones.last ?? 30 // Usually index 3
+            let secondsPerDay = 15.0 / Double(totalDays)
+            let nanoPerDay = UInt64(secondsPerDay * 1_000_000_000)
+            
+            timeTask = Task { @MainActor in
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: nanoPerDay)
+                    guard !Task.isCancelled else { break }
+                    advanceTime()
+                }
             }
         }
-    }
 
-    private func advanceTime() {
-        var currentDay = 0
-        if case .growing(let day) = state { currentDay = day }
-        else if state == .seeded { currentDay = 0 }
-        else { return }
+        private func advanceTime() {
+            var currentDay = 0
+            if case .growing(let day) = state { currentDay = day }
+            else if state == .seeded { currentDay = 0 }
+            else { return }
 
-        currentDay += 1
+            currentDay += 1
 
-        let previousIteration = currentIteration
-        let milestones = plant.growthMilestones
-        guard milestones.count >= 4 else { return }
+            let previousIteration = currentIteration
+            let milestones = plant.growthMilestones
+            guard milestones.count >= 4 else { return }
 
-        if currentDay >= milestones[3] {
-            state = .blooming
-            currentIteration = 4
-            timeTask?.cancel()
-            notification.notificationOccurred(.success)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { self.impactHeavy.impactOccurred() }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.impactMedium.impactOccurred() }
-        } else {
-            state = .growing(day: currentDay)
-            if currentDay == milestones[0] { currentIteration = 1 }
-            if currentDay == milestones[1] { currentIteration = 2 }
-            if currentDay == milestones[1] { currentIteration = 3 }
+            if currentDay >= milestones[3] {
+                state = .blooming
+                currentIteration = 4
+                timeTask?.cancel()
+                notification.notificationOccurred(.success)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { self.impactHeavy.impactOccurred() }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.impactMedium.impactOccurred() }
+            } else {
+                state = .growing(day: currentDay)
+                if currentDay == milestones[0] { currentIteration = 1 }
+                if currentDay == milestones[1] { currentIteration = 2 }
+                if currentDay == milestones[2] { currentIteration = 3 } // <-- FIXED typo here (was milestones[1])
+            }
+
+            if currentIteration != previousIteration && currentIteration > 0 {
+                impactMedium.impactOccurred()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.impactLight.impactOccurred() }
+            }
         }
-
-        if currentIteration != previousIteration && currentIteration > 0 {
-            impactMedium.impactOccurred()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.impactLight.impactOccurred() }
-        }
-    }
 
     func cleanUp() {
         timeTask?.cancel()

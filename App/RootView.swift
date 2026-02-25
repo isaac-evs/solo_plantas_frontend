@@ -11,7 +11,7 @@ struct RootView: View {
     @StateObject private var appState = AppState()
     
     var body: some View {
-        Group {
+        ZStack {
             switch appState.currentScreen {
             case .splash:
                 SplashView()
@@ -29,6 +29,8 @@ struct RootView: View {
                 PlantHomeView()
             case .scan:
                 ScanView()
+            case .plantUnlock(let plant):
+                PlantUnlockView(plant: plant)
             }
         }
         .environmentObject(appState)

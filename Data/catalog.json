@@ -11,6 +11,8 @@
       "Requires ample space for a 5-7m crown"
     ],
     "season": "Blooms January–March",
+    "seasonCategory": "spring",
+    "riddle": "I reach for the sky with a golden crown. Seek my bright yellow petals when the dry season comes.",
     "illustrationName": "Card_Primavera",
     "growthType": "tall",
     "dominantColor": "yellow",
@@ -40,6 +42,8 @@
       "Adapts well to clay, sandy, or acidic soils"
     ],
     "season": "Blooms February–March",
+    "seasonCategory": "spring",
+    "riddle": "My flowers look like fluffy white clouds resting on twisted pods. Find a resilient survivor dressed in white.",
     "illustrationName": "Card_Guachumil",
     "growthType": "wide",
     "dominantColor": "white",
@@ -69,6 +73,8 @@
       "Extremely drought tolerant"
     ],
     "season": "Blooms Spring",
+    "seasonCategory": "spring",
+    "riddle": "Deep roots, thorny arms, and pale blooms. Look for the creamy-yellow desert king.",
     "illustrationName": "Card_Mezquite",
     "growthType": "wide",
     "dominantColor": "yellow",
@@ -98,6 +104,8 @@
       "Water when top inch of soil is dry"
     ],
     "season": "Blooms Late Summer–Fall",
+    "seasonCategory": "fall",
+    "riddle": "Hummingbirds love my vibrant spikes. Search for the royal purple stalks standing tall.",
     "illustrationName": "Card_Salvia",
     "growthType": "tall",
     "dominantColor": "purple",
@@ -127,6 +135,8 @@
       "Prune annually to maintain shape"
     ],
     "season": "Blooms Spring–Fall",
+    "seasonCategory": "summer",
+    "riddle": "I am a vibrant shrub shaped like golden trumpets. Find my bright yellow bells ringing in the sun.",
     "illustrationName": "Card_Tronadora",
     "growthType": "balanced",
     "dominantColor": "yellow",
@@ -156,6 +166,8 @@
       "Do not overwater"
     ],
     "season": "Blooms Autumn (Día de Muertos)",
+    "seasonCategory": "fall",
+    "riddle": "I light the way for spirits with my brilliant colors. Seek the vibrant orange of autumn.",
     "illustrationName": "Card_Cempasuchil",
     "growthType": "balanced",
     "dominantColor": "orange",

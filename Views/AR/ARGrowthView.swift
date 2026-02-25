@@ -98,11 +98,11 @@ struct ARGrowthView: View {
                         VStack(spacing: 10) {
                             growthProgressBar(day: day)
                             statusPill(
-                                icon: "arrow.up.leaf.fill",
-                                text: "Day \(day) of 30",
-                                color: t.accent
+                            icon: "arrow.up.leaf.fill",
+                            text: "Day \(day) of \(viewModel.plant.growthMilestones.last ?? 30)",
+                            color: t.accent
                             )
-                        }
+                    }
 
                     case .blooming:
                         bloomingCTA
@@ -198,34 +198,40 @@ struct ARGrowthView: View {
 
     // --- Progress Bar ---
 
-    private func growthProgressBar(day: Int) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("GROWTH")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .tracking(3)
-                    .foregroundColor(.white.opacity(0.5))
-                Spacer()
-                Text("\(Int((Double(day) / 30.0) * 100))%")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .tracking(2)
-                    .foregroundColor(t.accent)
-            }
-            GeometryReader { g in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(.white.opacity(0.12))
-                        .frame(height: 4)
-                    Capsule()
-                        .fill(t.accent)
-                        .frame(width: g.size.width * CGFloat(day) / 30.0, height: 4)
-                        .animation(.spring(response: 0.6), value: day)
+        private func growthProgressBar(day: Int) -> some View {
+            // Fetch the final day (e.g., 70 for Primavera)
+            let totalDays = Double(viewModel.plant.growthMilestones.last ?? 30)
+            let progress = Double(day) / totalDays
+            
+            return VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("GROWTH")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .tracking(3)
+                        .foregroundColor(.white.opacity(0.5))
+                    Spacer()
+                    // Update percentage text
+                    Text("\(Int(progress * 100))%")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .tracking(2)
+                        .foregroundColor(t.accent)
                 }
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(.white.opacity(0.12))
+                            .frame(height: 4)
+                        Capsule()
+                            .fill(t.accent)
+                            // Update bar width
+                            .frame(width: g.size.width * CGFloat(progress), height: 4)
+                            .animation(.spring(response: 0.6), value: day)
+                    }
+                }
+                .frame(height: 4)
             }
-            .frame(height: 4)
+            .padding(.horizontal, 4)
         }
-        .padding(.horizontal, 4)
-    }
 
     // --- Status ---
 
