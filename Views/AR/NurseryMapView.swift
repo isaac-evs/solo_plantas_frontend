@@ -11,85 +11,98 @@ import MapKit
 struct NurseryMapView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = MapViewModel()
+    
+    private let textScale: CGFloat = 1.35
 
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
                 Map(coordinateRegion: $viewModel.region, annotationItems: viewModel.nurseries) { nursery in
                     MapAnnotation(coordinate: nursery.coordinate) {
-                        Button { viewModel.selectNursery(nursery) } label: {
-                            VStack(spacing: 3) {
+                        Button {
+                            viewModel.selectNursery(nursery)
+                        } label: {
+                            VStack(spacing: 4) {
                                 ZStack {
                                     Circle()
                                         .fill(Color.white)
-                                        .frame(width: 36, height: 36)
-                                        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                                        .frame(width: 32, height: 32)
+                                        .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
                                     Image(systemName: "leaf.circle.fill")
                                         .resizable()
                                         .foregroundColor(Color(hex: "#3B7A2E"))
-                                        .frame(width: 26, height: 26)
+                                        .frame(width: 36, height: 36)
                                 }
-                                // Pointer
                                 Triangle()
                                     .fill(Color.white)
-                                    .frame(width: 8, height: 5)
+                                    .frame(width: 12, height: 8)
                                     .shadow(color: .black.opacity(0.1), radius: 1)
                             }
                         }
+                        .accessibilityLabel("Nursery: \(nursery.name)")
+                        .accessibilityHint("Shows nursery details and directions")
                     }
                 }
                 .ignoresSafeArea()
 
                 if let nursery = viewModel.selectedNursery {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 6) {
                                 Text(nursery.name)
-                                    .font(.system(size: 17, weight: .bold, design: .serif))
+                                    .font(.system(size: 22 * textScale, weight: .bold, design: .serif))
                                     .foregroundColor(Color(hex: "#2E1A0E"))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                
                                 Text(nursery.address)
-                                    .font(.system(size: 13, design: .serif))
-                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14 * textScale, design: .serif))
+                                    .foregroundColor(.secondary)
                             }
                             Spacer()
-                            Button { viewModel.clearSelection() } label: {
+                            Button {
+                                withAnimation { viewModel.clearSelection() }
+                            } label: {
                                 Image(systemName: "xmark")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(.gray)
-                                    .padding(8)
-                                    .background(Circle().fill(Color.gray.opacity(0.12)))
+                                    .padding(12)
+                                    .background(Circle().fill(Color.gray.opacity(0.15)))
                             }
+                            .accessibilityLabel("Close details")
                         }
 
                         Text(nursery.description)
-                            .font(.system(size: 13, design: .serif))
-                            .foregroundColor(Color(hex: "#2E1A0E").opacity(0.65))
-                            .lineSpacing(2)
+                            .font(.system(size: 14 * textScale, design: .serif))
+                            .foregroundColor(Color(hex: "#2E1A0E").opacity(0.7))
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         Button {
                             viewModel.openInAppleMaps(nursery: nursery)
                         } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 13, weight: .semibold))
+                            HStack(spacing: 12) {
+                                Image(systemName: "location.fill")
+                                    .font(.system(size: 16, weight: .semibold))
                                 Text("Get Directions")
-                                    .font(.system(size: 15, weight: .semibold, design: .serif))
+                                    .font(.system(size: 17 * textScale, weight: .bold, design: .serif))
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 48)
+                            .frame(height: 64)
                             .background(Color(hex: "#3B7A2E"))
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .shadow(color: Color(hex: "#3B7A2E").opacity(0.3), radius: 8, y: 4)
                         }
+                        .padding(.top, 8)
                     }
-                    .padding(20)
+                    .padding(24)
                     .background(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
                             .fill(Color.white)
-                            .shadow(color: .black.opacity(0.12), radius: 16, x: 0, y: -4)
+                            .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: -5)
                     )
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 32)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -98,15 +111,13 @@ struct NurseryMapView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
-                        .font(.system(size: 15, weight: .semibold, design: .serif))
+                        .font(.system(size: 17 * textScale, weight: .bold, design: .serif))
                 }
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.selectedNursery?.id)
         }
     }
 }
 
-// Map pin
 private struct Triangle: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()

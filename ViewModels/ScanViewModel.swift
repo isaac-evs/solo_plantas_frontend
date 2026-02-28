@@ -1,5 +1,5 @@
 //
-//  CameraViewModel.swift
+//  ScanViewModel.swift
 //  VirtualGarden
 //
 //  Created by Isaac Vazquez Sandoval on 21/02/26.
@@ -61,11 +61,10 @@ class ScanViewModel: ObservableObject {
             
         Task { @MainActor in
              try? await Task.sleep(nanoseconds: 2_000_000_000)
-                
+                 
             self.isScanning = false
             self.classifyPlant(from: colorToAnalyze, unlockedIDs: unlockedIDs)
-                
-            // Trigger the sheet directly
+                 
             self.scanComplete = true
         }
     }
@@ -85,59 +84,47 @@ class ScanViewModel: ObservableObject {
 
         print("Scan: Hue: \(Int(h))° Sat: \(String(format: "%.2f", saturation)) Bright: \(String(format: "%.2f", brightness))")
 
-        // --- White: high brightness, low saturation ---
         if saturation < 0.15 && brightness > 0.75 {
             matchedCategory = .white
             print("Scan: → white (low saturation, high brightness)")
 
-        // --- Black/Dark: very low brightness ---
         } else if brightness < 0.15 {
-            matchedCategory = .green  // dark = no reliable color, fallback
+            matchedCategory = .green
             print("Scan: → dark/black, unreliable")
 
-        // --- Gray: low saturation, mid brightness ---
         } else if saturation < 0.15 {
-            matchedCategory = .white  // closest neutral
+            matchedCategory = .white
             print("Scan: → gray → white")
 
         // --- Hue-based classification ---
         } else {
             switch h {
 
-            // Red/Pink wraps around 0° (330-360 and 0-15)
             case 330...360, 0..<15:
-                // Distinguish pink (high brightness) from red (lower brightness)
                 if brightness > 0.7 && saturation < 0.6 {
-                    matchedCategory = .purple  // pink → closest is purple
+                    matchedCategory = .purple
                 } else {
-                    matchedCategory = .orange  // red → orange family
+                    matchedCategory = .orange
                 }
 
-            // Orange, brown, peach (15-45)
             case 15..<45:
                 matchedCategory = .orange
 
-            // Yellow (45-70) — expanded from your 85 to catch warm yellows
             case 45..<70:
                 matchedCategory = .yellow
 
-            // Yellow-green boundary (70-85) — lean yellow
             case 70..<85:
                 matchedCategory = .yellow
 
-            // Green (85-165)
             case 85..<165:
                 matchedCategory = .green
 
-            // Turquoise/Cyan boundary (165-195) — lean blue
             case 165..<195:
                 matchedCategory = .blue
 
-            // Blue (195-260)
             case 195..<260:
                 matchedCategory = .blue
 
-            // Purple/Violet (260-330)
             case 260..<330:
                 matchedCategory = .purple
 
@@ -148,10 +135,17 @@ class ScanViewModel: ObservableObject {
             print("Scan: Hue: \(Int(h))° → \(matchedCategory?.rawValue ?? "unknown")")
         }
 
-        // Filter catalog
+        // --- Filter catalog ---
         let allPlants = DataService.shared.catalog
+        
         self.matchedPlants = allPlants.filter { plant in
-            plant.dominantColor == self.matchedCategory && !unlockedIDs.contains(plant.id)
+            guard !unlockedIDs.contains(plant.id) else { return false }
+            
+            if self.matchedCategory == .green {
+                return true
+            }
+            
+            return plant.dominantColor == self.matchedCategory
         }
     }
 }

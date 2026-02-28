@@ -22,7 +22,6 @@ class ARGardenViewModel: ObservableObject {
     @Published var state: GrowthState
     @Published var currentIteration: Int = 0
     @Published var showPlantingFlash: Bool = false
-    @Published var showPromiseCard: Bool = false
 
     private var timeTask: Task<Void, Never>?
 
@@ -48,14 +47,11 @@ class ARGardenViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             self.impactMedium.impactOccurred()
         }
-        // Show promise card before planting begins
-        showPromiseCard = true
         state = .placed
     }
 
     func plantSeed() {
         guard state == .placed else { return }
-        showPromiseCard = false
 
         impactLight.impactOccurred()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { self.impactMedium.impactOccurred() }
@@ -67,10 +63,6 @@ class ARGardenViewModel: ObservableObject {
 
         state = .seeded
         startTimer()
-    }
-
-    func dismissPromise() {
-        showPromiseCard = false
     }
 
     private func startTimer() {

@@ -2,6 +2,8 @@
 //  MainTabBar.swift
 //  VirtualGarden
 //
+// Created by Isaac Vazquez Sandoval on 25/02/26.
+//
 
 import SwiftUI
 
@@ -17,14 +19,14 @@ struct MainTabBar: View {
 
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
-    private var pillH:     CGFloat { isIpad ? 72  : 60  }
-    private var pillW:     CGFloat { isIpad ? 440 : 300 }
-    private var iconSize:  CGFloat { isIpad ? 24  : 19  }
-    private var labelSize: CGFloat { isIpad ? 12  : 10  }
+    private var pillH:     CGFloat { isIpad ? 76  : 64  }
+    private var pillW:     CGFloat { isIpad ? 440 : 310 }
+    private var iconSize:  CGFloat { isIpad ? 24  : 20  }
+    private var labelSize: CGFloat { isIpad ? 13  : 11  }
 
     var body: some View {
         ZStack {
-            // Glass body — NO background behind it, fully floating
+            // Body
             Capsule()
                 .fill(
                     reduceTransparency
@@ -32,11 +34,9 @@ struct MainTabBar: View {
                         : AnyShapeStyle(.ultraThinMaterial)
                 )
                 .frame(width: pillW, height: pillH)
-                // Layered shadows give floating depth — no stroke
                 .shadow(color: .black.opacity(0.22), radius: 28, x: 0, y: 10)
                 .shadow(color: .black.opacity(0.08), radius: 8,  x: 0, y: 3)
                 .shadow(color: .black.opacity(0.04), radius: 2,  x: 0, y: 1)
-                // Faint top highlight instead of border
                 .overlay(
                     Capsule()
                         .inset(by: 0.5)
@@ -50,7 +50,7 @@ struct MainTabBar: View {
                         )
                 )
 
-            // Hairline dividers
+            // Dividers
             HStack(spacing: 0) {
                 Spacer()
                 Rectangle()
@@ -74,10 +74,11 @@ struct MainTabBar: View {
             .frame(width: pillW, height: pillH)
         }
         .frame(width: pillW, height: pillH)
-        // Extra clearance so shadow isn't clipped
-        .padding(.bottom, isIpad ? 28 : 20)
+        .padding(.bottom, isIpad ? 12 : 6)
         .scaleEffect(appeared ? 1 : 0.88)
         .opacity(appeared ? 1 : 0)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Main navigation")
         .onAppear {
             withAnimation(
                 reduceMotion
@@ -87,8 +88,7 @@ struct MainTabBar: View {
         }
     }
 
-    // MARK: - Tab button
-
+    // Tab Button
     private func tabButton(tab: AppTab, icon: String, label: String) -> some View {
         let isActive = appState.activeTab == tab
 
@@ -99,41 +99,44 @@ struct MainTabBar: View {
         } label: {
             VStack(spacing: isIpad ? 5 : 4) {
                 Image(systemName: icon)
-                    .font(.system(size: iconSize, weight: isActive ? .bold : .regular))
+                    .font(.system(size: iconSize, weight: isActive ? .semibold : .regular))
                     .foregroundStyle(
                         isActive
                             ? AnyShapeStyle(Color.black.opacity(0.85))
-                            : AnyShapeStyle(Color.black.opacity(0.25))
+                            : AnyShapeStyle(Color.black.opacity(0.35))
                     )
                     .scaleEffect(isActive ? 1.08 : 1.0)
                     .animation(
                         reduceMotion ? .none : .spring(response: 0.28, dampingFraction: 0.6),
                         value: isActive
                     )
+                    .accessibilityHidden(true)
 
                 Text(label)
-                    .font(.system(size: labelSize, weight: isActive ? .bold : .medium, design: .monospaced))
-                    .tracking(0.5)
+                    .font(.system(size: labelSize, weight: isActive ? .bold : .medium))
                     .foregroundStyle(
                         isActive
                             ? AnyShapeStyle(Color.black.opacity(0.85))
-                            : AnyShapeStyle(Color.black.opacity(0.25))
+                            : AnyShapeStyle(Color.black.opacity(0.40))
                     )
                     .animation(
                         reduceMotion ? .none : .easeInOut(duration: 0.18),
                         value: isActive
                     )
+                    .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity)
+            .dynamicTypeSize(...DynamicTypeSize.large)
         }
         .accessibilityLabel(label)
-        .accessibilityAddTraits(isActive ? [.isSelected] : [])
+        .accessibilityAddTraits(isActive ? [.isButton, .isSelected] : [.isButton])
         .accessibilityHint({
             switch tab {
-            case .home:    return "Shows your garden"
+            case .home:    return "Shows your planted garden"
             case .scan:    return "Opens camera to identify native plants"
-            case .catalog: return "Browse all native plants"
+            case .catalog: return "Browse all native plants in the field guide"
             }
         }())
+        .accessibilityRemoveTraits(isActive ? [] : [.isSelected])
     }
 }

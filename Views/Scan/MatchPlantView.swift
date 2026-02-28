@@ -20,22 +20,13 @@ struct MatchPlantView: View {
     var body: some View {
         ZStack {
             bg.ignoresSafeArea()
-
-            // Faint letter watermark
-            Text(matchedPlants.isEmpty ? "?" : String(matchedPlants[0].name.prefix(1)))
-                .font(.system(size: 220, weight: .black, design: .serif))
-                .foregroundColor(green.opacity(0.05))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .offset(x: 30, y: 30)
-                .allowsHitTesting(false)
-
             VStack(spacing: 0) {
 
                 // Handle
                 Capsule()
                     .fill(Color.gray.opacity(0.25))
-                    .frame(width: 36, height: 4)
-                    .padding(.top, 12)
+                    .frame(width: 48, height: 6)
+                    .padding(.top, 16)
                     .padding(.bottom, 24)
 
                 if matchedPlants.isEmpty {
@@ -47,79 +38,87 @@ struct MatchPlantView: View {
         }
     }
 
-    // MARK: - Empty state
-
+    // No Match Found
     private var emptyState: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 24) {
             Spacer()
 
             ZStack {
                 Circle()
                     .fill(Color(hex: "#D8D4CC").opacity(0.4))
-                    .frame(width: 80, height: 80)
+                    .frame(width: 100, height: 100)
                 Image(systemName: "leaf.circle")
-                    .font(.system(size: 36, weight: .light))
+                    .font(.system(size: 48, weight: .light))
                     .foregroundColor(Color(hex: "#A0998F"))
             }
+            .accessibilityHidden(true)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 Text("NO MATCH FOUND")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .tracking(4)
-                    .foregroundColor(green.opacity(0.6))
+                    .foregroundColor(green.opacity(0.8))
+                    .accessibilityAddTraits(.isHeader)
 
                 Text("Color not recognized")
-                    .font(.system(size: 26, weight: .bold, design: .serif))
+                    .font(.system(size: 35, weight: .bold, design: .serif))
                     .foregroundColor(text)
 
                 Text("We couldn't find a native species matching that color in your locked catalog. Try scanning a clearer leaf or flower in good lighting.")
-                    .font(.system(size: 14, design: .serif))
-                    .foregroundColor(text.opacity(0.55))
+                    .font(.system(size: 19, design: .serif))
+                    .foregroundColor(text.opacity(0.65))
                     .multilineTextAlignment(.center)
-                    .lineSpacing(3)
+                    .lineSpacing(4)
                     .padding(.horizontal, 32)
             }
+            .accessibilityElement(children: .combine)
 
             Spacer()
 
             Button { dismiss() } label: {
                 Text("Try Again")
-                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .font(.system(size: 22, weight: .semibold, design: .serif))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 54)
+                    .frame(height: 64)
                     .background(green)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, 32)
             .padding(.bottom, 40)
+            .accessibilityLabel("Try scanning again")
         }
     }
 
-    // MARK: - Success state
-
+    // Match Found
     private var successState: some View {
         VStack(spacing: 0) {
 
             // Header
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Text("MATCH FOUND")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .tracking(4)
-                    .foregroundColor(green.opacity(0.7))
+                    .foregroundColor(green.opacity(0.8))
+                    .accessibilityAddTraits(.isHeader)
+                
                 Text("Which plant are you growing?")
-                    .font(.system(size: 26, weight: .bold, design: .serif))
+                    .font(.system(size: 35, weight: .bold, design: .serif))
                     .foregroundColor(text)
+                    .multilineTextAlignment(.center)
+                
                 Text("Select the one that matches your plant")
-                    .font(.system(size: 13, design: .serif))
-                    .foregroundColor(text.opacity(0.5))
+                    .font(.system(size: 18, design: .serif))
+                    .foregroundColor(text.opacity(0.6))
+                    .multilineTextAlignment(.center)
             }
-            .padding(.horizontal, 28)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 32)
+            .padding(.bottom, 32)
+            .accessibilityElement(children: .combine)
 
             // Plant list
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     ForEach(matchedPlants) { plant in
                         let t = seedTheme(for: plant.id)
                         Button {
@@ -127,71 +126,70 @@ struct MatchPlantView: View {
                             dismiss()
                             appState.currentScreen = .plantUnlock(plant)
                         } label: {
-                            HStack(spacing: 16) {
+                            HStack(spacing: 20) {
                                 // Illustration
                                 ZStack {
                                     Circle()
                                         .fill(t.patternColor.opacity(0.2))
-                                        .frame(width: 56, height: 56)
+                                        .frame(width: 72, height: 72)
                                     Image(plant.illustrationName)
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 42, height: 42)
+                                        .frame(width: 54, height: 54)
                                 }
+                                .accessibilityHidden(true)
 
                                 // Info
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(plant.name)
-                                        .font(.system(size: 17, weight: .bold, design: .serif))
+                                        .font(.system(size: 24, weight: .bold, design: .serif))
                                         .foregroundColor(t.textColor)
-                                    Text(plant.scientificName)
-                                        .font(.system(size: 12, design: .serif))
-                                        .italic()
-                                        .foregroundColor(t.textColor.opacity(0.5))
-                                    Text(plant.season)
-                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                        .tracking(2)
-                                        .foregroundColor(t.accent.opacity(0.7))
+                                    
                                 }
 
                                 Spacer()
 
-                                // Add indicator
+                                // Indicator
                                 ZStack {
                                     Circle()
                                         .fill(t.accent.opacity(0.12))
-                                        .frame(width: 36, height: 36)
+                                        .frame(width: 48, height: 48)
                                     Image(systemName: "plus")
-                                        .font(.system(size: 14, weight: .semibold))
+                                        .font(.system(size: 20, weight: .semibold))
                                         .foregroundColor(t.accent)
                                 }
+                                .accessibilityHidden(true)
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 14)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 18)
                             .background(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
                                     .fill(t.background)
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .strokeBorder(t.accent.opacity(0.18), lineWidth: 1)
+                                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                            .strokeBorder(t.accent.opacity(0.18), lineWidth: 1.5)
                                     )
-                                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                                    .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
                             )
                         }
+                        .accessibilityLabel("Select \(plant.name)")
+                        .accessibilityHint("Adds this plant to your garden")
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 12)
+                .padding(.bottom, 24)
             }
 
             // Cancel
             Button { dismiss() } label: {
                 Text("Cancel")
-                    .font(.system(size: 14, design: .serif))
-                    .foregroundColor(text.opacity(0.4))
-                    .padding(.vertical, 16)
+                    .font(.system(size: 19, weight: .medium, design: .serif))
+                
+                    .foregroundColor(text.opacity(0.5))
+                    .padding(.vertical, 20)
             }
-            .padding(.bottom, 16)
+            .padding(.bottom, 20)
+            .accessibilityLabel("Cancel selection")
         }
     }
 }

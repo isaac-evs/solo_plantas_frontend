@@ -46,7 +46,7 @@ class AppState: ObservableObject {
     init() {
         
         // --------- TESTING ONLY -------- //
-        UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
+        // UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
         // ------------------------------- //
         self.plantedDates = PersistenceService.shared.loadGarden()
     }

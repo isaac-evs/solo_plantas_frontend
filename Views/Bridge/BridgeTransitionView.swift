@@ -4,10 +4,6 @@
 //
 //  Created by Isaac Vazquez Sandoval on 21/02/26.
 //
-//
-//  BridgeTransitionView.swift
-//  VirtualGarden
-//
 
 import SwiftUI
 
@@ -105,7 +101,7 @@ struct BridgeTransitionView: View {
                         
                         Spacer().frame(height: isIpad ? 80 : 50)
 
-                        // -
+                        // ---- Button ---
                         Button {
                             appState.currentScreen = .plantHome
                         } label: {

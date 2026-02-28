@@ -13,7 +13,6 @@ struct RootView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
 
-            // Full-bleed screen content — never padded
             ZStack {
                 switch appState.currentScreen {
                 case .splash:                 SplashView()
@@ -29,7 +28,6 @@ struct RootView: View {
             }
             .ignoresSafeArea()
 
-            // Tab bar floats over content — no background, no padding beneath it
             if appState.showsTabBar {
                 MainTabBar()
                     .transition(

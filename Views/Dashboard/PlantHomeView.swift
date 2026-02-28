@@ -2,6 +2,8 @@
 //  PlantHomeView.swift
 //  VirtualGarden
 //
+// Created by Isaac Vazquez Sandoval on 21/02/26.
+//
 
 import SwiftUI
 
@@ -30,33 +32,35 @@ struct PlantHomeView: View {
 
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
-    private var currentTheme: SeedPacketTheme {
-        guard !viewModel.userGarden.isEmpty else { return seedTheme(for: "") }
-        return seedTheme(for: viewModel.userGarden[min(currentIndex, viewModel.userGarden.count - 1)].plant.id)
-    }
+    private let homeBackground = Color(hex: "#F5F0E8")
+    private let homeTextPrimary = Color(hex: "#1A2E1A")
+    private let homeAccent = Color(hex: "#4A7C59")
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                currentTheme.background
+                homeBackground
                     .ignoresSafeArea()
-                    .animation(reduceMotion ? .none : .easeInOut(duration: 0.5), value: currentIndex)
                     .opacity(backgroundOpacity)
 
-                currentTheme.accent
-                    .ignoresSafeArea()
-                    .opacity(overlayOpacity)
-                    .accessibilityHidden(true)
+                if !viewModel.userGarden.isEmpty {
+                    seedTheme(for: viewModel.userGarden[min(currentIndex, viewModel.userGarden.count - 1)].plant.id).accent
+                        .ignoresSafeArea()
+                        .opacity(overlayOpacity)
+                        .accessibilityHidden(true)
+                }
 
                 if viewModel.userGarden.isEmpty {
                     emptyState
                 } else {
                     VStack(spacing: 0) {
-
+                        
                         topBar
                             .opacity(uiOpacity)
+                            
+                        Spacer()
 
-                        // Card carousel — taller now that name/button live below card
+                        // Card carousel
                         ZStack {
                             ForEach(Array(viewModel.userGarden.enumerated()), id: \.element.id) { index, status in
                                 if abs(index - currentIndex) <= 1 {
@@ -64,7 +68,7 @@ struct PlantHomeView: View {
                                 }
                             }
                         }
-                        .frame(width: geo.size.width, height: geo.size.height * 0.82)
+                        .frame(width: geo.size.width, height: isIpad ? geo.size.height * 0.64 : geo.size.height * 0.60)
                         .gesture(swipeGesture(geo: geo))
                         .accessibilityElement(children: .contain)
                         .accessibilityAction(named: "Previous plant") {
@@ -78,14 +82,16 @@ struct PlantHomeView: View {
                             withAnimation { currentIndex += 1 }
                         }
 
+                        Spacer()
+
                         // Dot indicators
                         if viewModel.userGarden.count > 1 {
                             HStack(spacing: isIpad ? 12 : 8) {
                                 ForEach(0..<viewModel.userGarden.count, id: \.self) { i in
                                     Capsule()
                                         .fill(i == currentIndex
-                                              ? currentTheme.accent
-                                              : currentTheme.accent.opacity(0.25))
+                                              ? homeAccent
+                                              : homeAccent.opacity(0.25))
                                         .frame(
                                             width:  i == currentIndex ? (isIpad ? 28 : 20) : (isIpad ? 8 : 6),
                                             height: isIpad ? 6 : 5
@@ -96,13 +102,12 @@ struct PlantHomeView: View {
                                         )
                                 }
                             }
-                            .padding(.top, isIpad ? 14 : 10)
                             .opacity(uiOpacity)
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel("Plant \(currentIndex + 1) of \(viewModel.userGarden.count)")
                         }
-
-                        Spacer()
+                        
+                        Spacer().frame(height: isIpad ? 100 : 80)
                     }
                 }
             }
@@ -124,43 +129,31 @@ struct PlantHomeView: View {
         }
     }
 
-    // MARK: - Top Bar
-
+    // Top Bar
     private var topBar: some View {
         HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: isIpad ? 5 : 3) {
-                Text("MY GARDEN")
-                    .font(.system(size: isIpad ? 14 : 10, weight: .bold, design: .monospaced))
-                    .tracking(4)
-                    .foregroundColor(currentTheme.accent.opacity(0.7))
-                    .animation(reduceMotion ? .none : .easeInOut(duration: 0.3), value: currentIndex)
-                    .accessibilityAddTraits(.isHeader)
+            Text("My Garden")
+                .font(.system(size: isIpad ? 44 : 34, weight: .bold, design: .serif))
+                .foregroundColor(homeTextPrimary)
+                .accessibilityAddTraits(.isHeader)
 
-                Text("Growing with you")
-                    .font(.system(size: isIpad ? 38 : 26, weight: .bold, design: .serif))
-                    .foregroundColor(currentTheme.textColor)
-                    .animation(reduceMotion ? .none : .easeInOut(duration: 0.3), value: currentIndex)
-            }
             Spacer()
 
             ZStack {
                 Circle()
-                    .fill(currentTheme.accent.opacity(0.12))
-                    .frame(width: isIpad ? 60 : 44, height: isIpad ? 60 : 44)
+                    .fill(homeAccent.opacity(0.12))
+                    .frame(width: isIpad ? 54 : 44, height: isIpad ? 54 : 44)
                 Text("\(viewModel.userGarden.count)")
-                    .font(.system(size: isIpad ? 24 : 17, weight: .bold, design: .monospaced))
-                    .foregroundColor(currentTheme.accent)
+                    .font(.system(size: isIpad ? 22 : 18, weight: .bold, design: .monospaced))
+                    .foregroundColor(homeAccent)
             }
-            .animation(reduceMotion ? .none : .easeInOut(duration: 0.3), value: currentIndex)
             .accessibilityLabel("\(viewModel.userGarden.count) plants in your garden")
         }
         .padding(.horizontal, isIpad ? 40 : 28)
-        .padding(.top, isIpad ? 56 : 52)
-        .padding(.bottom, isIpad ? 12 : 8)
+        .padding(.top, isIpad ? 50 : 62)
     }
 
-    // MARK: - Transition
-
+    // Transition
     private func triggerTransition(theme: SeedPacketTheme, completion: @escaping () -> Void) {
         isTransitioning = true
         feedbackHeavy.impactOccurred()
@@ -191,29 +184,27 @@ struct PlantHomeView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { completion() }
     }
 
-    // MARK: - Empty State
-
+    // Edge Case
     private var emptyState: some View {
         VStack(spacing: isIpad ? 22 : 16) {
             Spacer()
             Image(systemName: "leaf")
                 .font(.system(size: isIpad ? 72 : 52, weight: .thin))
-                .foregroundColor(currentTheme.accent.opacity(0.35))
+                .foregroundColor(homeAccent.opacity(0.35))
                 .accessibilityHidden(true)
             Text("Your garden is empty")
                 .font(.system(size: isIpad ? 32 : 22, weight: .bold, design: .serif))
-                .foregroundColor(currentTheme.textColor.opacity(0.6))
+                .foregroundColor(homeTextPrimary.opacity(0.6))
                 .accessibilityAddTraits(.isHeader)
             Text("Plant your first seed to begin.")
-                .font(.system(size: isIpad ? 20 : 14, design: .serif))
-                .foregroundColor(currentTheme.textColor.opacity(0.35))
+                .font(.system(size: isIpad ? 20 : 16, design: .serif))
+                .foregroundColor(homeTextPrimary.opacity(0.45))
             Spacer()
         }
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: - Helpers
-
+    // Helper Functions
     private var cardAnimation: Animation? {
         (isTransitioning || reduceMotion) ? .none : .interactiveSpring(response: 0.4, dampingFraction: 0.82)
     }
@@ -223,7 +214,7 @@ struct PlantHomeView: View {
     }
 
     private func offsetFor(index: Int, geo: GeometryProxy) -> CGFloat {
-        CGFloat(index - currentIndex) * geo.size.width * 0.88 + dragOffset
+        CGFloat(index - currentIndex) * geo.size.width * 0.82 + dragOffset
     }
 
     @ViewBuilder
@@ -238,9 +229,12 @@ struct PlantHomeView: View {
                 }
             }
         )
+        .padding(.horizontal, isIpad ? 60 : 24)
+        .frame(maxWidth: isIpad ? 700 : 390)
+        
         .scaleEffect(cardScaleFor(index: index))
         .offset(x: offsetFor(index: index, geo: geo))
-        .opacity(index == currentIndex ? cardOpacity : 0.35)
+        .opacity(index == currentIndex ? cardOpacity : 0.35 * uiOpacity)
         .zIndex(index == currentIndex ? 1 : 0)
         .animation(cardAnimation, value: currentIndex)
         .animation(cardAnimation, value: dragOffset)

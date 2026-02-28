@@ -80,18 +80,18 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
         if self.session.canAddInput(input) {
             self.session.addInput(input)
         }
-                
+                 
         // Output config
         self.output.setSampleBufferDelegate(self, queue: self.sessionQueue)
         self.output.alwaysDiscardsLateVideoFrames = true
         self.output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
-                
+                 
         if self.session.canAddOutput(self.output) {
             self.session.addOutput(self.output)
         }
-                
+                 
         self.session.commitConfiguration()
-       
+        
     }
 }
 
@@ -119,8 +119,8 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         
-        // 20 x 20 sampling center square
-        let sampleSize = 20
+        // Sampling area: 40x40
+        let sampleSize = 40
         let startX = (width - sampleSize) / 2
         let startY = (height - sampleSize) / 2
         
@@ -164,4 +164,3 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         }
     }
 }
-

@@ -34,18 +34,16 @@ enum PlantStage: String, CaseIterable {
         }
     }
 
-    // Maps stage to a planted date in the past so the growth math
-    // in PlantHomeViewModel produces the right iteration immediately
     func simulatedPlantedDate(for plant: PlantSpecies) -> Date {
         guard plant.growthMilestones.count >= 4 else { return Date() }
         let m = plant.growthMilestones
         let daysAgo: Int
         switch self {
         case .seed:     daysAgo = 0
-        case .sprout:   daysAgo = m[0]           // just hit first milestone
-        case .small:    daysAgo = m[1]           // just hit second milestone
-        case .juvenile: daysAgo = m[2]           // just hit third milestone
-        case .grown:    daysAgo = m[3]           // fully matured
+        case .sprout:   daysAgo = m[0]
+        case .small:    daysAgo = m[1]
+        case .juvenile: daysAgo = m[2]
+        case .grown:    daysAgo = m[3]
         }
         return Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
     }
@@ -65,7 +63,6 @@ class PlantUnlockViewModel: ObservableObject {
         isConfirming = true
         let backdatedDate = selectedStage.simulatedPlantedDate(for: plant)
 
-        // Override the planted date with the back-calculated one
         appState.plantedDates[plant.id] = backdatedDate
         appState.focusedPlantID = plant.id
     }

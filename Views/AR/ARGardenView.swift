@@ -12,8 +12,7 @@ struct ARGardenView: View {
     @StateObject private var viewModel: ARGardenViewModel
 
     @State private var showDetail = false
-    @State private var hasOpenedDetail = false
-    @State private var chevronPulse = false
+    @State private var showNurseryMap = false
 
     private var t: SeedPacketTheme { seedTheme(for: viewModel.plant.id) }
 
@@ -34,115 +33,114 @@ struct ARGardenView: View {
                         appState.currentScreen = .plantHome
                     } label: {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(width: 40, height: 40)
+                            .frame(width: 60, height: 60)
                             .background(.ultraThinMaterial, in: Circle())
                     }
+                    .accessibilityLabel("Go back")
 
                     Spacer()
 
                     if viewModel.state != .scanning {
                         Text(stageLabel())
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .tracking(3)
+                            .font(.system(size: 19, weight: .bold, design: .serif))
+                            .tracking(2)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, 22)
+                            .padding(.vertical, 12)
                             .background(.ultraThinMaterial, in: Capsule())
                             .transition(.opacity.combined(with: .scale))
                     }
 
                     Spacer()
-
-                    // Balance spacer
-                    Color.clear.frame(width: 40, height: 40)
+                    Color.clear.frame(width: 60, height: 60)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 56)
 
-                // Scanning instruction
-                if viewModel.state == .scanning {
-                    Spacer()
-                    VStack(spacing: 10) {
-                        Image(systemName: "scope")
-                            .font(.system(size: 20, weight: .light))
-                            .foregroundColor(.white)
-                        Text("Point at a flat surface and tap to place your plant")
-                            .font(.system(size: 14, design: .serif))
-                            .foregroundColor(.white.opacity(0.9))
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.vertical, 18)
-                    .padding(.horizontal, 28)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .padding(.horizontal, 40)
-                }
-
                 Spacer()
 
-                // --- Bottom row: chevron hint (left) + detail button (right) ---
-                if viewModel.state != .scanning {
-                    HStack(alignment: .bottom) {
-
-                        // One-time chevron hint — disappears after first open
-                        if !hasOpenedDetail {
-                            VStack(spacing: 3) {
-                                Image(systemName: "chevron.up")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(.white.opacity(0.7))
-                                    .offset(y: chevronPulse ? -3 : 0)
-                                    .animation(
-                                        .easeInOut(duration: 0.9)
-                                        .repeatForever(autoreverses: true),
-                                        value: chevronPulse
-                                    )
-                                Text("Details")
-                                    .font(.system(size: 11, weight: .medium, design: .serif))
-                                    .foregroundColor(.white.opacity(0.5))
-                            }
-                            .transition(.opacity)
-                            .onAppear { chevronPulse = true }
-                        } else {
-                            Color.clear.frame(width: 40)
-                        }
-
-                        Spacer()
-
-                        // Detail button — bottom right
-                        Button {
-                            hasOpenedDetail = true
-                            showDetail = true
-                        } label: {
-                            Image(systemName: "leaf.fill")
-                                .font(.system(size: 16, weight: .medium))
+                // --- Instructions ---
+                VStack(spacing: 24) {
+                    
+                    if viewModel.state == .scanning {
+                        VStack(spacing: 16) {
+                            Image(systemName: "scope")
+                                .font(.system(size: 42, weight: .light))
                                 .foregroundColor(.white)
-                                .frame(width: 48, height: 48)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .overlay(
-                                    Circle()
-                                        .strokeBorder(t.accent.opacity(0.5), lineWidth: 1.5)
-                                )
+                                .accessibilityHidden(true)
+                            
+                            Text("Point at a flat surface and tap to place your plant")
+                                .font(.system(size: 24, weight: .medium, design: .serif))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
                         }
+                        .padding(.vertical, 32)
+                        .padding(.horizontal, 34)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .padding(.horizontal, 24)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 44)
-                    .animation(.easeInOut(duration: 0.4), value: hasOpenedDetail)
+
+                    // Buttons
+                    if viewModel.state != .scanning {
+                        HStack(alignment: .bottom) {
+                            Spacer()
+                            
+                            VStack(spacing: 20) {
+                                // Map Button
+                                Button {
+                                    showNurseryMap = true
+                                } label: {
+                                    Image(systemName: "map.fill")
+                                        .font(.system(size: 28, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .frame(width: 76, height: 76)
+                                        .background(.ultraThinMaterial, in: Circle())
+                                        .overlay(Circle().strokeBorder(.white.opacity(0.2), lineWidth: 1))
+                                }
+                                .accessibilityLabel("Find nearby nurseries")
+
+                                // Detail Button
+                                Button {
+                                    showDetail = true
+                                } label: {
+                                    Image(systemName: "leaf.fill")
+                                        .font(.system(size: 28, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .frame(width: 76, height: 76)
+                                        .background(.ultraThinMaterial, in: Circle())
+                                }
+                                .accessibilityLabel("Plant information")
+                            }
+                        }
+                        .padding(.horizontal, 30)
+                    }
                 }
+                .padding(.bottom, 60)
             }
-            .animation(.easeInOut(duration: 0.3), value: viewModel.state)
+        }
+        // Sheet for Plant Details
+        .sheet(isPresented: $showDetail) {
+            PlantDetailView(plant: viewModel.plant)
+                .presentationDetents([.medium, .large])
+        }
+        // Sheet for the Nursery Map
+        .sheet(isPresented: $showNurseryMap) {
+            NurseryMapView()
         }
         .onChange(of: viewModel.state) { newState in
             if newState == .placed { syncToRealWorldData() }
         }
-        .sheet(isPresented: $showDetail) {
-            PlantDetailView(plant: viewModel.plant)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-        }
     }
 
-    // MARK: - Sync
+    private func stageLabel() -> String {
+        switch viewModel.state {
+        case .blooming:         return "MATURED"
+        case .growing(let day): return "DAY \(day)"
+        default:                return ""
+        }
+    }
 
     private func syncToRealWorldData() {
         guard let plantedDate = appState.plantedDates[viewModel.plant.id] else { return }
@@ -159,13 +157,5 @@ struct ARGardenView: View {
 
         viewModel.currentIteration = iteration
         viewModel.state = iteration == 4 ? .blooming : .growing(day: elapsedDays)
-    }
-
-    private func stageLabel() -> String {
-        switch viewModel.state {
-        case .blooming:         return "FULLY MATURED"
-        case .growing(let day): return "DAY \(day)"
-        default:                return ""
-        }
     }
 }

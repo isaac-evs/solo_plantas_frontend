@@ -61,7 +61,6 @@ struct SeedPacketCard: View {
                 .fill(theme.background)
                 .shadow(color: .black.opacity(0.12), radius: 24, x: 0, y: 12)
 
-            // Dot scatter — hidden from VoiceOver, purely decorative
             GeometryReader { _ in
                 let xs: [CGFloat] = [30,110,200,60,150,250,40,130,220,80,170,290,20,100,190,70,160,240]
                 let ys: [CGFloat] = [40,80,30,140,100,60,200,160,120,300,250,90,350,310,270,400,370,330]
@@ -78,7 +77,7 @@ struct SeedPacketCard: View {
 
             VStack(alignment: .leading, spacing: 0) {
 
-                // Season header — only line in the top band
+                // Season header
                 Text(plant.season)
                     .font(.system(size: 11 * s, weight: .semibold, design: .monospaced))
                     .tracking(2)
@@ -119,7 +118,7 @@ struct SeedPacketCard: View {
                     .padding(.horizontal, 28)
                     .accessibilityHidden(true)
 
-                // Plant name + scientific name
+                // Plant name
                 VStack(alignment: .leading, spacing: 6) {
                     Text(plant.name)
                         .font(.system(size: 36 * s, weight: .bold, design: .serif))
@@ -152,8 +151,6 @@ struct SeedPacketCard: View {
                 Spacer()
             }
         }
-        // SHORTER CARD UPDATE: No longer sets height inside the card component itself.
-        // It relies entirely on the `.frame` applied in the Parent View (PlantSelectionView) for better scaling control.
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(plant.name), \(plant.scientificName). \(plant.season). \(plant.ecologicalRole)")
         .accessibilityHint("Swipe left or right to browse plants. Double-tap Plant this seed to select.")
