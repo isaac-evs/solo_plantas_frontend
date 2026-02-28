@@ -1,0 +1,139 @@
+//
+//  MainTabBar.swift
+//  VirtualGarden
+//
+
+import SwiftUI
+
+struct MainTabBar: View {
+    @EnvironmentObject var appState: AppState
+
+    @State private var appeared = false
+
+    @Environment(\.accessibilityReduceMotion)       private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private let feedbackMedium = UIImpactFeedbackGenerator(style: .medium)
+
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
+    private var pillH:     CGFloat { isIpad ? 72  : 60  }
+    private var pillW:     CGFloat { isIpad ? 440 : 300 }
+    private var iconSize:  CGFloat { isIpad ? 24  : 19  }
+    private var labelSize: CGFloat { isIpad ? 12  : 10  }
+
+    var body: some View {
+        ZStack {
+            // Glass body — NO background behind it, fully floating
+            Capsule()
+                .fill(
+                    reduceTransparency
+                        ? AnyShapeStyle(Color(hex: "#F8F5EF").opacity(0.96))
+                        : AnyShapeStyle(.ultraThinMaterial)
+                )
+                .frame(width: pillW, height: pillH)
+                // Layered shadows give floating depth — no stroke
+                .shadow(color: .black.opacity(0.22), radius: 28, x: 0, y: 10)
+                .shadow(color: .black.opacity(0.08), radius: 8,  x: 0, y: 3)
+                .shadow(color: .black.opacity(0.04), radius: 2,  x: 0, y: 1)
+                // Faint top highlight instead of border
+                .overlay(
+                    Capsule()
+                        .inset(by: 0.5)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.55), Color.clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 0.8
+                        )
+                )
+
+            // Hairline dividers
+            HStack(spacing: 0) {
+                Spacer()
+                Rectangle()
+                    .fill(Color.black.opacity(0.07))
+                    .frame(width: 0.75, height: pillH * 0.42)
+                Spacer()
+                Rectangle()
+                    .fill(Color.black.opacity(0.07))
+                    .frame(width: 0.75, height: pillH * 0.42)
+                Spacer()
+            }
+            .frame(width: pillW)
+            .accessibilityHidden(true)
+
+            // Buttons
+            HStack(spacing: 0) {
+                tabButton(tab: .home,    icon: "leaf.fill",         label: "Garden")
+                tabButton(tab: .scan,    icon: "camera.viewfinder", label: "Scan")
+                tabButton(tab: .catalog, icon: "book.closed.fill",  label: "Field Guide")
+            }
+            .frame(width: pillW, height: pillH)
+        }
+        .frame(width: pillW, height: pillH)
+        // Extra clearance so shadow isn't clipped
+        .padding(.bottom, isIpad ? 28 : 20)
+        .scaleEffect(appeared ? 1 : 0.88)
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(
+                reduceMotion
+                    ? .none
+                    : .spring(response: 0.45, dampingFraction: 0.72).delay(0.15)
+            ) { appeared = true }
+        }
+    }
+
+    // MARK: - Tab button
+
+    private func tabButton(tab: AppTab, icon: String, label: String) -> some View {
+        let isActive = appState.activeTab == tab
+
+        return Button {
+            guard !isActive else { return }
+            feedbackMedium.impactOccurred()
+            appState.switchTab(tab)
+        } label: {
+            VStack(spacing: isIpad ? 5 : 4) {
+                Image(systemName: icon)
+                    .font(.system(size: iconSize, weight: isActive ? .bold : .regular))
+                    .foregroundStyle(
+                        isActive
+                            ? AnyShapeStyle(Color.black.opacity(0.85))
+                            : AnyShapeStyle(Color.black.opacity(0.25))
+                    )
+                    .scaleEffect(isActive ? 1.08 : 1.0)
+                    .animation(
+                        reduceMotion ? .none : .spring(response: 0.28, dampingFraction: 0.6),
+                        value: isActive
+                    )
+
+                Text(label)
+                    .font(.system(size: labelSize, weight: isActive ? .bold : .medium, design: .monospaced))
+                    .tracking(0.5)
+                    .foregroundStyle(
+                        isActive
+                            ? AnyShapeStyle(Color.black.opacity(0.85))
+                            : AnyShapeStyle(Color.black.opacity(0.25))
+                    )
+                    .animation(
+                        reduceMotion ? .none : .easeInOut(duration: 0.18),
+                        value: isActive
+                    )
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(isActive ? [.isSelected] : [])
+        .accessibilityHint({
+            switch tab {
+            case .home:    return "Shows your garden"
+            case .scan:    return "Opens camera to identify native plants"
+            case .catalog: return "Browse all native plants"
+            }
+        }())
+    }
+}

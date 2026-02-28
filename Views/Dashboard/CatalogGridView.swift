@@ -2,8 +2,6 @@
 //  CatalogGridView.swift
 //  VirtualGarden
 //
-//  Created by Isaac Vazquez Sandoval on 21/02/26.
-//
 
 import SwiftUI
 
@@ -14,14 +12,21 @@ struct CatalogGridView: View {
     @State private var riddlePlant: PlantSpecies? = nil
     @State private var showRiddle = false
 
-    let columns = [
-        GridItem(.flexible(), spacing: 14),
-        GridItem(.flexible(), spacing: 14)
-    ]
+    @Environment(\.accessibilityReduceMotion)       private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    private var s: CGFloat { isIpad ? 1.4 : 1.0 }
 
     private let green = Color(hex: "#4A7C59")
     private let text  = Color(hex: "#1A2E1A")
     private let bg    = Color(hex: "#F5F0E8")
+
+    var columns: [GridItem] {
+        isIpad
+            ? [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)]
+            : [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+    }
 
     var body: some View {
         ZStack {
@@ -30,55 +35,57 @@ struct CatalogGridView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
 
-                    // --- Header ---
-                    VStack(alignment: .leading, spacing: 4) {
+                    // Header
+                    VStack(alignment: .leading, spacing: 6) {
                         Text("FIELD GUIDE")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .font(.system(size: isIpad ? 14 : 10, weight: .bold, design: .monospaced))
                             .tracking(5)
                             .foregroundColor(green.opacity(0.7))
+                            .accessibilityAddTraits(.isHeader)
 
                         HStack(alignment: .firstTextBaseline) {
                             Text("Native Plants")
-                                .font(.system(size: 34, weight: .bold, design: .serif))
+                                .font(.system(size: isIpad ? 48 : 34, weight: .bold, design: .serif))
                                 .foregroundColor(text)
                             Spacer()
                             Text("\(appState.plantedDates.count)/\(viewModel.totalCatalogSize)")
-                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .font(.system(size: isIpad ? 18 : 13, weight: .bold, design: .monospaced))
                                 .foregroundColor(green)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
+                                .padding(.horizontal, isIpad ? 16 : 12)
+                                .padding(.vertical, isIpad ? 8 : 6)
                                 .background(Capsule().fill(green.opacity(0.10)))
+                                .accessibilityLabel("\(appState.plantedDates.count) of \(viewModel.totalCatalogSize) plants discovered")
                         }
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 56)
-                    .padding(.bottom, 20)
+                    .padding(.horizontal, isIpad ? 36 : 24)
+                    .padding(.top, isIpad ? 64 : 56)
+                    .padding(.bottom, isIpad ? 28 : 20)
 
-                    // --- Scan banner ---
+                    // Scan banner
                     scanBanner
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 20)
+                        .padding(.horizontal, isIpad ? 36 : 24)
+                        .padding(.bottom, isIpad ? 28 : 20)
 
-                    // --- Available this season ---
+                    // Season banner
                     if !viewModel.availableThisSeason.isEmpty {
                         seasonBanner
-                            .padding(.horizontal, 24)
-                            .padding(.bottom, 20)
+                            .padding(.horizontal, isIpad ? 36 : 24)
+                            .padding(.bottom, isIpad ? 28 : 20)
                     }
 
-                    // --- Season filter chips ---
+                    // Season filter chips
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: isIpad ? 12 : 8) {
                             ForEach(CatalogViewModel.SeasonFilter.allCases, id: \.self) { filter in
                                 filterChip(filter)
                             }
                         }
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, isIpad ? 36 : 24)
                     }
-                    .padding(.bottom, 20)
+                    .padding(.bottom, isIpad ? 28 : 20)
 
-                    // --- Grid ---
-                    LazyVGrid(columns: columns, spacing: 14) {
+                    // Grid
+                    LazyVGrid(columns: columns, spacing: isIpad ? 20 : 14) {
                         ForEach(viewModel.filteredPlants) { plant in
                             let unlocked = appState.plantedDates[plant.id] != nil
                             CatalogCell(plant: plant, isUnlocked: unlocked) {
@@ -86,12 +93,12 @@ struct CatalogGridView: View {
                                     appState.navigateToPlanHomeCard(plantID: plant.id)
                                 } else {
                                     riddlePlant = plant
-                                    showRiddle = true
+                                    showRiddle  = true
                                 }
                             }
                         }
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, isIpad ? 36 : 24)
                     .padding(.bottom, 40)
                 }
             }
@@ -99,113 +106,117 @@ struct CatalogGridView: View {
         .sheet(isPresented: $showRiddle) {
             if let plant = riddlePlant {
                 RiddleSheet(plant: plant)
-                    .presentationDetents([.height(340)])
+                    .presentationDetents([.height(isIpad ? 420 : 340)])
                     .presentationDragIndicator(.visible)
             }
         }
+        .accessibilityLabel("Field Guide. Browse and discover native plants.")
     }
 
     // MARK: - Scan Banner
 
     private var scanBanner: some View {
-        Button { appState.currentScreen = .scan } label: {
-            HStack(spacing: 14) {
+        Button { appState.switchTab(.scan) } label: {
+            HStack(spacing: isIpad ? 18 : 14) {
                 ZStack {
-                    Circle().fill(green).frame(width: 40, height: 40)
+                    Circle().fill(green).frame(width: isIpad ? 52 : 40, height: isIpad ? 52 : 40)
                     Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(size: isIpad ? 22 : 17, weight: .medium))
                         .foregroundColor(.white)
                 }
-                VStack(alignment: .leading, spacing: 2) {
+                .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text("Already growing a native plant?")
-                        .font(.system(size: 14, weight: .semibold, design: .serif))
+                        .font(.system(size: isIpad ? 19 : 14, weight: .semibold, design: .serif))
                         .foregroundColor(text)
                     Text("Scan it to add it to your garden")
-                        .font(.system(size: 12, design: .serif))
+                        .font(.system(size: isIpad ? 15 : 12, design: .serif))
                         .foregroundColor(text.opacity(0.5))
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: isIpad ? 16 : 12, weight: .semibold))
                     .foregroundColor(green.opacity(0.5))
+                    .accessibilityHidden(true)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
+            .padding(.horizontal, isIpad ? 22 : 18)
+            .padding(.vertical, isIpad ? 18 : 14)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.8))
+                RoundedRectangle(cornerRadius: isIpad ? 20 : 16, style: .continuous)
+                    .fill(reduceTransparency ? Color.white : Color.white.opacity(0.8))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: isIpad ? 20 : 16, style: .continuous)
                             .strokeBorder(green.opacity(0.18), lineWidth: 1)
                     )
             )
         }
+        .accessibilityLabel("Already growing a native plant? Scan it to add it to your garden.")
+        .accessibilityHint("Opens the camera scanner")
     }
 
     // MARK: - Season Banner
 
     private var seasonBanner: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: isIpad ? 14 : 10) {
             HStack(spacing: 6) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(green)
+                Image(systemName: "sparkles").font(.system(size: isIpad ? 13 : 10, weight: .bold)).foregroundColor(green)
+                    .accessibilityHidden(true)
                 Text("AVAILABLE THIS SEASON")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .font(.system(size: isIpad ? 12 : 9, weight: .bold, design: .monospaced))
                     .tracking(3)
                     .foregroundColor(green.opacity(0.8))
             }
+            .accessibilityAddTraits(.isHeader)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
+                HStack(spacing: isIpad ? 14 : 10) {
                     ForEach(viewModel.availableThisSeason) { plant in
                         let unlocked = appState.plantedDates[plant.id] != nil
                         Button {
-                            if unlocked {
-                                appState.navigateToPlanHomeCard(plantID: plant.id)
-                            } else {
-                                riddlePlant = plant
-                                showRiddle = true
-                            }
+                            if unlocked { appState.navigateToPlanHomeCard(plantID: plant.id) }
+                            else { riddlePlant = plant; showRiddle = true }
                         } label: {
                             let t = seedTheme(for: plant.id)
-                            HStack(spacing: 10) {
+                            HStack(spacing: isIpad ? 14 : 10) {
                                 Image(plant.illustrationName)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32)
+                                    .resizable().scaledToFit()
+                                    .frame(width: isIpad ? 44 : 32, height: isIpad ? 44 : 32)
+                                    .accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(unlocked ? plant.name : "???")
-                                        .font(.system(size: 13, weight: .bold, design: .serif))
+                                        .font(.system(size: isIpad ? 17 : 13, weight: .bold, design: .serif))
                                         .foregroundColor(t.textColor)
                                     Text(plant.season)
-                                        .font(.system(size: 9, design: .monospaced))
+                                        .font(.system(size: isIpad ? 12 : 9, design: .monospaced))
                                         .foregroundColor(t.textColor.opacity(0.5))
                                         .lineLimit(1)
                                 }
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, isIpad ? 18 : 14)
+                            .padding(.vertical, isIpad ? 14 : 10)
                             .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                RoundedRectangle(cornerRadius: isIpad ? 16 : 12, style: .continuous)
                                     .fill(t.background)
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        RoundedRectangle(cornerRadius: isIpad ? 16 : 12, style: .continuous)
                                             .strokeBorder(t.accent.opacity(0.2), lineWidth: 1)
                                     )
                             )
                         }
+                        .accessibilityLabel(unlocked ? "\(plant.name), blooms in \(plant.season)" : "Undiscovered plant, blooms in \(plant.season)")
+                        .accessibilityHint(unlocked ? "Go to this plant in your garden" : "Tap to see a clue")
                     }
                 }
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
+        .padding(.horizontal, isIpad ? 22 : 18)
+        .padding(.vertical, isIpad ? 18 : 14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: isIpad ? 20 : 16, style: .continuous)
                 .fill(green.opacity(0.06))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: isIpad ? 20 : 16, style: .continuous)
                         .strokeBorder(green.opacity(0.12), lineWidth: 1)
                 )
         )
@@ -216,28 +227,27 @@ struct CatalogGridView: View {
     private func filterChip(_ filter: CatalogViewModel.SeasonFilter) -> some View {
         let isSelected = viewModel.selectedFilter == filter
         return Button {
-            withAnimation(.spring(response: 0.3)) {
+            withAnimation(reduceMotion ? .none : .spring(response: 0.3)) {
                 viewModel.selectedFilter = filter
             }
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: isIpad ? 7 : 5) {
                 Image(systemName: filter.icon)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: isIpad ? 14 : 11, weight: .medium))
                 Text(filter.rawValue)
-                    .font(.system(size: 12, weight: isSelected ? .bold : .medium, design: .serif))
+                    .font(.system(size: isIpad ? 15 : 12, weight: isSelected ? .bold : .medium, design: .serif))
             }
             .foregroundColor(isSelected ? .white : text.opacity(0.6))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, isIpad ? 20 : 14)
+            .padding(.vertical, isIpad ? 12 : 8)
             .background(
                 Capsule()
                     .fill(isSelected ? green : Color.white.opacity(0.7))
-                    .overlay(
-                        Capsule()
-                            .strokeBorder(isSelected ? .clear : green.opacity(0.15), lineWidth: 1)
-                    )
+                    .overlay(Capsule().strokeBorder(isSelected ? .clear : green.opacity(0.15), lineWidth: 1))
             )
         }
+        .accessibilityLabel("\(filter.rawValue) filter")
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 
@@ -249,17 +259,16 @@ struct CatalogCell: View {
     let action: () -> Void
 
     private var t: SeedPacketTheme { seedTheme(for: plant.id) }
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    private var s: CGFloat { isIpad ? 1.4 : 1.0 }
 
     var body: some View {
         Button(action: action) {
             ZStack {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: isIpad ? 24 : 18, style: .continuous)
                     .fill(isUnlocked ? t.background : Color(hex: "#EEEBE4"))
-                    .shadow(
-                        color: .black.opacity(isUnlocked ? 0.08 : 0.03),
-                        radius: isUnlocked ? 10 : 4,
-                        x: 0, y: 4
-                    )
+                    .shadow(color: .black.opacity(isUnlocked ? 0.08 : 0.03),
+                            radius: isUnlocked ? 10 : 4, x: 0, y: 4)
 
                 if isUnlocked {
                     GeometryReader { _ in
@@ -274,6 +283,7 @@ struct CatalogCell: View {
                         }
                     }
                     .clipped()
+                    .accessibilityHidden(true)
                 }
 
                 VStack(spacing: 0) {
@@ -281,61 +291,67 @@ struct CatalogCell: View {
                         if isUnlocked {
                             Ellipse()
                                 .fill(t.patternColor.opacity(0.15))
-                                .frame(width: 90, height: 90)
+                                .frame(width: isIpad ? 120 : 90, height: isIpad ? 120 : 90)
+                                .accessibilityHidden(true)
                             Image(plant.illustrationName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 72)
+                                .resizable().scaledToFit()
+                                .frame(height: isIpad ? 96 : 72)
                                 .shadow(color: t.accent.opacity(0.15), radius: 6, x: 0, y: 3)
+                                .accessibilityLabel("\(plant.name) illustration")
                         } else {
                             ZStack {
                                 Circle()
                                     .fill(Color(hex: "#D8D4CC").opacity(0.5))
-                                    .frame(width: 60, height: 60)
+                                    .frame(width: isIpad ? 80 : 60, height: isIpad ? 80 : 60)
                                 Image(systemName: "lock.fill")
-                                    .font(.system(size: 22, weight: .medium))
+                                    .font(.system(size: isIpad ? 30 : 22, weight: .medium))
                                     .foregroundColor(Color(hex: "#A0998F"))
                             }
+                            .accessibilityHidden(true)
                         }
                     }
-                    .frame(height: 110)
+                    .frame(height: isIpad ? 140 : 110)
 
                     Rectangle()
                         .fill(isUnlocked ? t.accent.opacity(0.12) : Color(hex: "#C8C4BC").opacity(0.3))
                         .frame(height: 1)
                         .padding(.horizontal, 14)
+                        .accessibilityHidden(true)
 
-                    VStack(spacing: 3) {
+                    VStack(spacing: isIpad ? 5 : 3) {
                         if isUnlocked {
                             Text(plant.name)
-                                .font(.system(size: 15, weight: .bold, design: .serif))
+                                .font(.system(size: isIpad ? 20 : 15, weight: .bold, design: .serif))
                                 .foregroundColor(t.textColor)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
                             HStack(spacing: 4) {
-                                Circle().fill(t.accent).frame(width: 5, height: 5)
+                                Circle().fill(t.accent).frame(width: isIpad ? 7 : 5, height: isIpad ? 7 : 5)
+                                    .accessibilityHidden(true)
                                 Text("GROWING")
-                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                    .font(.system(size: isIpad ? 11 : 8, weight: .bold, design: .monospaced))
                                     .tracking(2)
                                     .foregroundColor(t.accent)
                             }
                         } else {
                             Text("?")
-                                .font(.system(size: 22, weight: .bold, design: .serif))
+                                .font(.system(size: isIpad ? 32 : 22, weight: .bold, design: .serif))
                                 .foregroundColor(Color(hex: "#A0998F"))
                             Text("Undiscovered")
-                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .font(.system(size: isIpad ? 13 : 10, weight: .medium, design: .monospaced))
                                 .tracking(1)
                                 .foregroundColor(Color(hex: "#A0998F").opacity(0.7))
                         }
                     }
-                    .padding(.vertical, 12)
+                    .padding(.vertical, isIpad ? 16 : 12)
                     .padding(.horizontal, 10)
                 }
             }
-            .frame(height: 180)
+            .frame(height: isIpad ? 240 : 180)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(isUnlocked ? "\(plant.name). Growing." : "Undiscovered plant")
+        .accessibilityHint(isUnlocked ? "Go to this plant in your garden" : "Tap for a clue to identify this plant")
     }
 }
 
@@ -344,6 +360,9 @@ struct CatalogCell: View {
 struct RiddleSheet: View {
     let plant: PlantSpecies
     @Environment(\.dismiss) var dismiss
+
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    private var s: CGFloat { isIpad ? 1.4 : 1.0 }
 
     private let green = Color(hex: "#4A7C59")
     private let text  = Color(hex: "#1A2E1A")
@@ -354,71 +373,73 @@ struct RiddleSheet: View {
             bg.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Handle
                 Capsule()
                     .fill(Color.gray.opacity(0.25))
                     .frame(width: 36, height: 4)
                     .padding(.top, 12)
                     .padding(.bottom, 24)
+                    .accessibilityHidden(true)
 
-                VStack(spacing: 20) {
-                    // Lock icon with accent ring
+                VStack(spacing: isIpad ? 26 : 20) {
                     ZStack {
-                        Circle()
-                            .fill(Color(hex: "#D8D4CC").opacity(0.4))
-                            .frame(width: 72, height: 72)
-                        Circle()
-                            .strokeBorder(green.opacity(0.2), lineWidth: 1.5)
-                            .frame(width: 72, height: 72)
+                        Circle().fill(Color(hex: "#D8D4CC").opacity(0.4))
+                            .frame(width: isIpad ? 96 : 72, height: isIpad ? 96 : 72)
+                        Circle().strokeBorder(green.opacity(0.2), lineWidth: 1.5)
+                            .frame(width: isIpad ? 96 : 72, height: isIpad ? 96 : 72)
                         Image(systemName: "lock.fill")
-                            .font(.system(size: 26, weight: .medium))
+                            .font(.system(size: isIpad ? 34 : 26, weight: .medium))
                             .foregroundColor(Color(hex: "#A0998F"))
                     }
+                    .accessibilityHidden(true)
 
                     VStack(spacing: 8) {
                         Text("UNDISCOVERED PLANT")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .font(.system(size: isIpad ? 12 : 9, weight: .bold, design: .monospaced))
                             .tracking(4)
                             .foregroundColor(green.opacity(0.6))
 
                         Text("Here's your clue")
-                            .font(.system(size: 24, weight: .bold, design: .serif))
+                            .font(.system(size: isIpad ? 32 : 24, weight: .bold, design: .serif))
                             .foregroundColor(text)
+                            .accessibilityAddTraits(.isHeader)
                     }
 
-                    // Riddle card
                     Text("\"\(plant.riddle)\"")
-                        .font(.system(size: 16, design: .serif))
+                        .font(.system(size: isIpad ? 20 : 16, design: .serif))
                         .italic()
                         .foregroundColor(text.opacity(0.75))
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
                         .padding(.horizontal, 28)
-                        .padding(.vertical, 20)
+                        .padding(.vertical, isIpad ? 26 : 20)
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: isIpad ? 20 : 16, style: .continuous)
                                 .fill(Color.white.opacity(0.7))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    RoundedRectangle(cornerRadius: isIpad ? 20 : 16, style: .continuous)
                                         .strokeBorder(green.opacity(0.15), lineWidth: 1)
                                 )
                         )
                         .padding(.horizontal, 24)
+                        .accessibilityLabel("Clue: \(plant.riddle)")
 
-                    // Hint about scanning
                     HStack(spacing: 6) {
                         Image(systemName: "camera.viewfinder")
-                            .font(.system(size: 11))
+                            .font(.system(size: isIpad ? 15 : 11))
                             .foregroundColor(green)
+                            .accessibilityHidden(true)
                         Text("Scan a matching plant to unlock it")
-                            .font(.system(size: 12, design: .serif))
+                            .font(.system(size: isIpad ? 16 : 12, design: .serif))
                             .foregroundColor(text.opacity(0.5))
                     }
                     .padding(.top, 4)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Scan a matching plant to unlock it")
                 }
 
                 Spacer()
             }
         }
+        .accessibilityElement(children: .contain)
     }
 }

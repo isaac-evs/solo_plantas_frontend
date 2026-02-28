@@ -22,10 +22,10 @@ class ARGardenViewModel: ObservableObject {
     @Published var state: GrowthState
     @Published var currentIteration: Int = 0
     @Published var showPlantingFlash: Bool = false
+    @Published var showPromiseCard: Bool = false
 
     private var timeTask: Task<Void, Never>?
 
-    // Haptics
     private let impactHeavy  = UIImpactFeedbackGenerator(style: .heavy)
     private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
     private let impactLight  = UIImpactFeedbackGenerator(style: .light)
@@ -48,76 +48,76 @@ class ARGardenViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             self.impactMedium.impactOccurred()
         }
+        // Show promise card before planting begins
+        showPromiseCard = true
         state = .placed
     }
 
     func plantSeed() {
         guard state == .placed else { return }
-        // Pulses
+        showPromiseCard = false
+
         impactLight.impactOccurred()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { self.impactMedium.impactOccurred() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { self.impactHeavy.impactOccurred() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.notification.notificationOccurred(.success) }
 
         showPlantingFlash = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            self.showPlantingFlash = false
-        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { self.showPlantingFlash = false }
 
         state = .seeded
         startTimer()
     }
 
-    private func startTimer() {
-            timeTask?.cancel()
-            
-            // THE FIX: Calculate dynamic speed so the whole sequence takes ~15 seconds
-            let totalDays = plant.growthMilestones.last ?? 30 // Usually index 3
-            let secondsPerDay = 15.0 / Double(totalDays)
-            let nanoPerDay = UInt64(secondsPerDay * 1_000_000_000)
-            
-            timeTask = Task { @MainActor in
-                while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: nanoPerDay)
-                    guard !Task.isCancelled else { break }
-                    advanceTime()
-                }
-            }
-        }
-
-        private func advanceTime() {
-            var currentDay = 0
-            if case .growing(let day) = state { currentDay = day }
-            else if state == .seeded { currentDay = 0 }
-            else { return }
-
-            currentDay += 1
-
-            let previousIteration = currentIteration
-            let milestones = plant.growthMilestones
-            guard milestones.count >= 4 else { return }
-
-            if currentDay >= milestones[3] {
-                state = .blooming
-                currentIteration = 4
-                timeTask?.cancel()
-                notification.notificationOccurred(.success)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { self.impactHeavy.impactOccurred() }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.impactMedium.impactOccurred() }
-            } else {
-                state = .growing(day: currentDay)
-                if currentDay == milestones[0] { currentIteration = 1 }
-                if currentDay == milestones[1] { currentIteration = 2 }
-                if currentDay == milestones[2] { currentIteration = 3 } // <-- FIXED typo here (was milestones[1])
-            }
-
-            if currentIteration != previousIteration && currentIteration > 0 {
-                impactMedium.impactOccurred()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.impactLight.impactOccurred() }
-            }
-        }
-
-    func cleanUp() {
-        timeTask?.cancel()
+    func dismissPromise() {
+        showPromiseCard = false
     }
+
+    private func startTimer() {
+        timeTask?.cancel()
+        let totalDays  = plant.growthMilestones.last ?? 30
+        let nanoPerDay = UInt64((15.0 / Double(totalDays)) * 1_000_000_000)
+
+        timeTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: nanoPerDay)
+                guard !Task.isCancelled else { break }
+                advanceTime()
+            }
+        }
+    }
+
+    private func advanceTime() {
+        var currentDay = 0
+        if case .growing(let day) = state { currentDay = day }
+        else if state == .seeded { currentDay = 0 }
+        else { return }
+
+        currentDay += 1
+
+        let previousIteration = currentIteration
+        let m = plant.growthMilestones
+        guard m.count >= 4 else { return }
+
+        if currentDay >= m[3] {
+            state = .blooming
+            currentIteration = 4
+            timeTask?.cancel()
+            notification.notificationOccurred(.success)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { self.impactHeavy.impactOccurred() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) { self.impactMedium.impactOccurred() }
+        } else {
+            state = .growing(day: currentDay)
+            if currentDay == m[0] { currentIteration = 1 }
+            if currentDay == m[1] { currentIteration = 2 }
+            if currentDay == m[2] { currentIteration = 3 }
+        }
+
+        if currentIteration != previousIteration && currentIteration > 0 {
+            impactMedium.impactOccurred()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.impactLight.impactOccurred() }
+        }
+    }
+
+    func cleanUp() { timeTask?.cancel() }
 }

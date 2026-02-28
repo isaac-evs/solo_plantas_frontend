@@ -2,6 +2,8 @@
 //  AppState.swift
 //  VirtualGarden
 //
+//  Created by Isaac Vazquez Sandoval on 13/02/26.
+//
 
 import SwiftUI
 
@@ -14,12 +16,19 @@ enum AppScreen: Equatable {
     case arGarden(PlantSpecies)
     case plantHome
     case scan
-    case plantUnlock(PlantSpecies)  // ← added
+    case plantUnlock(PlantSpecies)
+}
+
+enum AppTab {
+    case home
+    case catalog
+    case scan
 }
 
 @MainActor
 class AppState: ObservableObject {
     @Published var currentScreen: AppScreen = .splash
+    @Published var activeTab: AppTab = .home
     @Published var focusedPlantID: String? = nil
     @Published var plantedDates: [String: Date] = [:] {
         didSet {
@@ -27,9 +36,17 @@ class AppState: ObservableObject {
         }
     }
 
+    var showsTabBar: Bool {
+        switch currentScreen {
+        case .plantHome, .catalog, .scan: return true
+        default: return false
+        }
+    }
+
     init() {
+        
         // --------- TESTING ONLY -------- //
-        // UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
+        UserDefaults.standard.removeObject(forKey: "virtual_garden_save_data")
         // ------------------------------- //
         self.plantedDates = PersistenceService.shared.loadGarden()
     }
@@ -51,5 +68,15 @@ class AppState: ObservableObject {
     func navigateToPlanHomeCard(plantID: String) {
         focusedPlantID = plantID
         currentScreen = .plantHome
+        activeTab = .home
+    }
+
+    func switchTab(_ tab: AppTab) {
+        activeTab = tab
+        switch tab {
+        case .home:    currentScreen = .plantHome
+        case .catalog: currentScreen = .catalog
+        case .scan:    currentScreen = .scan
+        }
     }
 }

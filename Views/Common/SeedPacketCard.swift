@@ -29,9 +29,9 @@ public let seedPacketThemes: [String: SeedPacketTheme] = [
 @MainActor
 func seedTheme(for id: String) -> SeedPacketTheme {
     seedPacketThemes[id] ?? SeedPacketTheme(
-        background: Color(hex: "#F5F0E8"),
-        accent:     Color(hex: "#4A7C59"),
-        textColor:  Color(hex: "#1A2E1A"),
+        background:   Color(hex: "#F5F0E8"),
+        accent:       Color(hex: "#4A7C59"),
+        textColor:    Color(hex: "#1A2E1A"),
         patternColor: Color(hex: "#7AAF8E")
     )
 }
@@ -42,6 +42,12 @@ struct SeedPacketCard: View {
     public let plant: PlantSpecies
     public let theme: SeedPacketTheme
     public let screenSize: CGSize
+
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    private var s: CGFloat { isIpad ? 2.0 : 1.5 }
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(plant: PlantSpecies, theme: SeedPacketTheme, screenSize: CGSize) {
         self.plant      = plant
@@ -55,6 +61,7 @@ struct SeedPacketCard: View {
                 .fill(theme.background)
                 .shadow(color: .black.opacity(0.12), radius: 24, x: 0, y: 12)
 
+            // Dot scatter — hidden from VoiceOver, purely decorative
             GeometryReader { _ in
                 let xs: [CGFloat] = [30,110,200,60,150,250,40,130,220,80,170,290,20,100,190,70,160,240]
                 let ys: [CGFloat] = [40,80,30,140,100,60,200,160,120,300,250,90,350,310,270,400,370,330]
@@ -67,113 +74,93 @@ struct SeedPacketCard: View {
                 }
             }
             .clipped()
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 0) {
 
-                // Top band
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("NATIVE SPECIES")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .tracking(3)
-                            .foregroundColor(theme.accent.opacity(0.6))
-                        Text(plant.season.uppercased())
-                            .font(.system(size: 8, weight: .medium, design: .monospaced))
-                            .tracking(2)
-                            .foregroundColor(theme.textColor.opacity(0.4))
-                    }
-                    Spacer()
-                    // Stamp
-                    ZStack {
-                        Circle()
-                            .strokeBorder(theme.accent.opacity(0.3), lineWidth: 1.5)
-                            .frame(width: 48, height: 48)
-                        Circle()
-                            .strokeBorder(theme.accent.opacity(0.15), lineWidth: 1)
-                            .frame(width: 42, height: 42)
-                        Text("MX")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(theme.accent.opacity(0.6))
-                    }
-                }
-                .padding(.horizontal, 28)
-                .padding(.top, 28)
-                .padding(.bottom, 20)
+                // Season header — only line in the top band
+                Text(plant.season)
+                    .font(.system(size: 11 * s, weight: .semibold, design: .monospaced))
+                    .tracking(2)
+                    .foregroundColor(theme.accent.opacity(0.75))
+                    .padding(.horizontal, 28)
+                    .padding(.top, 28)
+                    .padding(.bottom, 16)
+                    .accessibilityLabel("Blooming season: \(plant.season)")
 
                 Rectangle()
                     .fill(theme.accent.opacity(0.15))
                     .frame(height: 1)
                     .padding(.horizontal, 28)
+                    .accessibilityHidden(true)
 
                 // Illustration
                 ZStack {
                     Ellipse()
                         .fill(theme.patternColor.opacity(0.15))
-                        .frame(width: screenSize.width * 0.55, height: screenSize.width * 0.55)
+                        .frame(
+                            width:  screenSize.width * 0.45,
+                            height: screenSize.width * 0.45
+                        )
+                        .accessibilityHidden(true)
                     Image(plant.illustrationName)
                         .resizable()
                         .scaledToFit()
-                        .frame(height: screenSize.height * 0.22)
+                        .frame(height: screenSize.height * 0.18)
                         .shadow(color: theme.accent.opacity(0.2), radius: 12, x: 0, y: 6)
+                        .accessibilityLabel("\(plant.name) illustration")
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+                .padding(.vertical, 16)
 
                 Rectangle()
                     .fill(theme.accent.opacity(0.15))
                     .frame(height: 1)
                     .padding(.horizontal, 28)
+                    .accessibilityHidden(true)
 
-                // Name
+                // Plant name + scientific name
                 VStack(alignment: .leading, spacing: 6) {
                     Text(plant.name)
-                        .font(.system(size: 36, weight: .bold, design: .serif))
+                        .font(.system(size: 36 * s, weight: .bold, design: .serif))
                         .foregroundColor(theme.textColor)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.6)
+                        .accessibilityAddTraits(.isHeader)
+
                     Text(plant.scientificName)
-                        .font(.system(size: 13, weight: .regular, design: .serif))
+                        .font(.system(size: 13 * s, weight: .regular, design: .serif))
                         .italic()
                         .foregroundColor(theme.textColor.opacity(0.5))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .accessibilityLabel("Scientific name: \(plant.scientificName)")
                 }
                 .padding(.horizontal, 28)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
 
-                // Description
+                // Ecological role
                 Text(plant.ecologicalRole)
-                    .font(.system(size: 13, weight: .regular, design: .serif))
+                    .font(.system(size: 13 * s, weight: .regular, design: .serif))
                     .foregroundColor(theme.textColor.opacity(0.65))
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal, 28)
+                    .accessibilityLabel("Ecological role: \(plant.ecologicalRole)")
 
                 Spacer()
-
-                // Bottom bar
-                HStack(spacing: 10) {
-                    Circle()
-                        .fill(theme.accent)
-                        .frame(width: 10, height: 10)
-                    Text(plant.dominantColor.rawValue.uppercased())
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .tracking(3)
-                        .foregroundColor(theme.textColor.opacity(0.4))
-                    Spacer()
-                    Text("JALISCO, MX")
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .tracking(2)
-                        .foregroundColor(theme.textColor.opacity(0.3))
-                }
-                .padding(.horizontal, 28)
-                .padding(.bottom, 28)
             }
         }
-        .frame(width: screenSize.width * 0.82, height: screenSize.height * 0.68)
+        // SHORTER CARD UPDATE: No longer sets height inside the card component itself.
+        // It relies entirely on the `.frame` applied in the Parent View (PlantSelectionView) for better scaling control.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(plant.name), \(plant.scientificName). \(plant.season). \(plant.ecologicalRole)")
+        .accessibilityHint("Swipe left or right to browse plants. Double-tap Plant this seed to select.")
     }
 }
 
-// --- Color --- 
+// --- Color ---
 
 extension Color {
     init(hex: String) {
@@ -186,3 +173,4 @@ extension Color {
         self.init(red: r, green: g, blue: b)
     }
 }
+

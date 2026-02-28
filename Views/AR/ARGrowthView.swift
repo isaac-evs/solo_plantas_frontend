@@ -11,257 +11,229 @@ struct ARGrowthView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: ARGardenViewModel
 
-    // States
-    @State private var headerVisible    = false
+    @State private var headerVisible      = false
     @State private var instructionVisible = false
-    @State private var pulseRings       = false
-    @State private var growthBadgeScale: CGFloat = 0.1
-    @State private var showGrowthBadge  = false
-    @State private var lastIteration    = 0
+    @State private var pulseRings         = false
+    @State private var lastIteration      = 0
 
-    private let t: SeedPacketTheme
+    @Environment(\.accessibilityReduceMotion)     private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    
+    private var textScale: CGFloat { isIpad ? 2 : 1.5 }
 
     init(plant: PlantSpecies) {
         _viewModel = StateObject(wrappedValue: ARGardenViewModel(plant: plant, isFullyGrown: false))
-        t = seedTheme(for: plant.id)
     }
 
     var body: some View {
         ZStack {
-
             ARViewContainer(viewModel: viewModel)
                 .edgesIgnoringSafeArea(.all)
+                .accessibilityLabel("Augmented reality camera view")
 
-            t.accent
+            Color.white
                 .ignoresSafeArea()
-                .opacity(viewModel.showPlantingFlash ? 0.35 : 0)
-                .animation(.easeOut(duration: 0.5), value: viewModel.showPlantingFlash)
+                .opacity(viewModel.showPlantingFlash ? 0.2 : 0)
+                .animation(reduceMotion ? .none : .easeOut(duration: 0.5), value: viewModel.showPlantingFlash)
                 .allowsHitTesting(false)
-
-            if showGrowthBadge {
-                growthBadgeView
-            }
+                .accessibilityHidden(true)
 
             VStack(spacing: 0) {
 
-                // --- Header ---
-                
+                // Top bar
                 if viewModel.state != .scanning {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 5) {
                         Text(viewModel.plant.name)
-                            .font(.system(size: 30, weight: .bold, design: .serif))
+                            .font(.system(size: 28 * textScale, weight: .bold, design: .serif))
                             .foregroundColor(.white)
+                            .accessibilityAddTraits(.isHeader)
 
                         Text(viewModel.plant.scientificName)
-                            .font(.system(size: 13, weight: .regular, design: .serif))
+                            .font(.system(size: 15 * textScale, weight: .regular, design: .serif))
                             .italic()
-                            .foregroundColor(.white.opacity(0.7))
+                            .foregroundColor(.white.opacity(0.8))
+                            .accessibilityLabel("Scientific name: \(viewModel.plant.scientificName)")
                     }
                     .padding(.top, 56)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, 14)
                     .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity)
                     .background(
                         LinearGradient(
-                            colors: [.black.opacity(0.55), .clear],
+                            colors: [.black.opacity(reduceTransparency ? 0.8 : 0.6), .clear],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                         .ignoresSafeArea(edges: .top)
                     )
                     .opacity(headerVisible ? 1 : 0)
-                    .offset(y: headerVisible ? 0 : -12)
+                    .offset(y: headerVisible ? 0 : -10)
                     .transition(.opacity)
+                    .accessibilityElement(children: .combine)
                 }
 
                 Spacer()
 
-                // --- Instruction and Status ---
-                
+                // Status area
                 VStack(spacing: 16) {
                     switch viewModel.state {
-
-                    case .scanning:
-                        scanningInstruction
-
-                    case .placed:
-                        placedInstruction
-
-                    case .seeded:
-                        statusPill(
-                            icon: "leaf.fill",
-                            text: "Seed planted — nurturing…",
-                            color: t.accent
-                        )
-
-                    case .growing(let day):
-                        VStack(spacing: 10) {
-                            growthProgressBar(day: day)
-                            statusPill(
-                            icon: "arrow.up.leaf.fill",
-                            text: "Day \(day) of \(viewModel.plant.growthMilestones.last ?? 30)",
-                            color: t.accent
-                            )
-                    }
-
-                    case .blooming:
-                        bloomingCTA
+                    case .scanning:      scanningInstruction
+                    case .placed:        placedInstruction
+                    
+                    // THE FIX: Removed the .seeded case entirely so it doesn't flash.
+                    // It will now just stay on 'placed' until the first 'growing' frame hits.
+                    case .seeded:        EmptyView()
+                    
+                    case .growing(let day): growingSection(day: day)
+                    case .blooming:      bloomingPanel
                     }
                 }
+                .frame(maxWidth: isIpad ? 450 : .infinity)
                 .padding(.horizontal, 24)
-                .padding(.bottom, 44)
+                .padding(.bottom, 48)
                 .opacity(instructionVisible ? 1 : 0)
-                .offset(y: instructionVisible ? 0 : 16)
+                .offset(y: instructionVisible ? 0 : 12)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.6).delay(0.3)) { instructionVisible = true }
-            withAnimation(.easeOut(duration: 0.5).delay(0.5)) { headerVisible = true }
+            let delay = reduceMotion ? 0.1 : 0.3
+            withAnimation(.easeOut(duration: 0.5).delay(delay)) { instructionVisible = true }
+            withAnimation(.easeOut(duration: 0.4).delay(delay + 0.1)) { headerVisible = true }
         }
         .onChange(of: viewModel.currentIteration) { newIteration in
             guard newIteration > lastIteration, newIteration > 1 else {
-                lastIteration = newIteration
-                return
+                lastIteration = newIteration; return
             }
             lastIteration = newIteration
-            triggerGrowthBadge(iteration: newIteration)
+
+            let feedback = UIImpactFeedbackGenerator(style: .medium)
+            feedback.impactOccurred()
         }
         .onDisappear { viewModel.cleanUp() }
     }
 
-    // --- Scanning instruction ---
-
+    // Scan
     private var scanningInstruction: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 16) {
             ZStack {
                 ForEach(0..<3, id: \.self) { i in
                     Circle()
-                        .strokeBorder(.white.opacity(0.25 - Double(i) * 0.06), lineWidth: 1.5)
-                        .frame(width: CGFloat(56 + i * 22), height: CGFloat(56 + i * 22))
-                        .scaleEffect(pulseRings ? 1.08 : 1.0)
+                        .strokeBorder(.white.opacity(0.3 - Double(i) * 0.08), lineWidth: 1.5)
+                        .frame(width: CGFloat(52 + i * 22), height: CGFloat(52 + i * 22))
+                        .scaleEffect(pulseRings ? 1.06 : 1.0)
                         .animation(
-                            .easeInOut(duration: 1.4)
-                            .repeatForever(autoreverses: true)
-                            .delay(Double(i) * 0.2),
+                            reduceMotion ? .none :
+                                .easeInOut(duration: 1.4).repeatForever(autoreverses: true).delay(Double(i) * 0.2),
                             value: pulseRings
                         )
                 }
                 Image(systemName: "scope")
-                    .font(.system(size: 22, weight: .light))
+                    .font(.system(size: 22 * (textScale * 0.8), weight: .light))
                     .foregroundColor(.white)
             }
             .onAppear { pulseRings = true }
+            .accessibilityHidden(true)
 
-            Text("Point at a flat surface")
-                .font(.system(size: 17, weight: .semibold, design: .serif))
+            Text("Find a flat surface")
+                .font(.system(size: 19 * textScale, weight: .semibold, design: .serif))
                 .foregroundColor(.white)
 
-            Text("Move your phone slowly until the surface is detected, then tap to place your pot.")
-                .font(.system(size: 13, design: .serif))
-                .foregroundColor(.white.opacity(0.75))
+            Text("Then tap to place a pot.")
+                .font(.system(size: 15 * textScale, design: .serif))
+                .foregroundColor(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
         }
-        .padding(.vertical, 24)
-        .padding(.horizontal, 28)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.vertical, 26)
+        .padding(.horizontal, 30)
+        .background(
+            reduceTransparency
+                ? AnyView(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.black.opacity(0.85)))
+                : AnyView(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(.ultraThinMaterial))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Scanning for surface. Move your device slowly until a flat surface is detected, then tap to place your pot.")
     }
 
-    // --- Planting instruction ---
-
+    // Pot Placement
     private var placedInstruction: some View {
         VStack(spacing: 12) {
             Image(systemName: "hand.tap.fill")
-                .font(.system(size: 28, weight: .light))
-                .foregroundColor(t.accent)
-                .modifier(BouncingSymbolModifier(accent: t.accent))
-
-            Text("Tap the pot to plant your seed")
-                .font(.system(size: 17, weight: .semibold, design: .serif))
+                .font(.system(size: 30 * textScale, weight: .light))
                 .foregroundColor(.white)
+                .modifier(BouncingSymbolModifier())
+                .accessibilityHidden(true)
 
-            Text("Your \(viewModel.plant.name) is ready to begin its journey.")
-                .font(.system(size: 13, design: .serif))
-                .foregroundColor(.white.opacity(0.7))
-                .multilineTextAlignment(.center)
+            Text("Tap the pot to plant your \(viewModel.plant.name) seed")
+                .font(.system(size: 19 * textScale, weight: .semibold, design: .serif))
+                .foregroundColor(.white)
         }
-        .padding(.vertical, 22)
-        .padding(.horizontal, 28)
+        .padding(.vertical, 24)
+        .padding(.horizontal, 30)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(t.accent.opacity(0.18))
+                .fill(Color.white.opacity(reduceTransparency ? 0.35 : 0.15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .strokeBorder(t.accent.opacity(0.4), lineWidth: 1)
+                        .strokeBorder(Color.white.opacity(0.35), lineWidth: 1)
                 )
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Pot placed. Double-tap the pot in AR to plant your \(viewModel.plant.name).")
     }
 
-    // --- Progress Bar ---
+    // Growing
+    private func growingSection(day: Int) -> some View {
+        let total    = viewModel.plant.growthMilestones.last ?? 30
+        let progress = Double(day) / Double(total)
+        let percent  = Int(progress * 100)
 
-        private func growthProgressBar(day: Int) -> some View {
-            // Fetch the final day (e.g., 70 for Primavera)
-            let totalDays = Double(viewModel.plant.growthMilestones.last ?? 30)
-            let progress = Double(day) / totalDays
-            
-            return VStack(alignment: .leading, spacing: 6) {
+        return VStack(spacing: 10) {
+            // Progress bar
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("GROWTH")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .font(.system(size: 11 * textScale, weight: .bold, design: .monospaced))
                         .tracking(3)
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.white.opacity(0.6))
                     Spacer()
-                    // Update percentage text
-                    Text("\(Int(progress * 100))%")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .tracking(2)
-                        .foregroundColor(t.accent)
+                    Text("\(percent)%")
+                        .font(.system(size: 11 * textScale, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
                 }
                 GeometryReader { g in
                     ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.2)).frame(height: 5)
                         Capsule()
-                            .fill(.white.opacity(0.12))
-                            .frame(height: 4)
-                        Capsule()
-                            .fill(t.accent)
-                            // Update bar width
-                            .frame(width: g.size.width * CGFloat(progress), height: 4)
-                            .animation(.spring(response: 0.6), value: day)
+                            .fill(Color.white)
+                            .frame(width: g.size.width * CGFloat(progress), height: 5)
+                            .animation(reduceMotion ? .none : .spring(response: 0.6), value: day)
                     }
                 }
-                .frame(height: 4)
+                .frame(height: 5)
             }
             .padding(.horizontal, 4)
-        }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Growth progress")
+            .accessibilityValue("\(percent) percent")
 
-    // --- Status ---
-
-    private func statusPill(icon: String, text: String, color: Color) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(color)
-            Text(text)
-                .font(.system(size: 14, weight: .medium, design: .serif))
-                .foregroundColor(.white)
+            statusPill(
+                icon: "forward.fill",
+                text: "Fast-forwarding to Day \(day)"
+            )
+            .accessibilityLabel("Fast-forwarding to Day \(day)")
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 20)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(color.opacity(0.35), lineWidth: 1))
     }
 
-    // --- Blooming ---
-
-    private var bloomingCTA: some View {
-        VStack(spacing: 16) {
+    // Blooming
+    private var bloomingPanel: some View {
+        VStack(spacing: 14) {
             VStack(spacing: 4) {
-                Text("Fully grown")
-                    .font(.system(size: 13, weight: .regular, design: .monospaced))
-                    .tracking(3)
-                    .foregroundColor(t.accent.opacity(0.8))
-                Text(viewModel.plant.name)
-                    .font(.system(size: 26, weight: .bold, design: .serif))
-                    .foregroundColor(.white)
+                Text("VISION COMPLETE")
+                    .font(.system(size: 11 * textScale, weight: .bold, design: .monospaced))
+                    .tracking(4)
+                    .foregroundColor(.white.opacity(0.8))
             }
 
             Button {
@@ -269,66 +241,52 @@ struct ARGrowthView: View {
                 appState.currentScreen = .bridge(viewModel.plant)
             } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 15, weight: .semibold))
-                    Text("Capture & Add to Garden")
-                        .font(.system(size: 16, weight: .semibold, design: .serif))
+                    Text("Begin real journey")
+                        .font(.system(size: 17 * textScale, weight: .semibold, design: .serif))
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 14 * textScale, weight: .semibold))
+                        .accessibilityHidden(true)
                 }
-                .foregroundColor(t.textColor)
+                .foregroundColor(.black)
                 .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(t.accent)
+                .frame(height: isIpad ? 72 : 56)
+                .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
+            .accessibilityHint("Saves this plant to your garden and continues to the real-time tracker")
         }
-        .padding(20)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-    }
-
-    // --- Growth Badge --- 
-
-    private var growthBadgeView: some View {
-        VStack(spacing: 4) {
-            Text("STAGE \(viewModel.currentIteration)")
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .tracking(4)
-                .foregroundColor(t.accent)
-            Text("New growth")
-                .font(.system(size: 18, weight: .bold, design: .serif))
-                .foregroundColor(.white)
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 22))
-                .foregroundColor(t.accent)
-        }
-        .padding(.vertical, 20)
-        .padding(.horizontal, 28)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(t.accent.opacity(0.4), lineWidth: 1)
+        .padding(22)
+        .background(
+            reduceTransparency
+                ? AnyView(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.black.opacity(0.9)))
+                : AnyView(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(.ultraThinMaterial))
         )
-        .scaleEffect(growthBadgeScale)
-        .opacity(showGrowthBadge ? 1 : 0)
+        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
     }
 
-    private func triggerGrowthBadge(iteration: Int) {
-        showGrowthBadge = true
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
-            growthBadgeScale = 1.0
+    // Status
+    private func statusPill(icon: String, text: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 15 * textScale, weight: .medium))
+                .foregroundColor(.white)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.system(size: 16 * textScale, weight: .medium, design: .serif))
+                .foregroundColor(.white)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
-            withAnimation(.easeOut(duration: 0.3)) {
-                growthBadgeScale = 0.1
-                showGrowthBadge = false
-            }
-        }
+        .padding(.vertical, 14)
+        .padding(.horizontal, 22)
+        .background(
+            reduceTransparency
+                ? AnyView(Capsule().fill(Color.black.opacity(0.85)))
+                : AnyView(Capsule().fill(.ultraThinMaterial))
+        )
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.4), lineWidth: 1))
     }
 }
 
 struct BouncingSymbolModifier: ViewModifier {
-    let accent: Color
-
     func body(content: Content) -> some View {
         if #available(iOS 17.0, *) {
             content.symbolEffect(.pulse, options: .repeating)
