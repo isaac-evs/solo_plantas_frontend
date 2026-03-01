@@ -20,15 +20,6 @@ struct PlantDetailView: View {
         ZStack {
             t.background.ignoresSafeArea()
 
-            Text(String(plant.name.prefix(1)))
-                .font(.system(size: 320, weight: .black, design: .serif))
-                .foregroundColor(t.patternColor.opacity(0.08))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .offset(x: 50, y: 50)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
 
