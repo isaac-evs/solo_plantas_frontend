@@ -82,7 +82,7 @@ struct WatercolorCard: View {
                     .resizable()
                     .scaledToFill()
                     .frame(maxWidth: isIpad ? .infinity : screenSize.width * 0.82)
-                    .frame(height: isIpad ? screenSize.height * 0.45 : screenSize.height * 0.52)
+                    .frame(height: isIpad ? screenSize.height * 0.62 : screenSize.height * 0.52)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .accessibilityLabel("\(status.plant.name) illustration")

@@ -127,15 +127,18 @@ struct MatchPlantView: View {
                             appState.currentScreen = .plantUnlock(plant)
                         } label: {
                             HStack(spacing: 20) {
-                                // Illustration
+                                let imgSize: CGFloat = 60
+                                
                                 ZStack {
                                     Circle()
                                         .fill(t.patternColor.opacity(0.2))
-                                        .frame(width: 72, height: 72)
+                                        .frame(width: imgSize + 12, height: imgSize + 12)
+                                    
                                     Image(plant.illustrationName)
                                         .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 54, height: 54)
+                                        .scaledToFill() 
+                                        .frame(width: imgSize, height: imgSize)
+                                        .clipShape(Circle())
                                 }
                                 .accessibilityHidden(true)
 

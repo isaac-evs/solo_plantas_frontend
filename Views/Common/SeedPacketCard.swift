@@ -93,24 +93,24 @@ struct SeedPacketCard: View {
                     .padding(.horizontal, 28)
                     .accessibilityHidden(true)
 
-                // Illustration
+                let circleSize = isIpad ? 240.0 : screenSize.width * 0.48
+                
                 ZStack {
-                    Ellipse()
-                        .fill(theme.patternColor.opacity(0.15))
-                        .frame(
-                            width:  screenSize.width * 0.45,
-                            height: screenSize.width * 0.45
-                        )
-                        .accessibilityHidden(true)
+                    Circle()
+                        .fill(theme.patternColor.opacity(0.25))
+                        .frame(width: circleSize + 16, height: circleSize + 16)
+                    
                     Image(plant.illustrationName)
                         .resizable()
-                        .scaledToFit()
-                        .frame(height: screenSize.height * 0.18)
-                        .shadow(color: theme.accent.opacity(0.2), radius: 12, x: 0, y: 6)
-                        .accessibilityLabel("\(plant.name) illustration")
+                        .scaledToFill()
+                        .frame(width: circleSize, height: circleSize)
+                        .clipShape(Circle())
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, 24)
+                .shadow(color: theme.accent.opacity(0.25), radius: 12, x: 0, y: 6)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(plant.name)  illustration")
 
                 Rectangle()
                     .fill(theme.accent.opacity(0.15))
@@ -170,4 +170,3 @@ extension Color {
         self.init(red: r, green: g, blue: b)
     }
 }
-

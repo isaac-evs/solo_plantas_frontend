@@ -68,13 +68,15 @@ struct PlantUnlockView: View {
 
                     // --- Illustration ---
                     ZStack {
-                        Ellipse()
+                        Circle()
                             .fill(t.patternColor.opacity(0.14))
                             .frame(width: 200, height: 200)
+                        
                         Image(viewModel.plant.illustrationName)
                             .resizable()
-                            .scaledToFit()
-                            .frame(height: 160)
+                            .scaledToFill()
+                            .frame(width: 176, height: 176) 
+                            .clipShape(Circle())
                             .shadow(color: t.accent.opacity(0.2), radius: 12, x: 0, y: 6)
                     }
                     .scaleEffect(appeared ? (isTransitioning ? cardScale : 1.0) : 0.7)

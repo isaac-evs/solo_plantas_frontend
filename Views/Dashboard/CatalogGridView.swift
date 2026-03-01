@@ -141,7 +141,7 @@ struct CatalogCell: View {
                     GeometryReader { _ in
                         let xs: [CGFloat] = [10, 60, 120, 30, 90, 150]
                         let ys: [CGFloat] = [15, 40, 20, 90, 70, 100]
-                        let ds: [CGFloat] = [5,   9,   6,  12,  7,   8]
+                        let ds: [CGFloat] = [5,   9,   6,  12,  7,  8]
                         ForEach(0..<6, id: \.self) { i in
                             Circle()
                                 .fill(t.patternColor.opacity(0.13))
@@ -156,13 +156,18 @@ struct CatalogCell: View {
                 VStack(spacing: 0) {
                     ZStack {
                         if isUnlocked {
-                            Ellipse()
+                            let circleSize = isIpad ? 120.0 : 85.0
+                            
+                            Circle()
                                 .fill(t.patternColor.opacity(0.15))
-                                .frame(width: isIpad ? 140 : 100, height: isIpad ? 140 : 100)
+                                .frame(width: circleSize + 14, height: circleSize + 14)
                                 .accessibilityHidden(true)
+                                
                             Image(plant.illustrationName)
-                                .resizable().scaledToFit()
-                                .frame(height: isIpad ? 110 : 80)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: circleSize, height: circleSize)
+                                .clipShape(Circle())
                                 .shadow(color: t.accent.opacity(0.15), radius: 6, x: 0, y: 3)
                                 .accessibilityLabel("\(plant.name) illustration")
                         } else {

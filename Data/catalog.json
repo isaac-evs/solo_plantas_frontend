@@ -4,16 +4,18 @@
     "name": "Primavera",
     "scientificName": "Roseodendron donnell-smithii",
     "description": "A magnificent canopy tree reaching up to 30 meters, exploding with clustered yellow flowers that scatter winged seeds into the wind.",
-    "ecologicalRole": "Provides crucial high-canopy shelter and early-season nectar for native insects.",
+    "ecologicalRole": "Provides crucial high canopy shelter and early season nectar for native insects.",
     "careInstructions": [
-      "Plant in well-drained soil",
-      "Avoid continuous watering",
-      "Requires ample space for a 5-7m crown"
+      "Select a planting spot with at least 5 to 7 meters of open space for the future canopy.",
+      "Dig a hole twice as wide as the root ball and just as deep.",
+      "Place the tree in the hole, ensuring the base of the trunk is level with the surrounding soil.",
+      "Fill the hole with native soil, tamping it down gently to remove air pockets.",
+      "Water deeply immediately after planting, then water once a week during the first dry season."
     ],
     "season": "Blooms January–March",
     "seasonCategory": "spring",
     "riddle": "I reach for the sky with a golden crown. Seek my bright yellow petals when the dry season comes.",
-    "illustrationName": "Card_Primavera",
+    "illustrationName": "primavera",
     "growthType": "tall",
     "dominantColor": "yellow",
     "growthMilestones": [5, 20, 40, 70],
@@ -35,16 +37,18 @@
     "name": "Guachumil",
     "scientificName": "Leucaena macrophylla",
     "description": "A highly resilient tree with a wide crown, featuring fragrant white puffball flowers and twisted pendant pods.",
-    "ecologicalRole": "Highly adaptable soil-stabilizer that resists prolonged droughts and urban conditions.",
+    "ecologicalRole": "Highly adaptable soil stabilizer that resists prolonged droughts and urban conditions.",
     "careInstructions": [
-      "Requires direct sunlight",
-      "Protect from frost",
-      "Adapts well to clay, sandy, or acidic soils"
+      "Choose a location that receives full, direct sunlight for most of the day.",
+      "Loosen the soil at the planting site, as this plant adapts well to various soil types.",
+      "Plant the seedling at the same depth it was growing in its nursery pot.",
+      "Apply a light layer of mulch around the base to retain moisture, keeping it away from the trunk.",
+      "Cover the young plant with a frost blanket during unexpectedly cold winter nights."
     ],
     "season": "Blooms February–March",
     "seasonCategory": "spring",
     "riddle": "My flowers look like fluffy white clouds resting on twisted pods. Find a resilient survivor dressed in white.",
-    "illustrationName": "Card_Guachumil",
+    "illustrationName": "guachumil",
     "growthType": "wide",
     "dominantColor": "white",
     "growthMilestones": [4, 15, 30, 60],
@@ -68,14 +72,16 @@
     "description": "A legendary, deeply rooted tree with cracked blackish bark, thorny branches, and fragrant cream-yellowish flowers.",
     "ecologicalRole": "A keystone desert species whose wide ecological range allows it to shelter countless wildlife species.",
     "careInstructions": [
-      "Prefers plains and lowlands",
-      "Requires deep soils for taproots",
-      "Extremely drought tolerant"
+      "Find a spacious, flat area where the deep taproot can grow without hitting pipes or foundations.",
+      "Dig a deep hole, ensuring the taproot points straight down and is not bent or crowded.",
+      "Backfill with the original soil without adding rich compost, as they prefer native, arid soil.",
+      "Water thoroughly at planting, then restrict watering to encourage the roots to seek deep water.",
+      "Prune only broken or crossing branches during its dormant winter season."
     ],
     "season": "Blooms Spring",
     "seasonCategory": "spring",
     "riddle": "Deep roots, thorny arms, and pale blooms. Look for the creamy-yellow desert king.",
-    "illustrationName": "Card_Mezquite",
+    "illustrationName": "mesquite",
     "growthType": "wide",
     "dominantColor": "yellow",
     "growthMilestones": [6, 25, 45, 80],
@@ -97,16 +103,18 @@
     "name": "Salvia",
     "scientificName": "Salvia mexicana",
     "description": "An ancient native resident featuring tall, straight vertical stalks that end in striking deep purple flower spikes.",
-    "ecologicalRole": "A crucial, high-value nectar source for migrating hummingbirds across Jalisco.",
+    "ecologicalRole": "A crucial, high value nectar source for migrating hummingbirds across Jalisco.",
     "careInstructions": [
-      "Partial to full sun",
-      "Needs well-draining soil",
-      "Water when top inch of soil is dry"
+      "Select a garden bed or large pot that drains quickly and gets partial to full sun.",
+      "Dig a hole slightly larger than the root ball and place the plant inside.",
+      "Backfill the soil and water the base until the soil is fully saturated.",
+      "Check the soil moisture every few days, watering only when the top inch feels completely dry.",
+      "Cut the tall stalks back by a third after the fall blooming season ends to encourage new growth."
     ],
     "season": "Blooms Late Summer–Fall",
     "seasonCategory": "fall",
     "riddle": "Hummingbirds love my vibrant spikes. Search for the royal purple stalks standing tall.",
-    "illustrationName": "Card_Salvia",
+    "illustrationName": "salvia",
     "growthType": "tall",
     "dominantColor": "purple",
     "growthMilestones": [2, 7, 14, 30],
@@ -119,7 +127,7 @@
       "leafScale": 0.06,
       "flowerScale": 0.06,
       "stemColor": "#6B8E23",
-      "leafColor": "#4B5320",
+      "leafColor": "#4B0082",
       "flowerColor": "#4B0082"
     }
   },
@@ -130,14 +138,16 @@
     "description": "A beautiful, vibrant shrub that explodes with bright yellow, trumpet-shaped flowers. Easily pruned to fit any garden.",
     "ecologicalRole": "Provides a continuous source of nectar for native bees and local bird populations.",
     "careInstructions": [
-      "Full sun exposure",
-      "Water regularly until established",
-      "Prune annually to maintain shape"
+      "Pick a bright, sunny spot in your garden to guarantee maximum yellow blooms.",
+      "Dig a hole twice the width of the container and plant it at the same soil level.",
+      "Water the shrub twice a week for the first month to help the root system establish.",
+      "Reduce watering to once a week once established, letting the soil dry between waterings.",
+      "Prune the shrub heavily in late winter to shape it and encourage bushy spring growth."
     ],
     "season": "Blooms Spring–Fall",
     "seasonCategory": "summer",
     "riddle": "I am a vibrant shrub shaped like golden trumpets. Find my bright yellow bells ringing in the sun.",
-    "illustrationName": "Card_Tronadora",
+    "illustrationName": "tronadora",
     "growthType": "balanced",
     "dominantColor": "yellow",
     "growthMilestones": [3, 10, 20, 45],
@@ -150,7 +160,7 @@
       "leafScale": 0.15,
       "flowerScale": 0.17,
       "stemColor": "#8B7355",
-      "leafColor": "#32CD32",
+      "leafColor": "#FFD700",
       "flowerColor": "#FFD700"
     }
   },
@@ -161,14 +171,16 @@
     "description": "The iconic Mexican Marigold. A bushy, structural plant with brilliant orange blooms deeply tied to Mexican heritage.",
     "ecologicalRole": "Releases natural compounds into the soil that protect neighboring plants from harmful nematodes.",
     "careInstructions": [
-      "Full sun",
-      "Pinch off dead blooms to encourage more",
-      "Do not overwater"
+      "Prepare a spot with full sun exposure and loosen the top few inches of soil.",
+      "Plant the seeds about a quarter-inch deep, or transplant seedlings level with the soil.",
+      "Water the soil gently at the base to keep it moist but never soggy.",
+      "Pinch off the top growing tips when the plant is young to encourage a wider, bushier shape.",
+      "Remove dead or fading orange flowers regularly to force the plant to produce new blooms."
     ],
     "season": "Blooms Autumn (Día de Muertos)",
     "seasonCategory": "fall",
     "riddle": "I light the way for spirits with my brilliant colors. Seek the vibrant orange of autumn.",
-    "illustrationName": "Card_Cempasuchil",
+    "illustrationName": "cempasuchil",
     "growthType": "balanced",
     "dominantColor": "orange",
     "growthMilestones": [2, 5, 12, 25],
@@ -181,7 +193,7 @@
       "leafScale": 0.10,
       "flowerScale": 0.16,
       "stemColor": "#228B22",
-      "leafColor": "#006400",
+      "leafColor": "#FFA500",
       "flowerColor": "#FFA500"
     }
   }

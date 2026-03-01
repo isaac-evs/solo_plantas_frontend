@@ -1,0 +1,149 @@
+//
+//  PlantDetailView.swift
+//  VirtualGarden
+//
+//  Created by Isaac Vazquez Sandoval on 19/02/26.
+//
+
+import SwiftUI
+
+struct PlantDetailView: View {
+    let plant: PlantSpecies
+    @Environment(\.dismiss) var dismiss
+
+    private var t: SeedPacketTheme { seedTheme(for: plant.id) }
+    private let s: CGFloat = 1.35
+    
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
+    var body: some View {
+        ZStack {
+            t.background.ignoresSafeArea()
+
+            Text(String(plant.name.prefix(1)))
+                .font(.system(size: 320, weight: .black, design: .serif))
+                .foregroundColor(t.patternColor.opacity(0.08))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .offset(x: 50, y: 50)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+
+                    // Header
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("FIELD NOTES")
+                                .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                                .tracking(4)
+                                .foregroundColor(t.accent.opacity(0.8))
+                            
+                            Text(plant.name)
+                                .font(.system(size: 36 * s, weight: .bold, design: .serif))
+                                .foregroundColor(t.textColor)
+                                .accessibilityAddTraits(.isHeader)
+                            
+                            Text(plant.scientificName)
+                                .font(.system(size: 15 * s, weight: .regular, design: .serif))
+                                .italic()
+                                .foregroundColor(t.textColor.opacity(0.5))
+                        }
+                        
+                        Spacer(minLength: 20)
+                        
+                        let imgSize: CGFloat = isIpad ? 180 : 110
+                        let ringSize: CGFloat = isIpad ? 200 : 124
+                        
+                        ZStack {
+                            Circle()
+                                .fill(t.patternColor.opacity(0.15))
+                                .frame(width: ringSize, height: ringSize)
+                            
+                            Image(plant.illustrationName)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: imgSize, height: imgSize)
+                                .clipShape(Circle())
+                        }
+                        .shadow(color: t.accent.opacity(0.15), radius: 10, x: 0, y: 5)
+                        .accessibilityLabel("\(plant.name) hand-painted illustration")
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.top, 40)
+                    .padding(.bottom, 30)
+
+                    // Divider
+                    Rectangle()
+                        .fill(t.accent.opacity(0.15))
+                        .frame(height: 1.5)
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 35)
+
+                    // Ecological role
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label {
+                            Text("ECOLOGICAL ROLE")
+                                .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                                .tracking(3)
+                                .foregroundColor(t.accent.opacity(0.8))
+                        } icon: {
+                            Image(systemName: "leaf.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(t.accent)
+                        }
+
+                        Text(plant.ecologicalRole)
+                            .font(.system(size: 17 * s, design: .serif))
+                            .foregroundColor(t.textColor.opacity(0.85))
+                            .lineSpacing(6)
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 40)
+                    .accessibilityElement(children: .combine)
+
+                    // Care instructions
+                    VStack(alignment: .leading, spacing: 20) {
+                        Label {
+                            Text("CARE INSTRUCTIONS")
+                                .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                                .tracking(3)
+                                .foregroundColor(t.accent.opacity(0.8))
+                        } icon: {
+                            Image(systemName: "hand.raised.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(t.accent)
+                        }
+                        .padding(.bottom, 10)
+
+                        ForEach(Array(plant.careInstructions.enumerated()), id: \.offset) { index, instruction in
+                            HStack(alignment: .top, spacing: 18) {
+                                // Step Indicator
+                                ZStack {
+                                    Circle()
+                                        .fill(t.accent)
+                                        .frame(width: 34, height: 34)
+                                    Text("\(index + 1)")
+                                        .font(.system(size: 14 * s, weight: .bold, design: .monospaced))
+                                        .foregroundColor(t.background)
+                                }
+                                .accessibilityHidden(true)
+
+                                Text(instruction)
+                                    .font(.system(size: 17 * s, design: .serif))
+                                    .foregroundColor(t.textColor)
+                                    .lineSpacing(5)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityLabel("Step \(index + 1): \(instruction)")
+                            }
+                            .padding(.bottom, 12)
+                        }
+                    }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 60)
+                }
+            }
+        }
+    }
+}

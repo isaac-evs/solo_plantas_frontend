@@ -15,52 +15,56 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            Color(red: 0.96, green: 0.95, blue: 0.93).ignoresSafeArea()
-            
-            VStack(spacing: isIpad ? 30 : 20) {
-                Image(systemName: "leaf.fill")
+            GeometryReader { geo in
+                Image("splash")
                     .resizable()
-                    .scaledToFit()
-                    .frame(width: isIpad ? 140 : 100, height: isIpad ? 140 : 100)
-                    .foregroundColor(Color(red: 0.2, green: 0.4, blue: 0.2))
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped() 
+                    .ignoresSafeArea()
                     .accessibilityHidden(true)
                 
-                Text("Virtual Garden")
-                    .font(.system(size: isIpad ? 54 : 36, weight: .bold, design: .serif))
-                    .foregroundColor(Color(red: 0.2, green: 0.3, blue: 0.2))
+                VStack(spacing: isIpad ? 24 : 16) {
+                    
+                    Text("Milpa")
+                        .font(.system(size: isIpad ? 84 : 72, weight: .heavy, design: .serif))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.85), radius: 2, x: 0, y: 2)
+                        .shadow(color: .black.opacity(0.6), radius: 12, x: 0, y: 6)
+                        .accessibilityAddTraits(.isHeader)
+                    
+                    Text("Return native species to Jalisco.")
+                        .font(.system(size: isIpad ? 34 : 20, weight: .semibold, design: .serif))
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, isIpad ? 32 : 24)
+                        .padding(.vertical, isIpad ? 16 : 12)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.15))
+                                .background(.ultraThinMaterial)
+                                .clipShape(Capsule())
+                        )
+                }
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+                .frame(maxHeight: .infinity, alignment: .center)
+                .opacity(isVisible ? 1.0 : 0.0)
+                .scaleEffect(isVisible ? 1.0 : 0.95)
+            }
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.0)) {
+                    isVisible = true
+                }
                 
-                Text("Return native species to Jalisco.")
-                    .font(.system(size: isIpad ? 24 : 18, weight: .regular, design: .serif))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                
-                Spacer().frame(height: isIpad ? 60 : 40)
-                
-                Button {
-                    let feedback = UIImpactFeedbackGenerator(style: .medium)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                    let feedback = UIImpactFeedbackGenerator(style: .soft)
                     feedback.impactOccurred()
                     
-                    withAnimation(.easeInOut(duration: 0.4)) {
+                    withAnimation(.easeInOut(duration: 0.5)) {
                         appState.routeAfterSplash()
                     }
-                } label: {
-                    Text("Tap to Begin")
-                        .font(.system(size: isIpad ? 22 : 18, weight: .semibold, design: .serif))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, isIpad ? 40 : 32)
-                        .padding(.vertical, isIpad ? 20 : 16)
-                        .background(Color(red: 0.2, green: 0.4, blue: 0.2))
-                        .clipShape(Capsule())
                 }
-                .accessibilityHint("Starts your journey to restore the garden")
-            }
-            .opacity(isVisible ? 1.0 : 0.0)
-            .scaleEffect(isVisible ? 1.0 : 0.95)
-        }
-        .onAppear {
-            withAnimation(.easeOut(duration: 1.0)) {
-                isVisible = true
             }
         }
     }
