@@ -27,14 +27,14 @@ struct SplashView: View {
                 VStack(spacing: isIpad ? 24 : 16) {
                     
                     Text("Milpa")
-                        .font(.system(size: isIpad ? 84 : 72, weight: .heavy, design: .serif))
+                        .font(.system(size: isIpad ? 84 : 72, weight: .heavy))
                         .foregroundColor(.white)
                         .shadow(color: .black.opacity(0.85), radius: 2, x: 0, y: 2)
                         .shadow(color: .black.opacity(0.6), radius: 12, x: 0, y: 6)
                         .accessibilityAddTraits(.isHeader)
                     
                     Text("Return native species to Jalisco.")
-                        .font(.system(size: isIpad ? 34 : 20, weight: .semibold, design: .serif))
+                        .font(.system(size: isIpad ? 34 : 20, weight: .semibold))
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, isIpad ? 32 : 24)

@@ -50,12 +50,12 @@ struct NurseryMapView: View {
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(nursery.name)
-                                    .font(.system(size: 22 * textScale, weight: .bold, design: .serif))
+                                    .font(.system(size: 22 * textScale, weight: .bold))
                                     .foregroundColor(Color(hex: "#2E1A0E"))
                                     .fixedSize(horizontal: false, vertical: true)
                                 
                                 Text(nursery.address)
-                                    .font(.system(size: 14 * textScale, design: .serif))
+                                    .font(.system(size: 14 * textScale))
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -72,7 +72,7 @@ struct NurseryMapView: View {
                         }
 
                         Text(nursery.description)
-                            .font(.system(size: 14 * textScale, design: .serif))
+                            .font(.system(size: 14 * textScale))
                             .foregroundColor(Color(hex: "#2E1A0E").opacity(0.7))
                             .lineSpacing(4)
                             .fixedSize(horizontal: false, vertical: true)
@@ -84,7 +84,7 @@ struct NurseryMapView: View {
                                 Image(systemName: "location.fill")
                                     .font(.system(size: 16, weight: .semibold))
                                 Text("Get Directions")
-                                    .font(.system(size: 17 * textScale, weight: .bold, design: .serif))
+                                    .font(.system(size: 17 * textScale, weight: .bold))
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -111,7 +111,7 @@ struct NurseryMapView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
-                        .font(.system(size: 17 * textScale, weight: .bold, design: .serif))
+                        .font(.system(size: 17 * textScale, weight: .bold))
                 }
             }
         }

@@ -9,6 +9,8 @@ import SwiftUI
 
 enum AppScreen: Equatable {
     case splash
+    case login
+    case signUp
     case onboarding
     case catalog
     case arGrowth(PlantSpecies)
@@ -48,7 +50,11 @@ class AppState: ObservableObject {
     }
 
     func routeAfterSplash() {
-        currentScreen = plantedDates.isEmpty ? .onboarding : .plantHome
+        if KeychainHelper.shared.getToken() != nil {
+            currentScreen = .plantHome
+        } else {
+            currentScreen = .login
+        }
     }
 
     func plantSeed(for speciesID: String) {

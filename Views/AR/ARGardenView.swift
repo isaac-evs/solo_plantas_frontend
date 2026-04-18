@@ -44,7 +44,7 @@ struct ARGardenView: View {
 
                     if viewModel.state != .scanning {
                         Text(stageLabel())
-                            .font(.system(size: 19, weight: .bold, design: .serif))
+                            .font(.system(size: 19, weight: .bold))
                             .tracking(2)
                             .foregroundColor(.white)
                             .padding(.horizontal, 22)
@@ -72,7 +72,7 @@ struct ARGardenView: View {
                                 .accessibilityHidden(true)
                             
                             Text("Point at a flat surface and tap to place your plant")
-                                .font(.system(size: 24, weight: .medium, design: .serif))
+                                .font(.system(size: 24, weight: .medium))
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
                         }

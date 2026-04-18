@@ -47,18 +47,18 @@ struct PlantUnlockView: View {
                     // --- Header ---
                     VStack(spacing: 8) {
                         Text("YOU FOUND IT")
-                            .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                            .font(.system(size: 10 * s, weight: .bold))
                             .tracking(5)
                             .foregroundColor(t.accent.opacity(0.8))
                             .accessibilityAddTraits(.isHeader)
 
                         Text(viewModel.plant.name)
-                            .font(.system(size: 38 * (s * 0.9), weight: .bold, design: .serif))
+                            .font(.system(size: 38 * (s * 0.9), weight: .bold))
                             .foregroundColor(t.textColor)
                             .scaleEffect(appeared ? 1 : 0.85)
 
                         Text(viewModel.plant.scientificName)
-                            .font(.system(size: 13 * s, weight: .regular, design: .serif))
+                            .font(.system(size: 13 * s, weight: .regular))
                             .italic()
                             .foregroundColor(t.textColor.opacity(0.55))
                     }
@@ -87,7 +87,7 @@ struct PlantUnlockView: View {
                     // --- Stage question ---
                     VStack(spacing: 12) {
                         Text("HOW FAR ALONG IS IT?")
-                            .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                            .font(.system(size: 10 * s, weight: .bold))
                             .tracking(4)
                             .foregroundColor(t.textColor.opacity(0.55))
 
@@ -119,7 +119,7 @@ struct PlantUnlockView: View {
                             Image(systemName: "leaf.fill")
                                 .font(.system(size: 14 * s, weight: .semibold))
                             Text("Add to my garden")
-                                .font(.system(size: 16 * s, weight: .bold, design: .serif))
+                                .font(.system(size: 18 * s, weight: .semibold))
                         }
                         .foregroundColor(t.background)
                         .frame(maxWidth: .infinity)

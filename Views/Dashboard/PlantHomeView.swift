@@ -133,7 +133,7 @@ struct PlantHomeView: View {
     private var topBar: some View {
         HStack(alignment: .center) {
             Text("My Garden")
-                .font(.system(size: isIpad ? 44 : 34, weight: .bold, design: .serif))
+                .font(.system(size: isIpad ? 44 : 34, weight: .bold))
                 .foregroundColor(homeTextPrimary)
                 .accessibilityAddTraits(.isHeader)
 
@@ -144,7 +144,7 @@ struct PlantHomeView: View {
                     .fill(homeAccent.opacity(0.12))
                     .frame(width: isIpad ? 54 : 44, height: isIpad ? 54 : 44)
                 Text("\(viewModel.userGarden.count)")
-                    .font(.system(size: isIpad ? 22 : 18, weight: .bold, design: .monospaced))
+                    .font(.system(size: isIpad ? 22 : 18, weight: .bold))
                     .foregroundColor(homeAccent)
             }
             .accessibilityLabel("\(viewModel.userGarden.count) plants in your garden")
@@ -193,11 +193,11 @@ struct PlantHomeView: View {
                 .foregroundColor(homeAccent.opacity(0.35))
                 .accessibilityHidden(true)
             Text("Your garden is empty")
-                .font(.system(size: isIpad ? 32 : 22, weight: .bold, design: .serif))
+                .font(.system(size: isIpad ? 32 : 22, weight: .bold))
                 .foregroundColor(homeTextPrimary.opacity(0.6))
                 .accessibilityAddTraits(.isHeader)
             Text("Plant your first seed to begin.")
-                .font(.system(size: isIpad ? 20 : 16, design: .serif))
+                .font(.system(size: isIpad ? 20 : 16))
                 .foregroundColor(homeTextPrimary.opacity(0.45))
             Spacer()
         }

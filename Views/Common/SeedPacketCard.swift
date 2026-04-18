@@ -79,7 +79,7 @@ struct SeedPacketCard: View {
 
                 // Season header
                 Text(plant.season)
-                    .font(.system(size: 11 * s, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 11 * s, weight: .semibold))
                     .tracking(2)
                     .foregroundColor(theme.accent.opacity(0.75))
                     .padding(.horizontal, 28)
@@ -121,14 +121,14 @@ struct SeedPacketCard: View {
                 // Plant name
                 VStack(alignment: .leading, spacing: 6) {
                     Text(plant.name)
-                        .font(.system(size: 36 * s, weight: .bold, design: .serif))
+                        .font(.system(size: 36 * s, weight: .bold))
                         .foregroundColor(theme.textColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .accessibilityAddTraits(.isHeader)
 
                     Text(plant.scientificName)
-                        .font(.system(size: 13 * s, weight: .regular, design: .serif))
+                        .font(.system(size: 13 * s, weight: .regular))
                         .italic()
                         .foregroundColor(theme.textColor.opacity(0.5))
                         .lineLimit(1)
@@ -141,7 +141,7 @@ struct SeedPacketCard: View {
 
                 // Ecological role
                 Text(plant.ecologicalRole)
-                    .font(.system(size: 13 * s, weight: .regular, design: .serif))
+                    .font(.system(size: 13 * s, weight: .regular))
                     .foregroundColor(theme.textColor.opacity(0.65))
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)

@@ -27,17 +27,17 @@ struct PlantDetailView: View {
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("FIELD NOTES")
-                                .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                                .font(.system(size: 10 * s, weight: .bold))
                                 .tracking(4)
                                 .foregroundColor(t.accent.opacity(0.8))
                             
                             Text(plant.name)
-                                .font(.system(size: 36 * s, weight: .bold, design: .serif))
+                                .font(.system(size: 36 * s, weight: .bold))
                                 .foregroundColor(t.textColor)
                                 .accessibilityAddTraits(.isHeader)
                             
                             Text(plant.scientificName)
-                                .font(.system(size: 15 * s, weight: .regular, design: .serif))
+                                .font(.system(size: 15 * s, weight: .regular))
                                 .italic()
                                 .foregroundColor(t.textColor.opacity(0.5))
                         }
@@ -76,7 +76,7 @@ struct PlantDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Label {
                             Text("ECOLOGICAL ROLE")
-                                .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                                .font(.system(size: 10 * s, weight: .bold))
                                 .tracking(3)
                                 .foregroundColor(t.accent.opacity(0.8))
                         } icon: {
@@ -86,7 +86,7 @@ struct PlantDetailView: View {
                         }
 
                         Text(plant.ecologicalRole)
-                            .font(.system(size: 17 * s, design: .serif))
+                            .font(.system(size: 17 * s))
                             .foregroundColor(t.textColor.opacity(0.85))
                             .lineSpacing(6)
                     }
@@ -98,7 +98,7 @@ struct PlantDetailView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         Label {
                             Text("CARE INSTRUCTIONS")
-                                .font(.system(size: 10 * s, weight: .bold, design: .monospaced))
+                                .font(.system(size: 10 * s, weight: .bold))
                                 .tracking(3)
                                 .foregroundColor(t.accent.opacity(0.8))
                         } icon: {
@@ -116,13 +116,13 @@ struct PlantDetailView: View {
                                         .fill(t.accent)
                                         .frame(width: 34, height: 34)
                                     Text("\(index + 1)")
-                                        .font(.system(size: 14 * s, weight: .bold, design: .monospaced))
+                                        .font(.system(size: 14 * s, weight: .bold))
                                         .foregroundColor(t.background)
                                 }
                                 .accessibilityHidden(true)
 
                                 Text(instruction)
-                                    .font(.system(size: 17 * s, design: .serif))
+                                    .font(.system(size: 17 * s))
                                     .foregroundColor(t.textColor)
                                     .lineSpacing(5)
                                     .fixedSize(horizontal: false, vertical: true)

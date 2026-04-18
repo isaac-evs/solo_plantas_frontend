@@ -70,14 +70,14 @@ struct BridgeTransitionView: View {
 
                             VStack(spacing: 10) {
                                 Text("DAY 0: SEED PLANTED")
-                                    .font(.system(size: 14 * s, weight: .bold, design: .monospaced))
+                                    .font(.system(size: 14 * s, weight: .bold))
                                     .tracking(4)
                                     .foregroundColor(t.accent)
                                     .multilineTextAlignment(.center)
                                     .accessibilityAddTraits(.isHeader)
 
                                 Text(plant.name)
-                                    .font(.system(size: 46 * s, weight: .bold, design: .serif))
+                                    .font(.system(size: 46 * s, weight: .bold))
                                     .foregroundColor(t.textColor)
                             }
                             .opacity(appeared ? 1 : 0)
@@ -92,13 +92,13 @@ struct BridgeTransitionView: View {
                         // --- Explanation  ---
                         VStack(spacing: 20) {
                             Text("The Real Journey Begins")
-                                .font(.system(size: 26 * s, weight: .bold, design: .serif))
+                                .font(.system(size: 26 * s, weight: .bold))
                                 .foregroundColor(t.textColor)
                                 .multilineTextAlignment(.center)
                                 .accessibilityAddTraits(.isHeader)
 
                             Text("You just saw a vision of the future. In reality, native plants require patience. It will take \(plant.growthMilestones.last ?? 30) real-world days for your virtual seed to reach maturity.")
-                                .font(.system(size: 18 * s, weight: .medium, design: .serif))
+                                .font(.system(size: 18 * s, weight: .medium))
                                 .foregroundColor(t.textColor.opacity(0.85))
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(6)
@@ -118,7 +118,7 @@ struct BridgeTransitionView: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     Text("Go to my garden")
-                                        .font(.system(size: 20 * s, weight: .semibold, design: .serif))
+                                        .font(.system(size: 20 * s, weight: .semibold))
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 18, weight: .semibold))
                                         .accessibilityHidden(true)
@@ -141,7 +141,7 @@ struct BridgeTransitionView: View {
                                         Image(systemName: "map.fill")
                                             .font(.system(size: 18 * s, weight: .medium))
                                         Text("Where to get it")
-                                            .font(.system(size: 13 * s, weight: .bold, design: .serif))
+                                            .font(.system(size: 13 * s, weight: .bold))
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.8)
                                     }
@@ -161,7 +161,7 @@ struct BridgeTransitionView: View {
                                         Image(systemName: "leaf.fill")
                                             .font(.system(size: 18 * s, weight: .medium))
                                         Text("How to plant it")
-                                            .font(.system(size: 13 * s, weight: .bold, design: .serif))
+                                            .font(.system(size: 13 * s, weight: .bold))
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.8)
                                     }

@@ -43,14 +43,14 @@ struct WatercolorCard: View {
                 // Left: Names
                 VStack(alignment: .leading, spacing: 2) {
                     Text(status.plant.name)
-                        .font(.system(size: isIpad ? 74 : 32, weight: .bold, design: .serif))
+                        .font(.system(size: isIpad ? 74 : 32, weight: .bold))
                         .foregroundColor(t.textColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                         .accessibilityAddTraits(.isHeader)
 
                     Text(status.plant.scientificName)
-                        .font(.system(size: isIpad ? 34 : 16, weight: .regular, design: .serif))
+                        .font(.system(size: isIpad ? 34 : 16, weight: .regular))
                         .italic()
                         .foregroundColor(t.textColor.opacity(0.6))
                         .lineLimit(1)
@@ -107,7 +107,7 @@ struct WatercolorCard: View {
 
                 // Day pill — top left
                 Text("DAY \(status.daysElapsed)")
-                    .font(.system(size: 12 * s, weight: .bold, design: .monospaced))
+                    .font(.system(size: 12 * s, weight: .bold))
                     .tracking(3)
                     .foregroundColor(.black)
                     .padding(.horizontal, isIpad ? 16 : 14)

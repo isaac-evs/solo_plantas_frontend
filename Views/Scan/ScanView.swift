@@ -44,12 +44,12 @@ struct ScanView: View {
                 
                 VStack(spacing: isIpad ? 10 : 6) {
                     Text(viewModel.isScanning ? "Scanning Environment" : "Center a leaf or flower")
-                        .font(.system(size: isIpad ? 34 : 26, weight: .bold, design: .serif))
+                        .font(.system(size: isIpad ? 34 : 26, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
                     Text(viewModel.isScanning ? "Hold still…" : "Align it inside the circle")
-                        .font(.system(size: isIpad ? 24 : 18, weight: .medium, design: .serif))
+                        .font(.system(size: isIpad ? 24 : 18, weight: .medium))
                         .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
                 }
@@ -92,7 +92,7 @@ struct ScanView: View {
                                 .accessibilityHidden(true)
                         }
                         Text(viewModel.isScanning ? "Scanning…" : "Identify Plant")
-                            .font(.system(size: isIpad ? 24 : 20, weight: .bold, design: .serif))
+                            .font(.system(size: isIpad ? 24 : 20, weight: .bold))
                     }
                     .foregroundColor(.black)
                     .frame(maxWidth: isIpad ? 450 : .infinity)

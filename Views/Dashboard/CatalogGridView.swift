@@ -39,14 +39,14 @@ struct CatalogGridView: View {
                     // Header
                     HStack(alignment: .firstTextBaseline) {
                         Text("Field Guide")
-                            .font(.system(size: isIpad ? 44 : 34, weight: .bold, design: .serif))
+                            .font(.system(size: isIpad ? 44 : 34, weight: .bold))
                             .foregroundColor(homeTextPrimary)
                             .accessibilityAddTraits(.isHeader)
                         
                         Spacer()
                         
                         Text("\(appState.plantedDates.count)/\(viewModel.totalCatalogSize)")
-                            .font(.system(size: isIpad ? 20 : 16, weight: .bold, design: .monospaced))
+                            .font(.system(size: isIpad ? 20 : 16, weight: .bold))
                             .foregroundColor(homeAccent)
                             .padding(.horizontal, isIpad ? 16 : 14)
                             .padding(.vertical, isIpad ? 8 : 6)
@@ -104,7 +104,7 @@ struct CatalogGridView: View {
                     .font(.system(size: isIpad ? 17 : 14, weight: .medium))
                 
                 Text(filter.rawValue)
-                    .font(.system(size: isIpad ? 18 : 15, weight: isSelected ? .bold : .medium, design: .serif))
+                    .font(.system(size: isIpad ? 18 : 15, weight: isSelected ? .bold : .medium))
             }
             .foregroundColor(isSelected ? .white : homeTextPrimary.opacity(0.7))
             .padding(.horizontal, isIpad ? 24 : 18)
@@ -193,7 +193,7 @@ struct CatalogCell: View {
                     VStack(spacing: isIpad ? 6 : 4) {
                         if isUnlocked {
                             Text(plant.name)
-                                .font(.system(size: isIpad ? 26 : 19, weight: .bold, design: .serif))
+                                .font(.system(size: isIpad ? 26 : 19, weight: .bold))
                                 .foregroundColor(t.textColor)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
@@ -201,18 +201,18 @@ struct CatalogCell: View {
                                 Circle().fill(t.accent).frame(width: isIpad ? 8 : 6, height: isIpad ? 8 : 6)
                                     .accessibilityHidden(true)
                                 Text("GROWING")
-                                    .font(.system(size: isIpad ? 12 : 9, weight: .bold, design: .monospaced))
+                                    .font(.system(size: isIpad ? 12 : 9, weight: .bold))
                                     .tracking(2)
                                     .foregroundColor(t.accent)
                             }
                         } else {
                             Text(plant.name)
-                                .font(.system(size: isIpad ? 26 : 19, weight: .bold, design: .serif))
+                                .font(.system(size: isIpad ? 26 : 19, weight: .bold))
                                 .foregroundColor(Color(hex: "#A0998F"))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
                             Text("Undiscovered")
-                                .font(.system(size: isIpad ? 14 : 11, weight: .medium, design: .monospaced))
+                                .font(.system(size: isIpad ? 14 : 11, weight: .medium))
                                 .tracking(1)
                                 .foregroundColor(Color(hex: "#A0998F").opacity(0.7))
                         }

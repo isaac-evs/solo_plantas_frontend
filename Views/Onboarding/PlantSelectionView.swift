@@ -72,9 +72,8 @@ struct PlantSelectionView: View {
 
                             Text("\(currentIndex + 1) of \(plants.count)")
                                 .font(.system(
-                                    size: isIpad ? 22 : 18,
-                                    weight: .semibold,
-                                    design: .monospaced
+                                    size: isIpad ? 16 : 14,
+                                    weight: .semibold
                                 ))
                                 .tracking(2)
                                 .foregroundColor(t.textColor.opacity(0.6))
@@ -158,7 +157,7 @@ struct PlantSelectionView: View {
                         } label: {
                             HStack(spacing: isIpad ? 16 : 14) {
                                 Text("Plant this seed")
-                                    .font(.system(size: isIpad ? 26 : 22, weight: .semibold, design: .serif))
+                                    .font(.system(size: isIpad ? 26 : 22, weight: .semibold))
                                 Image(systemName: "arrow.right")
                                     .font(.system(size: isIpad ? 20 : 18, weight: .semibold))
                                     .accessibilityHidden(true)
