@@ -48,6 +48,7 @@ struct PlantSpecies: Identifiable, Codable, Equatable, Sendable {
     let dominantColor: PlantColorCategory
     let growthMilestones: [Int]
     let lsystem: LSystemDNA
+    let price: Double?
 }
 
 extension String {

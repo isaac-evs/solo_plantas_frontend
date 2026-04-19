@@ -40,6 +40,18 @@ struct PlantDetailView: View {
                                 .font(.system(size: 15 * s, weight: .regular))
                                 .italic()
                                 .foregroundColor(t.textColor.opacity(0.5))
+                            
+                            if let price = plant.price {
+                                let formatter = NumberFormatter()
+                                formatter.numberStyle = .currency
+                                formatter.currencyCode = "MXN"
+                                if let str = formatter.string(from: NSNumber(value: price)) {
+                                    Text(str)
+                                        .font(.system(size: 18 * s, weight: .bold))
+                                        .foregroundColor(t.textColor)
+                                        .padding(.top, 4)
+                                }
+                            }
                         }
                         
                         Spacer(minLength: 20)

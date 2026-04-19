@@ -16,6 +16,10 @@ class CatalogViewModel: ObservableObject {
     var totalCatalogSize: Int {
         allPlants.count
     }
+    
+    var recommendedPlants: [PlantSpecies] {
+        CatalogManager.shared.recommendedPlants
+    }
 
     enum SeasonFilter: String, CaseIterable {
         case all    = "All"
@@ -62,9 +66,26 @@ class CatalogViewModel: ObservableObject {
         return allPlants.filter { $0.seasonCategory == currentSeason }
     }
 
-    init() { loadCatalog() }
+    init() { 
+        Task { await loadCatalog() } 
+    }
 
-    private func loadCatalog() {
-        self.allPlants = DataService.shared.catalog
+    func loadCatalog() async {
+        do {
+            try await CatalogManager.shared.fetchCatalog()
+            try await CatalogManager.shared.fetchRecommendations()
+            self.allPlants = CatalogManager.shared.cachedCatalog
+        } catch {
+            print("Error loading catalog: \(error)")
+        }
+    }
+    
+    func refresh() async {
+        do {
+            try await CatalogManager.shared.refresh()
+            self.allPlants = CatalogManager.shared.cachedCatalog
+        } catch {
+            print("Error refreshing catalog: \(error)")
+        }
     }
 }

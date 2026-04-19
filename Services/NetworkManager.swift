@@ -9,7 +9,7 @@ enum NetworkError: Error {
     case unknown
 }
 
-class NetworkManager {
+final class NetworkManager: Sendable {
     static let shared = NetworkManager()
     private let baseURL = "http://localhost:3000/api/v1"
     

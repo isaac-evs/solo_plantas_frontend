@@ -57,6 +57,45 @@ struct CatalogGridView: View {
                     .padding(.top, isIpad ? 50 : 62)
                     .padding(.bottom, isIpad ? 36 : 24)
 
+                    // Banner
+                    Text("New Arrivals")
+                        .font(.system(size: isIpad ? 20 : 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(hex: "#1B4332"))
+                        .cornerRadius(12)
+                        .padding(.horizontal, isIpad ? 40 : 24)
+                        .padding(.bottom, 24)
+
+                    // Recommended Carousel
+                    if !viewModel.recommendedPlants.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Recommended Plants")
+                                .font(.system(size: isIpad ? 24 : 18, weight: .bold))
+                                .foregroundColor(homeTextPrimary)
+                                .padding(.horizontal, isIpad ? 40 : 24)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: isIpad ? 24 : 16) {
+                                    ForEach(viewModel.recommendedPlants.prefix(3)) { plant in
+                                        let unlocked = appState.plantedDates[plant.id] != nil
+                                        CatalogCell(plant: plant, isUnlocked: unlocked) {
+                                            if unlocked {
+                                                appState.navigateToPlanHomeCard(plantID: plant.id)
+                                            } else {
+                                                feedbackBlocked.impactOccurred()
+                                            }
+                                        }
+                                        .frame(width: isIpad ? 300 : 220)
+                                    }
+                                }
+                                .padding(.horizontal, isIpad ? 40 : 24)
+                                .padding(.bottom, 12)
+                            }
+                        }
+                    }
+
                     // Season filter chips
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: isIpad ? 12 : 8) {
@@ -85,6 +124,9 @@ struct CatalogGridView: View {
                     
                     Spacer().frame(height: isIpad ? 120 : 100)
                 }
+            }
+            .refreshable {
+                await viewModel.refresh()
             }
         }
         .accessibilityLabel("Field Guide. Browse and discover native plants.")
@@ -197,6 +239,18 @@ struct CatalogCell: View {
                                 .foregroundColor(t.textColor)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
+                            
+                            if let price = plant.price {
+                                let formatter = NumberFormatter()
+                                formatter.numberStyle = .currency
+                                formatter.currencyCode = "MXN"
+                                if let str = formatter.string(from: NSNumber(value: price)) {
+                                    Text(str)
+                                        .font(.system(size: isIpad ? 16 : 14, weight: .semibold))
+                                        .foregroundColor(t.textColor.opacity(0.8))
+                                }
+                            }
+                            
                             HStack(spacing: 4) {
                                 Circle().fill(t.accent).frame(width: isIpad ? 8 : 6, height: isIpad ? 8 : 6)
                                     .accessibilityHidden(true)

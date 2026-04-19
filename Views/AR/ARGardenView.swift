@@ -13,6 +13,7 @@ struct ARGardenView: View {
 
     @State private var showDetail = false
     @State private var showNurseryMap = false
+    @State private var captureSnapshot = false
 
     private var t: SeedPacketTheme { seedTheme(for: viewModel.plant.id) }
 
@@ -23,7 +24,7 @@ struct ARGardenView: View {
     var body: some View {
         ZStack {
             // AR Canvas
-            ARViewContainer(viewModel: viewModel)
+            ARViewContainer(viewModel: viewModel, captureSnapshot: $captureSnapshot)
                 .ignoresSafeArea()
 
             VStack {
@@ -110,8 +111,19 @@ struct ARGardenView: View {
                                         .foregroundColor(.white)
                                         .frame(width: 76, height: 76)
                                         .background(.ultraThinMaterial, in: Circle())
-                                }
                                 .accessibilityLabel("Plant information")
+                                
+                                // Snapshot Button
+                                Button {
+                                    captureSnapshot = true
+                                } label: {
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 28, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .frame(width: 76, height: 76)
+                                        .background(.ultraThinMaterial, in: Circle())
+                                }
+                                .accessibilityLabel("Take a photo of your garden")
                             }
                         }
                         .padding(.horizontal, 30)

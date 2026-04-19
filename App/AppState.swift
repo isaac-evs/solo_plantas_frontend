@@ -16,6 +16,8 @@ enum AppScreen: Equatable {
     case arGrowth(PlantSpecies)
     case bridge(PlantSpecies)
     case arGarden(PlantSpecies)
+    case virtualGarden
+    case checkout(subtotal: Double)
     case plantHome
     case scan
     case plantUnlock(PlantSpecies)
@@ -37,6 +39,8 @@ class AppState: ObservableObject {
             PersistenceService.shared.saveGarden(plantedDates: plantedDates)
         }
     }
+    
+    @Published var selectedNurseryForPickup: String? = nil
 
     var showsTabBar: Bool {
         switch currentScreen {

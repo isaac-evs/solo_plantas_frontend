@@ -15,9 +15,9 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
     // --- Published Propierties ---
     /// Live Color
     @Published var extractedColor : UIColor = .clear
+    @Published var detectedQR: String? = nil
     
-    
-    // --- Internal Propierties ---
+    // --- Internal Properties ---
     let session = AVCaptureSession()
     private let output = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
@@ -88,6 +88,16 @@ final class CameraService: NSObject, ObservableObject, @unchecked Sendable {
                  
         if self.session.canAddOutput(self.output) {
             self.session.addOutput(self.output)
+        }
+        
+        // Metadata output config (QR scanning)
+        let metadataOutput = AVCaptureMetadataOutput()
+        if self.session.canAddOutput(metadataOutput) {
+            self.session.addOutput(metadataOutput)
+            metadataOutput.setMetadataObjectsDelegate(self, queue: .main)
+            if metadataOutput.availableMetadataObjectTypes.contains(.qr) {
+                metadataOutput.metadataObjectTypes = [.qr]
+            }
         }
                  
         self.session.commitConfiguration()
@@ -161,6 +171,19 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         // Update UI (Main Thread)
         DispatchQueue.main.async {
             self.extractedColor = newColor
+        }
+    }
+}
+
+// --- QR Detection Processing ---
+extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
+    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+        if let metadataObject = metadataObjects.first as? AVMetadataMachineReadableCodeObject, metadataObject.type == .qr {
+            if let stringValue = metadataObject.stringValue {
+                if self.detectedQR != stringValue {
+                    self.detectedQR = stringValue
+                }
+            }
         }
     }
 }

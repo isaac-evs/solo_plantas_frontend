@@ -11,6 +11,7 @@ import ARKit
 
 struct ARViewContainer: UIViewRepresentable {
     @ObservedObject var viewModel: ARGardenViewModel
+    @Binding var captureSnapshot: Bool
     
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
@@ -38,6 +39,15 @@ struct ARViewContainer: UIViewRepresentable {
     func updateUIView(_ uiView: ARView, context: Context) {
         Task {
             await context.coordinator.syncPlantMesh(iteration: viewModel.currentIteration)
+        }
+        
+        if captureSnapshot {
+            DispatchQueue.main.async { captureSnapshot = false }
+            context.coordinator.captureSnapshot { image in
+                if let img = image {
+                    UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
+                }
+            }
         }
     }
         
@@ -132,6 +142,14 @@ struct ARViewContainer: UIViewRepresentable {
                         anchor.addChild(newPlant)
                         self.currentPlantEntity = newPlant
                     }
+                }
+                
+                func captureSnapshot(completion: @escaping (UIImage?) -> Void) {
+                    guard let arView = arView else {
+                        completion(nil)
+                        return
+                    }
+                    arView.snapshot(saveToHDR: false, completion: completion)
                 }
     }
 }

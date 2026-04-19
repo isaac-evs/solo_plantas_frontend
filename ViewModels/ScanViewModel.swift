@@ -39,6 +39,29 @@ class ScanViewModel: ObservableObject {
                 self.liveColor = Color(uiColor: uiColor)
             }
             .store(in: &cancellables)
+            
+        cameraService.$detectedQR
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] qrString in
+                guard let self = self, let qr = qrString, !self.isScanning else { return }
+                self.activatePackage(qrString: qr)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func activatePackage(qrString: String) {
+        self.isScanning = true
+        Task {
+            do {
+                // Ignore actual response mappings, just trigger standard POST
+                struct EmptyBody: Encodable {}
+                let _ : [String: String] = try await NetworkManager.shared.request(endpoint: "/activate/\(qrString)", method: "POST", body: EmptyBody())
+                self.scanComplete = true 
+            } catch {
+                print("QR Activation failed: \(error)")
+            }
+            self.isScanning = false
+        }
     }
     
     // --- Actions ---

@@ -10,6 +10,7 @@ import MapKit
 
 struct NurseryMapView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = MapViewModel()
     
     private let textScale: CGFloat = 1.35
@@ -94,6 +95,22 @@ struct NurseryMapView: View {
                             .shadow(color: Color(hex: "#3B7A2E").opacity(0.3), radius: 8, y: 4)
                         }
                         .padding(.top, 8)
+                        
+                        Button {
+                            // Access global context dynamically if possible or via injected appState
+                            // Unfortunately AppState isn't here? Wait, Map doesnt have it.
+                            // I will add @EnvironmentObject var appState: AppState at the top!
+                            appState.selectedNurseryForPickup = nursery.id
+                            dismiss()
+                        } label: {
+                            Text("Select for Pickup (Waive Shipping)")
+                                .font(.system(size: 15 * textScale, weight: .bold))
+                                .foregroundColor(Color(hex: "#3B7A2E"))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 54)
+                                .background(Color(hex: "#3B7A2E").opacity(0.12))
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
                     }
                     .padding(24)
                     .background(
