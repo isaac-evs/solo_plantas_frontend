@@ -197,6 +197,13 @@ struct CatalogCell: View {
 
     private var t: SeedPacketTheme { seedTheme(for: plant.id) }
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    
+    private var currencyFormatter: NumberFormatter {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "MXN"
+        return f
+    }
 
     var body: some View {
         Button(action: action) {
@@ -267,15 +274,11 @@ struct CatalogCell: View {
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
                             
-                            if let price = plant.price {
-                                let formatter = NumberFormatter()
-                                formatter.numberStyle = .currency
-                                formatter.currencyCode = "MXN"
-                                if let str = formatter.string(from: NSNumber(value: price)) {
-                                    Text(str)
-                                        .font(.system(size: isIpad ? 16 : 14, weight: .semibold))
-                                        .foregroundColor(t.textColor.opacity(0.8))
-                                }
+                            if let price = plant.price,
+                               let str = currencyFormatter.string(from: NSNumber(value: price)) {
+                                Text(str)
+                                    .font(.system(size: isIpad ? 16 : 14, weight: .semibold))
+                                    .foregroundColor(t.textColor.opacity(0.8))
                             }
                             
                             HStack(spacing: 4) {
