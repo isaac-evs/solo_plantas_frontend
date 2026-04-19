@@ -136,6 +136,7 @@ struct MainTabBar: View {
             case .home:    return "Shows your planted garden"
             case .catalog: return "Browse all native plants in the field guide"
             case .profile: return "View account settings and orders"
+            case .scan:    return "Opens camera to identify native plants"
             }
         }())
         .accessibilityRemoveTraits(isActive ? [] : [.isSelected])

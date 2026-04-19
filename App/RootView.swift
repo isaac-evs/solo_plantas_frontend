@@ -27,6 +27,7 @@ struct RootView: View {
                 case .arGarden(let plant):    ARGardenView(plant: plant)
                 case .virtualGarden:          VirtualGardenView()
                 case .checkout(let amount):   CheckoutView(subtotal: amount)
+                case .profile:                ProfileView()
                 case .plantUnlock(let plant): PlantUnlockView(plant: plant)
                 }
             }

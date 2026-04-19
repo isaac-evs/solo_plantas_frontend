@@ -15,6 +15,7 @@ struct ARGrowthView: View {
     @State private var instructionVisible = false
     @State private var pulseRings         = false
     @State private var lastIteration      = 0
+    @State private var captureSnapshot    = false
 
     @Environment(\.accessibilityReduceMotion)     private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -29,7 +30,7 @@ struct ARGrowthView: View {
 
     var body: some View {
         ZStack {
-            ARViewContainer(viewModel: viewModel)
+            ARViewContainer(viewModel: viewModel, captureSnapshot: $captureSnapshot)
                 .edgesIgnoringSafeArea(.all)
                 .accessibilityLabel("Augmented reality camera view")
 

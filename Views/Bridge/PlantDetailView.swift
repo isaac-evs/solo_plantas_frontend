@@ -16,6 +16,13 @@ struct PlantDetailView: View {
     private let s: CGFloat = 1.35
     
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+    
+    private var currencyFormatter: NumberFormatter {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "MXN"
+        return f
+    }
 
     var body: some View {
         ZStack {
@@ -42,16 +49,12 @@ struct PlantDetailView: View {
                                 .italic()
                                 .foregroundColor(t.textColor.opacity(0.5))
                             
-                            if let price = plant.price {
-                                let formatter = NumberFormatter()
-                                formatter.numberStyle = .currency
-                                formatter.currencyCode = "MXN"
-                                if let str = formatter.string(from: NSNumber(value: price)) {
-                                    Text(str)
-                                        .font(.system(size: 18 * s, weight: .bold))
-                                        .foregroundColor(t.textColor)
-                                        .padding(.top, 4)
-                                }
+                            if let price = plant.price,
+                               let str = currencyFormatter.string(from: NSNumber(value: price)) {
+                                Text(str)
+                                    .font(.system(size: 18 * s, weight: .bold))
+                                    .foregroundColor(t.textColor)
+                                    .padding(.top, 4)
                             }
                         }
                         

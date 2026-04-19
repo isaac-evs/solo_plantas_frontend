@@ -104,6 +104,13 @@ struct CartView: View {
 struct CartItemRow: View {
     @EnvironmentObject var cart: CartManager
     let item: CartItem
+    
+    private var currencyFormatter: NumberFormatter {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "MXN"
+        return f
+    }
 
     var body: some View {
         HStack(spacing: 16) {
@@ -126,15 +133,11 @@ struct CartItemRow: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(Color(hex: "#1A2E1A"))
                 
-                if let price = item.plant.price {
-                    let formatter = NumberFormatter()
-                    formatter.numberStyle = .currency
-                    formatter.currencyCode = "MXN"
-                    if let str = formatter.string(from: NSNumber(value: price)) {
-                        Text(str)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Color(hex: "#4A7C59"))
-                    }
+                if let price = item.plant.price,
+                   let str = currencyFormatter.string(from: NSNumber(value: price)) {
+                    Text(str)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(Color(hex: "#4A7C59"))
                 }
             }
 
