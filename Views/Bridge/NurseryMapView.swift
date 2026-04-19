@@ -100,7 +100,7 @@ struct NurseryMapView: View {
                             // Access global context dynamically if possible or via injected appState
                             // Unfortunately AppState isn't here? Wait, Map doesnt have it.
                             // I will add @EnvironmentObject var appState: AppState at the top!
-                            appState.selectedNurseryForPickup = nursery.id
+                            appState.selectedNurseryForPickup = nursery.id.uuidString
                             dismiss()
                         } label: {
                             Text("Select for Pickup (Waive Shipping)")
