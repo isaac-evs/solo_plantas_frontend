@@ -111,6 +111,7 @@ struct ARGardenView: View {
                                         .foregroundColor(.white)
                                         .frame(width: 76, height: 76)
                                         .background(.ultraThinMaterial, in: Circle())
+                                }
                                 .accessibilityLabel("Plant information")
                                 
                                 // Snapshot Button
