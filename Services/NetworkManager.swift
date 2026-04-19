@@ -7,11 +7,17 @@ enum NetworkError: Error {
     case serverError(String)
     case decodingError(Error)
     case unknown
+    case invalidResponse
+    case statusCode(Int)
 }
 
 final class NetworkManager: Sendable {
     static let shared = NetworkManager()
-    private let baseURL = "http://localhost:3000/api/v1"
+    private let baseURL = "http://192.168.68.120:5001/api/v1"
+    
+    private var authToken: String? {
+        KeychainHelper.shared.getToken()
+    }
     
     private let session: URLSession
     
@@ -32,7 +38,7 @@ final class NetworkManager: Sendable {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         if requiresAuth {
-            if let token = KeychainHelper.shared.getToken() {
+            if let token = authToken {
                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             }
         }
@@ -46,28 +52,41 @@ final class NetworkManager: Sendable {
     
     func request<T: Decodable>(endpoint: String, method: String, requiresAuth: Bool = true, body: Data? = nil) async throws -> T {
         let req = try createRequest(for: endpoint, method: method, requiresAuth: requiresAuth, body: body)
-        let (data, response) = try await session.data(for: req)
         
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.unknown
-        }
+        print("\n🌐 [NETWORK] Sending \(method) to \(req.url?.absoluteString ?? "")")
         
-        switch httpResponse.statusCode {
-        case 200...299:
-            do {
-                let decoded = try JSONDecoder().decode(T.self, from: data)
-                return decoded
-            } catch {
-                throw NetworkError.decodingError(error)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: req)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ [NETWORK] Invalid response cast.")
+                throw NetworkError.invalidResponse
             }
-        case 401:
-            KeychainHelper.shared.deleteToken()
-            throw NetworkError.unauthorized
-        default:
-            if let errorMsg = try? JSONDecoder().decode([String: String].self, from: data), let msg = errorMsg["message"] {
-                throw NetworkError.serverError(msg)
+            
+            print("🌐 [NETWORK] HTTP Status: \(httpResponse.statusCode)")
+            
+            if !(200...299).contains(httpResponse.statusCode) {
+                let errorStr = String(data: data, encoding: .utf8) ?? "None"
+                print("❌ [NETWORK] Server Error Body: \(errorStr)")
+                
+                if let errorMsg = try? JSONDecoder().decode([String: String].self, from: data), let msg = errorMsg["message"] {
+                    throw NetworkError.serverError(msg)
+                }
+                throw NetworkError.serverError("Received status code \(httpResponse.statusCode)")
             }
-            throw NetworkError.serverError("Received status code \(httpResponse.statusCode)")
+            
+            if let strResponse = String(data: data, encoding: .utf8) {
+                print("✅ [NETWORK] Payload: \(strResponse)")
+            }
+            
+            return try JSONDecoder().decode(T.self, from: data)
+            
+        } catch let urlError as URLError {
+            print("❌ [NETWORK] URLError: \(urlError.localizedDescription) (Code: \(urlError.errorCode))")
+            throw urlError
+        } catch {
+            print("❌ [NETWORK] Generic Error: \(error.localizedDescription)")
+            throw error
         }
     }
 }
