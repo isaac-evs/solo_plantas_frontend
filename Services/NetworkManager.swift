@@ -13,7 +13,7 @@ enum NetworkError: Error {
 
 final class NetworkManager: Sendable {
     static let shared = NetworkManager()
-    private let baseURL = "http://192.168.68.120:5001/api/v1"
+    private let baseURL = "https://sour-tigers-boil.loca.lt/api/v1"
     
     private var authToken: String? {
         KeychainHelper.shared.getToken()
