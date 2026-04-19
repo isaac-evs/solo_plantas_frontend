@@ -17,6 +17,7 @@ enum AppScreen: Equatable {
     case bridge(PlantSpecies)
     case arGarden(PlantSpecies)
     case virtualGarden
+    case profile
     case checkout(subtotal: Double)
     case plantHome
     case scan
@@ -27,6 +28,7 @@ enum AppTab {
     case home
     case catalog
     case scan
+    case profile
 }
 
 @MainActor
@@ -44,7 +46,7 @@ class AppState: ObservableObject {
 
     var showsTabBar: Bool {
         switch currentScreen {
-        case .plantHome, .catalog, .scan: return true
+        case .plantHome, .catalog, .scan, .profile: return true
         default: return false
         }
     }
@@ -83,6 +85,7 @@ class AppState: ObservableObject {
         case .home:    currentScreen = .plantHome
         case .catalog: currentScreen = .catalog
         case .scan:    currentScreen = .scan
+        case .profile: currentScreen = .profile
         }
     }
 }

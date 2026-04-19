@@ -5,6 +5,10 @@ struct CheckoutView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = CheckoutViewModel()
     
+    @State private var streetAddress: String = ""
+    @State private var city: String = ""
+    @State private var zipCode: String = ""
+    
     let subtotal: Double
     var shipping: Double { appState.selectedNurseryForPickup == nil ? 99.00 : 0.00 }
     var total: Double { subtotal + shipping }
@@ -58,6 +62,30 @@ struct CheckoutView: View {
                             Text("Local Nursery Pickup Applied!")
                                 .font(.subheadline)
                                 .foregroundColor(Color(hex: "#4A7C59"))
+                        }
+                        .padding(.horizontal, 24)
+                    } else {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Delivery Address")
+                                .font(.headline)
+                            
+                            TextField("Street Address", text: $streetAddress)
+                                .padding()
+                                .background(Color.black.opacity(0.05))
+                                .cornerRadius(10)
+                                
+                            HStack {
+                                TextField("City", text: $city)
+                                    .padding()
+                                    .background(Color.black.opacity(0.05))
+                                    .cornerRadius(10)
+                                    
+                                TextField("Zip Code", text: $zipCode)
+                                    .keyboardType(.numberPad)
+                                    .padding()
+                                    .background(Color.black.opacity(0.05))
+                                    .cornerRadius(10)
+                            }
                         }
                         .padding(.horizontal, 24)
                     }

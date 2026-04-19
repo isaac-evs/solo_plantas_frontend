@@ -70,6 +70,7 @@ struct MainTabBar: View {
                 tabButton(tab: .home,    icon: "leaf.fill",         label: "Garden")
                 tabButton(tab: .scan,    icon: "camera.viewfinder", label: "Scan")
                 tabButton(tab: .catalog, icon: "book.closed.fill",  label: "Field Guide")
+                tabButton(tab: .profile, icon: "person.crop.circle.fill", label: "Profile")
             }
             .frame(width: pillW, height: pillH)
         }
@@ -133,8 +134,8 @@ struct MainTabBar: View {
         .accessibilityHint({
             switch tab {
             case .home:    return "Shows your planted garden"
-            case .scan:    return "Opens camera to identify native plants"
             case .catalog: return "Browse all native plants in the field guide"
+            case .profile: return "View account settings and orders"
             }
         }())
         .accessibilityRemoveTraits(isActive ? [] : [.isSelected])

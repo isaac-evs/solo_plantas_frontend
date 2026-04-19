@@ -10,7 +10,9 @@ import SwiftUI
 
 struct CatalogGridView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var cart: CartManager
     @StateObject private var viewModel = CatalogViewModel()
+    @State private var showingCart = false
 
     @Environment(\.accessibilityReduceMotion)       private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -52,6 +54,27 @@ struct CatalogGridView: View {
                             .padding(.vertical, isIpad ? 8 : 6)
                             .background(Capsule().fill(homeAccent.opacity(0.12)))
                             .accessibilityLabel("\(appState.plantedDates.count) of \(viewModel.totalCatalogSize) plants discovered")
+                            
+                        Button {
+                            showingCart = true
+                        } label: {
+                            ZStack(alignment: .topTrailing) {
+                                Image(systemName: "bag.fill")
+                                    .font(.system(size: isIpad ? 26 : 22))
+                                    .foregroundColor(homeTextPrimary)
+                                
+                                if cart.itemCount > 0 {
+                                    Text("\(cart.itemCount)")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(5)
+                                        .background(Circle().fill(Color.red))
+                                        .offset(x: 8, y: -6)
+                                }
+                            }
+                        }
+                        .padding(.leading, 12)
+                        .accessibilityLabel("Shopping Cart. \(cart.itemCount) items.")
                     }
                     .padding(.horizontal, isIpad ? 40 : 24)
                     .padding(.top, isIpad ? 50 : 62)
@@ -129,6 +152,9 @@ struct CatalogGridView: View {
                 await viewModel.refresh()
             }
         }
+        .sheet(isPresented: $showingCart) {
+            CartView()
+        }
         .accessibilityLabel("Field Guide. Browse and discover native plants.")
     }
 
@@ -167,6 +193,7 @@ struct CatalogCell: View {
     let plant: PlantSpecies
     let isUnlocked: Bool
     let action: () -> Void
+    @EnvironmentObject var cart: CartManager
 
     private var t: SeedPacketTheme { seedTheme(for: plant.id) }
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
@@ -273,6 +300,25 @@ struct CatalogCell: View {
                     }
                     .padding(.vertical, isIpad ? 18 : 14)
                     .padding(.horizontal, 10)
+                }
+                
+                // Add to Cart Overlay
+                if isUnlocked {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button {
+                                cart.addToCart(plant: plant)
+                            } label: {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: isIpad ? 36 : 28))
+                                    .foregroundColor(t.accent)
+                                    .background(Circle().fill(Color.white))
+                            }
+                            .padding(isIpad ? 16 : 12)
+                        }
+                        Spacer()
+                    }
                 }
             }
             .frame(height: isIpad ? 260 : 190)

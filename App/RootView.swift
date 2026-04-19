@@ -44,6 +44,7 @@ struct RootView: View {
             }
         }
         .environmentObject(appState)
+        .environmentObject(CartManager.shared)
         .animation(.spring(response: 0.4, dampingFraction: 0.82), value: appState.showsTabBar)
         .animation(.easeInOut(duration: 0.35), value: appState.currentScreen)
     }
