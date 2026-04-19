@@ -25,7 +25,8 @@ struct OrderModel: Identifiable, Equatable {
 }
 
 // Mock Data
-class OrderService: ObservableObject {
+@MainActor
+final class OrderService: ObservableObject {
     static let shared = OrderService()
     
     @Published var myOrders: [OrderModel] = [

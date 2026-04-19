@@ -139,12 +139,13 @@ class CheckoutViewModel: ObservableObject {
         do {
             struct PaymentBody: Encodable { let amount: Double; let currency: String }
             let body = PaymentBody(amount: amount, currency: "mxn")
+            let bodyData = try? JSONEncoder().encode(body)
             
             // Mock Express Intent
             let _: [String: String]? = try? await NetworkManager.shared.request(
                 endpoint: "/payments/intent",
                 method: "POST",
-                body: body
+                body: bodyData
             )
             
             try await Task.sleep(nanoseconds: 1_200_000_000)

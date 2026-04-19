@@ -54,8 +54,12 @@ class ScanViewModel: ObservableObject {
         Task {
             do {
                 // Ignore actual response mappings, just trigger standard POST
-                struct EmptyBody: Encodable {}
-                let _ : [String: String] = try await NetworkManager.shared.request(endpoint: "/activate/\(qrString)", method: "POST", body: EmptyBody())
+                let emptyData = "{}".data(using: .utf8)
+                let _ : [String: String] = try await NetworkManager.shared.request(
+                    endpoint: "/activate/\(qrString)", 
+                    method: "POST", 
+                    body: emptyData
+                )
                 self.scanComplete = true 
             } catch {
                 print("QR Activation failed: \(error)")
