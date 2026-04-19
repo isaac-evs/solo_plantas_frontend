@@ -11,6 +11,24 @@ enum NetworkError: Error {
     case statusCode(Int)
 }
 
+struct ApiErrorDetail: Decodable {
+    let field: String
+    let message: String
+}
+
+struct ApiErrorResponse: Decodable {
+    let success: Bool?
+    let error: String?
+    let details: [ApiErrorDetail]?
+    let message: String?
+}
+
+struct ApiResponse<T: Decodable>: Decodable {
+    let success: Bool
+    let data: T?
+    let message: String?
+}
+
 final class NetworkManager: Sendable {
     static let shared = NetworkManager()
     private let baseURL = "https://ocnsk-187-213-32-126.run.pinggy-free.link/api/v1"
@@ -69,8 +87,15 @@ final class NetworkManager: Sendable {
                 let errorStr = String(data: data, encoding: .utf8) ?? "None"
                 print("❌ [NETWORK] Server Error Body: \(errorStr)")
                 
-                if let errorMsg = try? JSONDecoder().decode([String: String].self, from: data), let msg = errorMsg["message"] {
-                    throw NetworkError.serverError(msg)
+                if let apiError = try? JSONDecoder().decode(ApiErrorResponse.self, from: data) {
+                    if let details = apiError.details, !details.isEmpty {
+                        let combined = details.map { $0.message }.joined(separator: "\n")
+                        throw NetworkError.serverError(combined)
+                    } else if let errMsgs = apiError.error {
+                        throw NetworkError.serverError(errMsgs)
+                    } else if let msg = apiError.message {
+                        throw NetworkError.serverError(msg)
+                    }
                 }
                 throw NetworkError.serverError("Received status code \(httpResponse.statusCode)")
             }
@@ -79,7 +104,15 @@ final class NetworkManager: Sendable {
                 print("✅ [NETWORK] Payload: \(strResponse)")
             }
             
-            return try JSONDecoder().decode(T.self, from: data)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            
+            if let wrapper = try? decoder.decode(ApiResponse<T>.self, from: data), let unwrappedData = wrapper.data {
+                return unwrappedData
+            }
+            
+            return try decoder.decode(T.self, from: data)
+            
             
         } catch let urlError as URLError {
             print("❌ [NETWORK] URLError: \(urlError.localizedDescription) (Code: \(urlError.errorCode))")
