@@ -26,6 +26,11 @@ class CatalogManager: ObservableObject {
     }
     
     func fetchRecommendations(lat: Double = 0, lon: Double = 0) async throws {
+        guard lat != 0.0, lon != 0.0 else {
+            print("⚠️ Skipping recommendations: no valid location")
+            return
+        }
+        
         let fetched: [PlantSpecies] = try await NetworkManager.shared.request(
             endpoint: "/catalog/recommendations?lat=\(lat)&lon=\(lon)",
             method: "GET"
