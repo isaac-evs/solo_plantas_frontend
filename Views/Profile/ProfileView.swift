@@ -22,13 +22,40 @@ struct ProfileView: View {
                     .padding(.top, 24)
                     
                     // User Info Card
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Solo Plantas Member")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
-                        Text("Member since 2026")
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.8))
+                    HStack(spacing: 20) {
+                        Image("cempasuchil")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                            .shadow(color: .black.opacity(0.15), radius: 5, y: 2)
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Solo Plantas Botanist")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading) {
+                                    Text("Seeds Planted")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.white.opacity(0.8))
+                                    Text("12")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                VStack(alignment: .leading) {
+                                    Text("Active Orders")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.white.opacity(0.8))
+                                    Text("1")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                        }
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,24 +93,20 @@ struct ProfileView: View {
                     .padding(.horizontal, 24)
                     
                     Spacer()
-                    
-                    // Logout
-                    Button {
-                        KeychainHelper.shared.deleteToken()
-                        appState.routeAfterSplash()
-                    } label: {
-                        Text("Log Out")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 60)
-                            .background(Color.red.opacity(0.1))
-                            .cornerRadius(16)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
                 }
             }
+            .navigationBarItems(trailing: Button {
+                KeychainHelper.shared.deleteToken()
+                appState.routeAfterSplash()
+            } label: {
+                Text("Log Out")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(20)
+            })
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }

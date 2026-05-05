@@ -35,6 +35,8 @@ enum AppTab {
 
 @MainActor
 class AppState: ObservableObject {
+    @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
+    
     @Published var currentScreen: AppScreen = .splash
     @Published var activeTab: AppTab = .home
     @Published var focusedPlantID: String? = nil
@@ -58,7 +60,9 @@ class AppState: ObservableObject {
     }
 
     func routeAfterSplash() {
-        if KeychainHelper.shared.getToken() != nil {
+        if !hasSeenOnboarding {
+            currentScreen = .onboarding
+        } else if KeychainHelper.shared.getToken() != nil {
             currentScreen = .plantHome
         } else {
             currentScreen = .login

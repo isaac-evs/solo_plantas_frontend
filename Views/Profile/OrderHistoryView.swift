@@ -9,24 +9,7 @@ struct OrderHistoryView: View {
             Color(hex: "#F5F0E8").ignoresSafeArea()
             
             VStack(alignment: .leading, spacing: 20) {
-                // Header
-                HStack {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(Color(hex: "#1A2E1A"))
-                            .frame(width: 44, height: 44)
-                            .background(Color.white, in: Circle())
-                            .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
-                    }
-                    Text("Order History")
-                        .font(.system(size: 24, weight: .heavy))
-                        .foregroundColor(Color(hex: "#1A2E1A"))
-                        .padding(.leading, 8)
-                    Spacer()
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 24)
+
                 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -40,7 +23,8 @@ struct OrderHistoryView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        .navigationTitle("Order History")
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

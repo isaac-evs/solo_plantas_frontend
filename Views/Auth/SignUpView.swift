@@ -7,7 +7,9 @@ struct SignUpView: View {
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     var body: some View {
-        VStack(spacing: 32) {
+        ZStack {
+            Color(hex: "#F5F0E8").ignoresSafeArea()
+            VStack(spacing: 32) {
             Spacer()
             
             Text("Create Account")
@@ -70,6 +72,5 @@ struct SignUpView: View {
             
             Spacer()
         }
-        .background(Color(hex: "#F5F0E8").ignoresSafeArea())
     }
 }

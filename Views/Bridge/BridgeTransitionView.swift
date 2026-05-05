@@ -114,7 +114,12 @@ struct BridgeTransitionView: View {
                             
                             // Primary Button
                             Button {
-                                appState.currentScreen = .plantHome
+                                appState.hasSeenOnboarding = true
+                                if KeychainHelper.shared.getToken() != nil {
+                                    appState.currentScreen = .plantHome
+                                } else {
+                                    appState.currentScreen = .signUp
+                                }
                             } label: {
                                 HStack(spacing: 12) {
                                     Text("Go to my garden")
@@ -129,7 +134,7 @@ struct BridgeTransitionView: View {
                                 .background(t.accent)
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                             }
-                            .accessibilityLabel("Go to my garden to see your new plant")
+                            .accessibilityLabel("Go to my garden or create account")
                             
                             // Secondary Action Buttons
                             HStack(spacing: 16) {
