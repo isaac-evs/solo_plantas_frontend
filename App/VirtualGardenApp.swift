@@ -6,14 +6,8 @@
 //
 
 import SwiftUI
-import StripePaymentSheet
-
 @main
 struct VirtualGardenApp: App {
-    init() {
-        StripeAPI.defaultPublishableKey = "pk_test_TYooMQauvdEDq54NiTphI7jx"
-    }
-    
     var body: some Scene {
         WindowGroup {
             RootView()

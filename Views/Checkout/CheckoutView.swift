@@ -1,5 +1,5 @@
 import SwiftUI
-import StripePaymentSheet
+import SafariServices
 
 struct CheckoutView: View {
     @Environment(\.dismiss) var dismiss
@@ -89,7 +89,7 @@ struct CheckoutView: View {
                         let shippingType = "delivery"
                         
                         Task { 
-                            await viewModel.preparePaymentSheet(
+                            await viewModel.prepareCheckoutSession(
                                 plantId: plantId,
                                 shippingType: shippingType,
                                 nurseryId: nil,
@@ -116,24 +116,14 @@ struct CheckoutView: View {
                     .disabled(viewModel.isProcessing || viewModel.checkoutSuccess || cart.items.isEmpty)
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
-                    .alert("Payment Successful", isPresented: $viewModel.checkoutSuccess) {
-                        Button("OK") { 
-                            cart.items.removeAll()
-                            dismiss() 
+                    .sheet(isPresented: $viewModel.showSafari, onDismiss: {
+                        cart.items.removeAll()
+                        dismiss()
+                    }) {
+                        if let url = viewModel.checkoutUrl {
+                            SafariView(url: url)
                         }
                     }
-                    .background(
-                        Group {
-                            if let ps = viewModel.paymentSheet {
-                                Color.clear
-                                    .paymentSheet(
-                                        isPresented: $viewModel.showPaymentSheet,
-                                        paymentSheet: ps,
-                                        onCompletion: viewModel.onPaymentCompletion
-                                    )
-                            }
-                        }
-                    )
                 }
             }
             .navigationBarHidden(true)
@@ -148,12 +138,22 @@ struct CheckoutView: View {
     }
 }
 
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        return SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
+}
+
 @MainActor
 class CheckoutViewModel: ObservableObject {
     @Published var isProcessing: Bool = false
     @Published var checkoutSuccess: Bool = false
-    @Published var paymentSheet: PaymentSheet?
-    @Published var showPaymentSheet: Bool = false
+    @Published var checkoutUrl: URL?
+    @Published var showSafari: Bool = false
     
     struct PaymentBody: Encodable {
         let plantId: String
@@ -163,10 +163,10 @@ class CheckoutViewModel: ObservableObject {
     }
     
     struct PaymentResponse: Decodable {
-        let clientSecret: String
+        let url: String
     }
     
-    func preparePaymentSheet(plantId: String, shippingType: String, nurseryId: String?, street: String, city: String, zipCode: String) async {
+    func prepareCheckoutSession(plantId: String, shippingType: String, nurseryId: String?, street: String, city: String, zipCode: String) async {
         isProcessing = true
         
         let addressDict: [String: String]? = shippingType == "delivery" ? [
@@ -178,33 +178,19 @@ class CheckoutViewModel: ObservableObject {
         
         do {
             let response: PaymentResponse? = try await NetworkManager.shared.request(
-                endpoint: "/payments/intent",
+                endpoint: "/payments/checkout-session",
                 method: "POST",
                 body: bodyData
             )
             
-            if let secret = response?.clientSecret {
-                var config = PaymentSheet.Configuration()
-                config.merchantDisplayName = "Solo Plantas"
-                config.allowsDelayedPaymentMethods = true
-                self.paymentSheet = PaymentSheet(paymentIntentClientSecret: secret, configuration: config)
-                self.showPaymentSheet = true
+            if let urlString = response?.url, let url = URL(string: urlString) {
+                self.checkoutUrl = url
+                self.showSafari = true
             }
         } catch {
-            print("Checkout intent failed: \(error)")
+            print("Checkout session failed: \(error)")
         }
         
         isProcessing = false
-    }
-    
-    func onPaymentCompletion(result: PaymentSheetResult) {
-        switch result {
-        case .completed:
-            self.checkoutSuccess = true
-        case .canceled:
-            print("Payment canceled by user")
-        case .failed(let error):
-            print("Payment failed: \(error.localizedDescription)")
-        }
     }
 }

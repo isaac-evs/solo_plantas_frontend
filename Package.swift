@@ -35,15 +35,11 @@ let package = Package(
             appCategory: .education
         )
     ],
-    dependencies: [
-        .package(url: "https://github.com/stripe/stripe-ios", from: "23.27.0")
-    ],
+    dependencies: [],
     targets: [
         .executableTarget(
             name: "AppModule",
-            dependencies: [
-                .product(name: "StripePaymentSheet", package: "stripe-ios")
-            ],
+            dependencies: [],
             path: ".",
             resources: [
                 .process("Resources"),
