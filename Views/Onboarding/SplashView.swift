@@ -32,19 +32,6 @@ struct SplashView: View {
                         .shadow(color: .black.opacity(0.85), radius: 2, x: 0, y: 2)
                         .shadow(color: .black.opacity(0.6), radius: 12, x: 0, y: 6)
                         .accessibilityAddTraits(.isHeader)
-                    
-                    Text("Return native species to Jalisco.")
-                        .font(.system(size: isIpad ? 34 : 20, weight: .semibold))
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, isIpad ? 32 : 24)
-                        .padding(.vertical, isIpad ? 16 : 12)
-                        .background(
-                            Capsule()
-                                .fill(Color.white.opacity(0.15))
-                                .background(.ultraThinMaterial)
-                                .clipShape(Capsule())
-                        )
                 }
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)

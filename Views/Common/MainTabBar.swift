@@ -50,27 +50,14 @@ struct MainTabBar: View {
                         )
                 )
 
-            // Dividers
-            HStack(spacing: 0) {
-                Spacer()
-                Rectangle()
-                    .fill(Color.black.opacity(0.07))
-                    .frame(width: 0.75, height: pillH * 0.42)
-                Spacer()
-                Rectangle()
-                    .fill(Color.black.opacity(0.07))
-                    .frame(width: 0.75, height: pillH * 0.42)
-                Spacer()
-            }
-            .frame(width: pillW)
-            .accessibilityHidden(true)
+
 
             // Buttons
             HStack(spacing: 0) {
                 tabButton(tab: .home,    icon: "leaf.fill",         label: "Garden")
                 tabButton(tab: .scan,    icon: "camera.viewfinder", label: "Scan")
                 tabButton(tab: .catalog, icon: "book.closed.fill",  label: "Field Guide")
-                tabButton(tab: .assistant, icon: "sparkles.bubble.fill", label: "Chat")
+                tabButton(tab: .assistant, icon: "sparkles", label: "Chat")
                 tabButton(tab: .profile, icon: "person.crop.circle.fill", label: "Profile")
             }
             .frame(width: pillW, height: pillH)

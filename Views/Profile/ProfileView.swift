@@ -40,13 +40,26 @@ struct ProfileView: View {
                     
                     // Settings Links
                     VStack(spacing: 0) {
-                        ProfileRow(icon: "shippingbox.fill", title: "Order History") {
-                            showOrderHistory = true
+                        NavigationLink(destination: OrderHistoryView()) {
+                            HStack(spacing: 16) {
+                                Image(systemName: "shippingbox.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(Color(hex: "#4A7C59"))
+                                    .frame(width: 24)
+                                
+                                Text("Order History")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(Color(hex: "#1A2E1A"))
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(Color(hex: "#A0998F"))
+                            }
+                            .padding(20)
+                            .background(Color.white)
                         }
-                        Divider().padding(.leading, 56)
-                        ProfileRow(icon: "map.fill", title: "Saved Addresses") {}
-                        Divider().padding(.leading, 56)
-                        ProfileRow(icon: "creditcard.fill", title: "Payment Methods") {}
                     }
                     .background(Color.white)
                     .cornerRadius(20)
@@ -71,39 +84,7 @@ struct ProfileView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .navigationBarHidden(true)
-            .fullScreenCover(isPresented: $showOrderHistory) {
-                OrderHistoryView()
-            }
         }
-    }
-}
-
-struct ProfileRow: View {
-    let icon: String
-    let title: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(hex: "#4A7C59"))
-                    .frame(width: 24)
-                
-                Text(title)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(Color(hex: "#1A2E1A"))
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(Color(hex: "#A0998F"))
-            }
-            .padding(20)
-            .background(Color.white)
-        }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }

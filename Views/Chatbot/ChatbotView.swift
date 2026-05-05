@@ -86,6 +86,7 @@ struct ChatbotView: View {
                         .background(Color(hex: "#F5F0E8"))
                     }
                 }
+                .padding(.bottom, isIpad ? 100 : 80) // Push above the Main Tab Bar
             }
             .navigationTitle("Plant Assistant")
             .navigationBarTitleDisplayMode(.inline)
