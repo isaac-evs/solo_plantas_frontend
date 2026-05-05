@@ -74,3 +74,4 @@ struct LoginView: View {
         }
     }
 }
+}
