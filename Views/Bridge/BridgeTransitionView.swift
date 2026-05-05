@@ -115,11 +115,7 @@ struct BridgeTransitionView: View {
                             // Primary Button
                             Button {
                                 appState.hasSeenOnboarding = true
-                                if KeychainHelper.shared.getToken() != nil {
-                                    appState.currentScreen = .plantHome
-                                } else {
-                                    appState.currentScreen = .signUp
-                                }
+                                appState.currentScreen = .plantHome
                             } label: {
                                 HStack(spacing: 12) {
                                     Text("Go to my garden")

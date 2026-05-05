@@ -33,7 +33,11 @@ class AuthViewModel: ObservableObject {
                 body: body
             )
             KeychainHelper.shared.saveToken(response.token)
-            appState.currentScreen = .plantHome
+            if !appState.hasSeenOnboarding {
+                appState.currentScreen = .onboarding
+            } else {
+                appState.currentScreen = .plantHome
+            }
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg
         } catch {
@@ -57,7 +61,7 @@ class AuthViewModel: ObservableObject {
                 body: body
             )
             KeychainHelper.shared.saveToken(response.token)
-            appState.currentScreen = .plantHome
+            appState.currentScreen = .onboarding
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg
         } catch {

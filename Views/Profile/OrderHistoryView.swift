@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct OrderHistoryView: View {
-    @StateObject private var service = OrderService.shared
+    @StateObject private var viewModel = OrderHistoryViewModel()
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -13,8 +13,17 @@ struct OrderHistoryView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        ForEach(service.myOrders) { order in
-                            OrderCardView(order: order)
+                        if viewModel.isLoading {
+                            ProgressView("Loading Orders...")
+                                .padding(.top, 40)
+                        } else if viewModel.orders.isEmpty {
+                            Text("No orders yet.")
+                                .foregroundColor(.secondary)
+                                .padding(.top, 40)
+                        } else {
+                            ForEach(viewModel.orders) { order in
+                                OrderCardView(order: order)
+                            }
                         }
                     }
                     .padding(.horizontal, 24)
@@ -25,39 +34,99 @@ struct OrderHistoryView: View {
         }
         .navigationTitle("Order History")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            Task { await viewModel.fetchOrders() }
+        }
+    }
+}
+
+// Backend Model
+struct BackendOrder: Decodable, Identifiable {
+    let id: String
+    let plantId: String
+    let status: String
+    let totalAmountCents: Int
+    let createdAt: String
+    let plant: PlantBrief?
+}
+
+struct PlantBrief: Decodable {
+    let name: String
+}
+
+@MainActor
+class OrderHistoryViewModel: ObservableObject {
+    @Published var orders: [BackendOrder] = []
+    @Published var isLoading: Bool = false
+    
+    func fetchOrders() async {
+        isLoading = true
+        do {
+            let response: [BackendOrder]? = try await NetworkManager.shared.request(
+                endpoint: "/orders",
+                method: "GET"
+            )
+            self.orders = response ?? []
+        } catch {
+            print("Failed to fetch orders: \(error)")
+        }
+        isLoading = false
     }
 }
 
 struct OrderCardView: View {
-    let order: OrderModel
+    let order: BackendOrder
     
     private let formatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        return df
+    }()
+    
+    private let displayFormatter: DateFormatter = {
         let df = DateFormatter()
         df.dateStyle = .medium
         return df
     }()
     
+    private var formattedDate: String {
+        if let date = formatter.date(from: order.createdAt) {
+            return displayFormatter.string(from: date)
+        }
+        return "Unknown Date"
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text(order.id)
+                Text(order.id.prefix(8).uppercased())
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(Color(hex: "#1A2E1A"))
                 Spacer()
-                Text(formatter.string(from: order.date))
+                Text(formattedDate)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
             
-            Text(order.items.joined(separator: ", "))
+            Text(order.plant?.name ?? "Unknown Plant")
                 .font(.system(size: 15))
                 .foregroundColor(.secondary)
             
-            OrderTimelineView(currentStatus: order.status)
+            // Map backend status to UI status
+            let uiStatus: OrderStatus = {
+                switch order.status {
+                case "pending": return .preparing
+                case "confirmed": return .shipped
+                case "cancelled": return .preparing // Or add a cancelled state
+                default: return .delivered
+                }
+            }()
+            
+            OrderTimelineView(currentStatus: uiStatus)
                 .padding(.vertical, 8)
                 
             HStack {
-                Text("Total: $\(String(format: "%.2f", order.totalAmount)) MXN")
+                Text("Total: $\(String(format: "%.2f", Double(order.totalAmountCents) / 100.0)) MXN")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "#4A7C59"))
                 Spacer()

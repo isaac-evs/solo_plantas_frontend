@@ -12,7 +12,7 @@ struct CheckoutView: View {
     @State private var zipCode: String = ""
     
     let subtotal: Double
-    var shipping: Double { appState.selectedNurseryForPickup == nil ? 99.00 : 0.00 }
+    var shipping: Double { 99.00 }
     var total: Double { subtotal + shipping }
     
     var body: some View {
@@ -39,7 +39,7 @@ struct CheckoutView: View {
                             Text("Shipping")
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text(shipping == 0 ? "Free (Pickup)" : formatMXN(shipping))
+                            Text(formatMXN(shipping))
                         }
                         
                         Divider().padding(.vertical, 8)
@@ -57,16 +57,7 @@ struct CheckoutView: View {
                     .cornerRadius(16)
                     .padding(.horizontal, 24)
                     
-                    if let _ = appState.selectedNurseryForPickup {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(Color(hex: "#4A7C59"))
-                            Text("Local Nursery Pickup Applied!")
-                                .font(.subheadline)
-                                .foregroundColor(Color(hex: "#4A7C59"))
-                        }
-                        .padding(.horizontal, 24)
-                    } else {
+
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Delivery Address")
                                 .font(.headline)
@@ -90,19 +81,18 @@ struct CheckoutView: View {
                             }
                         }
                         .padding(.horizontal, 24)
-                    }
                     
                     Spacer()
                     
                     Button {
                         guard let plantId = cart.items.first?.plant.id else { return }
-                        let shippingType = appState.selectedNurseryForPickup == nil ? "delivery" : "pickup"
+                        let shippingType = "delivery"
                         
                         Task { 
                             await viewModel.preparePaymentSheet(
                                 plantId: plantId,
                                 shippingType: shippingType,
-                                nurseryId: appState.selectedNurseryForPickup,
+                                nurseryId: nil,
                                 street: streetAddress,
                                 city: city,
                                 zipCode: zipCode

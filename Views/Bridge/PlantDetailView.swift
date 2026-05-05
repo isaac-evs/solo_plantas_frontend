@@ -150,26 +150,7 @@ struct PlantDetailView: View {
                     .padding(.horizontal, 32)
                     .padding(.bottom, 60)
                     
-                    // Add to Cart Button Action
-                    Button {
-                        cart.addToCart(plant: plant)
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "bag.fill.badge.plus")
-                                .font(.system(size: 20, weight: .bold))
-                            Text("Add to Cart")
-                                .font(.system(size: 18, weight: .bold))
-                        }
-                        .foregroundColor(t.background)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 60)
-                        .background(t.textColor)
-                        .cornerRadius(16)
-                        .shadow(color: t.textColor.opacity(0.3), radius: 8, y: 4)
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 60)
+
                 }
             }
         }

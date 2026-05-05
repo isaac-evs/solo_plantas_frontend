@@ -60,10 +60,12 @@ class AppState: ObservableObject {
     }
 
     func routeAfterSplash() {
-        if !hasSeenOnboarding {
-            currentScreen = .onboarding
-        } else if KeychainHelper.shared.getToken() != nil {
-            currentScreen = .plantHome
+        if KeychainHelper.shared.getToken() != nil {
+            if !hasSeenOnboarding {
+                currentScreen = .onboarding
+            } else {
+                currentScreen = .plantHome
+            }
         } else {
             currentScreen = .login
         }

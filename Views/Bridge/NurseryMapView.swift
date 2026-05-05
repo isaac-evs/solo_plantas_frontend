@@ -96,21 +96,7 @@ struct NurseryMapView: View {
                         }
                         .padding(.top, 8)
                         
-                        Button {
-                            // Access global context dynamically if possible or via injected appState
-                            // Unfortunately AppState isn't here? Wait, Map doesnt have it.
-                            // I will add @EnvironmentObject var appState: AppState at the top!
-                            appState.selectedNurseryForPickup = nursery.id.uuidString
-                            dismiss()
-                        } label: {
-                            Text("Select for Pickup (Waive Shipping)")
-                                .font(.system(size: 15 * textScale, weight: .bold))
-                                .foregroundColor(Color(hex: "#3B7A2E"))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .background(Color(hex: "#3B7A2E").opacity(0.12))
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
+
                     }
                     .padding(24)
                     .background(
