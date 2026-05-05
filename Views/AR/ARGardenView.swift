@@ -17,8 +17,6 @@ struct ARGardenView: View {
 
     private var t: SeedPacketTheme { seedTheme(for: viewModel.plant.id) }
 
-    private var t: SeedPacketTheme { seedTheme(for: viewModel.plant.id) }
-
     init(plant: PlantSpecies, overrideIteration: Int? = nil) {
         _viewModel = StateObject(wrappedValue: ARGardenViewModel(plant: plant, isFullyGrown: false, overrideIteration: overrideIteration))
     }

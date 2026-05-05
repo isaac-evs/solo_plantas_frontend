@@ -57,7 +57,7 @@ class ChatbotViewModel: ObservableObject {
             
             // Expected to hit an endpoint that the backend team configures dynamically
             let response: ChatResponse = try await NetworkManager.shared.request(
-                endpoint: "/chat/completion",
+                endpoint: "/chat",
                 method: "POST",
                 requiresAuth: true,
                 body: body
@@ -68,7 +68,7 @@ class ChatbotViewModel: ObservableObject {
         } catch {
             print("Chatbot Error: \(error)")
             // Inform user visually if the backend isn't ready
-            messages.append(ChatMessage(text: "I couldn't reach the server right now. The DevOps team might still be wiring up the OpenAI keys natively!", isUser: false))
+            messages.append(ChatMessage(text: "I couldn't reach the server right now", isUser: false))
             errorMessage = error.localizedDescription
         }
 
