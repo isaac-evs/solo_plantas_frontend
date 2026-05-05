@@ -3,6 +3,8 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @State private var showOrderHistory = false
+    @State private var randomUsername = ["HappyRadish", "AngryTomato", "SleepyCactus", "BraveAgave", "MysticFern", "ZenBonsai", "CosmicMonstera", "WildOrchid", "ChubbySucculent", "NeonPothos"].randomElement() ?? "HappyRadish"
+    @State private var activeOrdersCount: Int = 0
     
     var body: some View {
         NavigationView {
@@ -32,7 +34,7 @@ struct ProfileView: View {
                             .shadow(color: .black.opacity(0.15), radius: 5, y: 2)
                         
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Solo Plantas Botanist")
+                            Text(randomUsername)
                                 .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(.white)
                             
@@ -41,7 +43,7 @@ struct ProfileView: View {
                                     Text("Seeds Planted")
                                         .font(.system(size: 12))
                                         .foregroundColor(.white.opacity(0.8))
-                                    Text("12")
+                                    Text("\(appState.plantedDates.count)")
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.white)
                                 }
@@ -50,7 +52,7 @@ struct ProfileView: View {
                                     Text("Active Orders")
                                         .font(.system(size: 12))
                                         .foregroundColor(.white.opacity(0.8))
-                                    Text("1")
+                                    Text("\(activeOrdersCount)")
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.white)
                                 }
@@ -109,5 +111,20 @@ struct ProfileView: View {
             })
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .onAppear {
+            Task { await fetchActiveOrders() }
+        }
+    }
+    
+    private func fetchActiveOrders() async {
+        do {
+            struct BriefOrder: Decodable { let status: String }
+            let response: [BriefOrder]? = try await NetworkManager.shared.request(endpoint: "/orders", method: "GET")
+            if let orders = response {
+                activeOrdersCount = orders.filter { $0.status == "pending" }.count
+            }
+        } catch {
+            print("Failed to fetch active orders count: \(error)")
+        }
     }
 }

@@ -41,7 +41,7 @@ class CatalogViewModel: ObservableObject {
         var icon: String {
             switch self {
             case .all:    return "square.grid.2x2"
-            case .spring: return "flower"
+            case .spring: return "camera.macro"
             case .summer: return "sun.max"
             case .fall:   return "leaf"
             case .winter: return "snowflake"
