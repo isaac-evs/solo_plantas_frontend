@@ -225,7 +225,7 @@ struct PlantHomeView: View {
             onARTap: {
                 guard !isTransitioning else { return }
                 triggerTransition(theme: seedTheme(for: status.plant.id)) {
-                    appState.currentScreen = .arGarden(status.plant)
+                    appState.currentScreen = .arGarden(status.plant, nil)
                 }
             }
         )

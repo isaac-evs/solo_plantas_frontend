@@ -30,8 +30,10 @@ struct PlantUnlockView: View {
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
     
     private let s: CGFloat = 1.35
+    private let isPreviewMode: Bool
 
-    init(plant: PlantSpecies) {
+    init(plant: PlantSpecies, isPreviewMode: Bool = false) {
+        self.isPreviewMode = isPreviewMode
         _viewModel = StateObject(wrappedValue: PlantUnlockViewModel(plant: plant))
     }
 
@@ -46,7 +48,7 @@ struct PlantUnlockView: View {
 
                     // --- Header ---
                     VStack(spacing: 8) {
-                        Text("YOU FOUND IT")
+                        Text(isPreviewMode ? "PREVIEW IN AR" : "YOU FOUND IT")
                             .font(.system(size: 10 * s, weight: .bold))
                             .tracking(5)
                             .foregroundColor(t.accent.opacity(0.8))
@@ -86,12 +88,12 @@ struct PlantUnlockView: View {
 
                     // --- Stage question ---
                     VStack(spacing: 12) {
-                        Text("HOW FAR ALONG IS IT?")
+                        Text(isPreviewMode ? "SELECT A GROWTH STAGE" : "HOW FAR ALONG IS IT?")
                             .font(.system(size: 10 * s, weight: .bold))
                             .tracking(4)
                             .foregroundColor(t.textColor.opacity(0.55))
 
-                        Text("Select its current stage")
+                        Text(isPreviewMode ? "Preview its current stage" : "Select its current stage")
                             .font(.system(size: 20 * s, weight: .bold, design: .serif))
                             .foregroundColor(t.textColor)
                     }
@@ -116,9 +118,9 @@ struct PlantUnlockView: View {
                         triggerConfirmTransition()
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "leaf.fill")
+                            Image(systemName: isPreviewMode ? "arkit" : "leaf.fill")
                                 .font(.system(size: 14 * s, weight: .semibold))
-                            Text("Add to my garden")
+                            Text(isPreviewMode ? "View in AR" : "Add to my garden")
                                 .font(.system(size: 18 * s, weight: .semibold))
                         }
                         .foregroundColor(t.background)
@@ -232,9 +234,21 @@ struct PlantUnlockView: View {
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-            viewModel.confirm(appState: appState)
-            dismiss()
-            appState.currentScreen = .plantHome
+            if isPreviewMode {
+                let iter: Int
+                switch viewModel.selectedStage {
+                case .seed: iter = 0
+                case .sprout: iter = 1
+                case .small: iter = 2
+                case .juvenile: iter = 3
+                case .grown: iter = 4
+                }
+                appState.currentScreen = .arGarden(viewModel.plant, iter)
+            } else {
+                viewModel.confirm(appState: appState)
+                dismiss()
+                appState.currentScreen = .plantHome
+            }
         }
     }
 }

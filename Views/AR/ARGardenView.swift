@@ -17,8 +17,10 @@ struct ARGardenView: View {
 
     private var t: SeedPacketTheme { seedTheme(for: viewModel.plant.id) }
 
-    init(plant: PlantSpecies) {
-        _viewModel = StateObject(wrappedValue: ARGardenViewModel(plant: plant, isFullyGrown: false))
+    private var t: SeedPacketTheme { seedTheme(for: viewModel.plant.id) }
+
+    init(plant: PlantSpecies, overrideIteration: Int? = nil) {
+        _viewModel = StateObject(wrappedValue: ARGardenViewModel(plant: plant, isFullyGrown: false, overrideIteration: overrideIteration))
     }
 
     var body: some View {
@@ -31,7 +33,7 @@ struct ARGardenView: View {
                 // --- Top bar ---
                 HStack {
                     Button {
-                        appState.currentScreen = .plantHome
+                        appState.switchTab(appState.activeTab)
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 24, weight: .bold))
@@ -156,6 +158,11 @@ struct ARGardenView: View {
     }
 
     private func syncToRealWorldData() {
+        if let override = viewModel.overrideIteration {
+            viewModel.currentIteration = override
+            viewModel.state = override == 4 ? .blooming : .growing(day: 1)
+            return
+        }
         guard let plantedDate = appState.plantedDates[viewModel.plant.id] else { return }
         let elapsedDays = Calendar.current.dateComponents([.day], from: plantedDate, to: Date()).day ?? 0
         let milestones = viewModel.plant.growthMilestones

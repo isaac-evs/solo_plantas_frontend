@@ -22,6 +22,7 @@ class ARGardenViewModel: ObservableObject {
     @Published var state: GrowthState
     @Published var currentIteration: Int = 0
     @Published var showPlantingFlash: Bool = false
+    let overrideIteration: Int?
 
     private var timeTask: Task<Void, Never>?
 
@@ -30,8 +31,9 @@ class ARGardenViewModel: ObservableObject {
     private let impactLight  = UIImpactFeedbackGenerator(style: .light)
     private let notification = UINotificationFeedbackGenerator()
 
-    init(plant: PlantSpecies, isFullyGrown: Bool = false) {
+    init(plant: PlantSpecies, isFullyGrown: Bool = false, overrideIteration: Int? = nil) {
         self.plant = plant
+        self.overrideIteration = overrideIteration
         if isFullyGrown {
             self.state = .blooming
             self.currentIteration = 4

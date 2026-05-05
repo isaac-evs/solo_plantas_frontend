@@ -15,7 +15,8 @@ enum AppScreen: Equatable {
     case catalog
     case arGrowth(PlantSpecies)
     case bridge(PlantSpecies)
-    case arGarden(PlantSpecies)
+    case arGarden(PlantSpecies, Int?)
+    case arPreview(PlantSpecies)
     case virtualGarden
     case profile
     case checkout(subtotal: Double)

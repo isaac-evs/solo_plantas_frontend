@@ -189,6 +189,7 @@ struct CatalogCell: View {
     let plant: PlantSpecies
     let action: () -> Void
     @EnvironmentObject var cart: CartManager
+    @EnvironmentObject var appState: AppState
 
     private var t: SeedPacketTheme { seedTheme(for: plant.id) }
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
@@ -273,10 +274,21 @@ struct CatalogCell: View {
                     .padding(.horizontal, 10)
                 }
                 
-                // Add to Cart Overlay
+                // Top Overlay Buttons
                 VStack {
                     HStack {
+                        Button {
+                            appState.currentScreen = .arPreview(plant)
+                        } label: {
+                            Image(systemName: "arkit")
+                                .font(.system(size: isIpad ? 32 : 24))
+                                .foregroundColor(t.accent)
+                                .background(Circle().fill(Color.white).frame(width: isIpad ? 44 : 36, height: isIpad ? 44 : 36))
+                        }
+                        .padding(isIpad ? 16 : 12)
+                        
                         Spacer()
+                        
                         Button {
                             cart.addToCart(plant: plant)
                         } label: {
