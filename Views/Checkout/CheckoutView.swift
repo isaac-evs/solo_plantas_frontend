@@ -166,6 +166,13 @@ class CheckoutViewModel: ObservableObject {
         let url: String
     }
     
+    struct ReserveBody: Encodable {
+        let plantId: String
+        let quantity: Int
+    }
+    
+    struct ReserveResponse: Decodable {}
+    
     func prepareCheckoutSession(plantId: String, shippingType: String, nurseryId: String?, street: String, city: String, zipCode: String) async {
         isProcessing = true
         
@@ -176,7 +183,18 @@ class CheckoutViewModel: ObservableObject {
         let body = PaymentBody(plantId: plantId, shippingType: shippingType, nurseryId: nurseryId, address: addressDict)
         let bodyData = try? JSONEncoder().encode(body)
         
+        let reserveBody = ReserveBody(plantId: plantId, quantity: 1)
+        let reserveData = try? JSONEncoder().encode(reserveBody)
+        
         do {
+            // 1. Automatically reserve inventory to satisfy Stripe Backend validation
+            let _: ReserveResponse? = try await NetworkManager.shared.request(
+                endpoint: "/cart/reserve",
+                method: "POST",
+                body: reserveData
+            )
+            
+            // 2. Generate Stripe Session
             let response: PaymentResponse? = try await NetworkManager.shared.request(
                 endpoint: "/payments/checkout-session",
                 method: "POST",
