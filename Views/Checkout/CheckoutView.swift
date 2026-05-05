@@ -1,8 +1,10 @@
 import SwiftUI
+import StripePaymentSheet
 
 struct CheckoutView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var cart: CartManager
     @StateObject private var viewModel = CheckoutViewModel()
     
     @State private var streetAddress: String = ""
@@ -93,7 +95,19 @@ struct CheckoutView: View {
                     Spacer()
                     
                     Button {
-                        Task { await viewModel.confirmPayment(amount: total) }
+                        guard let plantId = cart.items.first?.plant.id else { return }
+                        let shippingType = appState.selectedNurseryForPickup == nil ? "delivery" : "pickup"
+                        
+                        Task { 
+                            await viewModel.preparePaymentSheet(
+                                plantId: plantId,
+                                shippingType: shippingType,
+                                nurseryId: appState.selectedNurseryForPickup,
+                                street: streetAddress,
+                                city: city,
+                                zipCode: zipCode
+                            ) 
+                        }
                     } label: {
                         HStack {
                             if viewModel.isProcessing {
@@ -109,12 +123,27 @@ struct CheckoutView: View {
                         .background(Color(hex: "#635BFF")) // STRIPE BLURPPLE
                         .cornerRadius(16)
                     }
-                    .disabled(viewModel.isProcessing || viewModel.checkoutSuccess)
+                    .disabled(viewModel.isProcessing || viewModel.checkoutSuccess || cart.items.isEmpty)
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
                     .alert("Payment Successful", isPresented: $viewModel.checkoutSuccess) {
-                        Button("OK") { dismiss() }
+                        Button("OK") { 
+                            cart.items.removeAll()
+                            dismiss() 
+                        }
                     }
+                    .background(
+                        Group {
+                            if let ps = viewModel.paymentSheet {
+                                Color.clear
+                                    .paymentSheet(
+                                        isPresented: $viewModel.showPaymentSheet,
+                                        paymentSheet: ps,
+                                        onCompletion: viewModel.onPaymentCompletion
+                                    )
+                            }
+                        }
+                    )
                 }
             }
             .navigationBarHidden(true)
@@ -133,26 +162,59 @@ struct CheckoutView: View {
 class CheckoutViewModel: ObservableObject {
     @Published var isProcessing: Bool = false
     @Published var checkoutSuccess: Bool = false
+    @Published var paymentSheet: PaymentSheet?
+    @Published var showPaymentSheet: Bool = false
     
-    func confirmPayment(amount: Double) async {
+    struct PaymentBody: Encodable {
+        let plantId: String
+        let shippingType: String
+        let nurseryId: String?
+        let address: [String: String]?
+    }
+    
+    struct PaymentResponse: Decodable {
+        let clientSecret: String
+    }
+    
+    func preparePaymentSheet(plantId: String, shippingType: String, nurseryId: String?, street: String, city: String, zipCode: String) async {
         isProcessing = true
+        
+        let addressDict: [String: String]? = shippingType == "delivery" ? [
+            "street": street, "city": city, "zipCode": zipCode
+        ] : nil
+        
+        let body = PaymentBody(plantId: plantId, shippingType: shippingType, nurseryId: nurseryId, address: addressDict)
+        let bodyData = try? JSONEncoder().encode(body)
+        
         do {
-            struct PaymentBody: Encodable { let amount: Double; let currency: String }
-            let body = PaymentBody(amount: amount, currency: "mxn")
-            let bodyData = try? JSONEncoder().encode(body)
-            
-            // Mock Express Intent
-            let _: [String: String]? = try? await NetworkManager.shared.request(
+            let response: PaymentResponse? = try await NetworkManager.shared.request(
                 endpoint: "/payments/intent",
                 method: "POST",
                 body: bodyData
             )
             
-            try await Task.sleep(nanoseconds: 1_200_000_000)
-            checkoutSuccess = true
+            if let secret = response?.clientSecret {
+                var config = PaymentSheet.Configuration()
+                config.merchantDisplayName = "Solo Plantas"
+                config.allowsDelayedPaymentMethods = true
+                self.paymentSheet = PaymentSheet(paymentIntentClientSecret: secret, configuration: config)
+                self.showPaymentSheet = true
+            }
         } catch {
-            print("Checkout failed")
+            print("Checkout intent failed: \(error)")
         }
+        
         isProcessing = false
+    }
+    
+    func onPaymentCompletion(result: PaymentSheetResult) {
+        switch result {
+        case .completed:
+            self.checkoutSuccess = true
+        case .canceled:
+            print("Payment canceled by user")
+        case .failed(let error):
+            print("Payment failed: \(error.localizedDescription)")
+        }
     }
 }
