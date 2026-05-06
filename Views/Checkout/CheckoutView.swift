@@ -22,10 +22,24 @@ struct CheckoutView: View {
                 
                 VStack(alignment: .leading, spacing: 20) {
                     
-                    Text("Order Summary")
-                        .font(.system(size: 28, weight: .heavy))
-                        .padding(.horizontal, 24)
-                        .padding(.top, 24)
+                    HStack {
+                        Button {
+                            appState.switchTab(appState.activeTab)
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(hex: "#1A2E1A"))
+                        }
+                        .padding(.trailing, 8)
+                        
+                        Text("Order Summary")
+                            .font(.system(size: 28, weight: .heavy))
+                            .foregroundColor(Color(hex: "#1A2E1A"))
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
                     
                     VStack(spacing: 12) {
                         HStack {
