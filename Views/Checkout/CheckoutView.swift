@@ -14,7 +14,7 @@ struct CheckoutView: View {
     @State private var selectedNurseryId: String = ""
     
     let subtotal: Double
-    var shipping: Double { 99.00 }
+    var shipping: Double { shippingType == "delivery" ? 99.00 : 0.0 }
     var total: Double { subtotal + shipping }
     
     var body: some View {
@@ -44,20 +44,9 @@ struct CheckoutView: View {
                     .padding(.top, 24)
                     
                     if let plant = cart.items.first?.plant {
-                        HStack(alignment: .top, spacing: 32) {
+                        HStack(alignment: .top, spacing: 40) {
                             
-                            // LEFT SIDE: SeedPacketCard
-                            ZStack {
-                                SeedPacketCard(
-                                    plant: plant,
-                                    theme: seedTheme(for: plant.id),
-                                    screenSize: UIScreen.main.bounds.size
-                                )
-                                .scaleEffect(0.5)
-                            }
-                            .frame(width: 180, height: 260)
-                            
-                            // RIGHT SIDE: Forms & Totals
+                            // LEFT SIDE: Forms & Totals
                             VStack(alignment: .leading, spacing: 20) {
                                 // Stock Indicator
                                 if let stock = viewModel.availableStock {
@@ -109,8 +98,8 @@ struct CheckoutView: View {
                                         
                                         Picker("Nursery", selection: $selectedNurseryId) {
                                             Text("Select a nursery").tag("")
-                                            ForEach(DataService.shared.localNurseries) { nursery in
-                                                Text(nursery.name).tag(nursery.id.uuidString)
+                                            ForEach(viewModel.nurseries) { nursery in
+                                                Text(nursery.name).tag(nursery.id)
                                             }
                                         }
                                         .padding()
@@ -129,10 +118,10 @@ struct CheckoutView: View {
                                     }
                                     
                                     HStack {
-                                        Text("Shipping")
+                                        Text(shippingType == "delivery" ? "Shipping" : "Pickup")
                                             .foregroundColor(.secondary)
                                         Spacer()
-                                        Text(formatMXN(shipping))
+                                        Text(shippingType == "delivery" ? formatMXN(shipping) : "FREE")
                                     }
                                     
                                     Divider().padding(.vertical, 8)
@@ -149,6 +138,20 @@ struct CheckoutView: View {
                                 .background(Color.white)
                                 .cornerRadius(16)
                             }
+                            .frame(maxWidth: 380)
+                            
+                            Spacer()
+                            
+                            // RIGHT SIDE: SeedPacketCard
+                            ZStack {
+                                SeedPacketCard(
+                                    plant: plant,
+                                    theme: seedTheme(for: plant.id),
+                                    screenSize: UIScreen.main.bounds.size
+                                )
+                                .scaleEffect(0.8)
+                            }
+                            .frame(width: 320, height: 440)
                         }
                         .padding(.horizontal, 24)
                     }
@@ -199,18 +202,20 @@ struct CheckoutView: View {
                     )
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
-                    .sheet(isPresented: $viewModel.showSafari, onDismiss: {
+                    .fullScreenCover(isPresented: $viewModel.showSafari, onDismiss: {
                         cart.items.removeAll()
                         dismiss()
                     }) {
                         if let url = viewModel.checkoutUrl {
                             SafariView(url: url)
+                                .ignoresSafeArea()
                         }
                     }
                 }
             }
             .navigationBarHidden(true)
             .onAppear {
+                Task { await viewModel.fetchNurseries() }
                 if let plantId = cart.items.first?.plant.id {
                     Task { await viewModel.fetchStock(plantId: plantId) }
                 }
@@ -245,6 +250,25 @@ class CheckoutViewModel: ObservableObject {
     @Published var showSafari: Bool = false
     @Published var errorMessage: String?
     @Published var availableStock: Int?
+    @Published var nurseries: [RemoteNursery] = []
+    
+    struct RemoteNursery: Decodable, Identifiable {
+        let id: String
+        let name: String
+    }
+    
+    func fetchNurseries() async {
+        do {
+            let res: [RemoteNursery] = try await NetworkManager.shared.request(
+                endpoint: "/nurseries",
+                method: "GET",
+                requiresAuth: false
+            )
+            self.nurseries = res
+        } catch {
+            print("Could not fetch nurseries: \(error)")
+        }
+    }
     
     struct PaymentBody: Encodable {
         let plantId: String
