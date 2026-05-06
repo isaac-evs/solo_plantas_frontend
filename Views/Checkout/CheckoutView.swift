@@ -63,6 +63,34 @@ struct CheckoutView: View {
                 } else {
                     phoneLayout
                 }
+                
+                // ── Success Overlay Animation ──
+                if viewModel.checkoutSuccess {
+                    Color.black.opacity(0.4).ignoresSafeArea()
+                        .transition(.opacity)
+                        .zIndex(10)
+                    
+                    VStack(spacing: 24) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(Color(hex: "#4A7C59"))
+                        
+                        Text("Order Confirmed!")
+                            .font(.system(size: 32, weight: .heavy))
+                            .foregroundColor(.white)
+                            
+                        Text("Your botanical companion is being prepared.")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(40)
+                    .background(Color(hex: "#1A2E1A"))
+                    .cornerRadius(32)
+                    .shadow(color: .black.opacity(0.3), radius: 30, y: 15)
+                    .transition(.scale.combined(with: .opacity))
+                    .zIndex(11)
+                }
             }
             .navigationBarHidden(true)
             .onAppear {
@@ -493,8 +521,15 @@ struct CheckoutView: View {
         .opacity(disabled ? 0.45 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: disabled)
         .fullScreenCover(isPresented: $viewModel.showSafari, onDismiss: {
-            cart.items.removeAll()
-            dismiss()
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                viewModel.checkoutSuccess = true
+            }
+            
+            // Wait for the animation to play before navigating away
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                cart.items.removeAll()
+                appState.switchTab(.profile) // Go to profile to see the new order
+            }
         }) {
             if let url = viewModel.checkoutUrl {
                 SafariView(url: url).ignoresSafeArea()
