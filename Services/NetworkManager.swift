@@ -47,7 +47,10 @@ final class NetworkManager: Sendable {
     }
     
     private func createRequest(for endpoint: String, method: String, requiresAuth: Bool = true, body: Data? = nil) throws -> URLRequest {
-        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
+        let cleanEndpoint = endpoint.hasPrefix("/") ? String(endpoint.dropFirst()) : endpoint
+        let cleanBase = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
+        
+        guard let url = URL(string: "\(cleanBase)/\(cleanEndpoint)") else {
             throw NetworkError.invalidURL
         }
         

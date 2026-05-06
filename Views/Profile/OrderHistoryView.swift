@@ -43,7 +43,6 @@ struct OrderHistoryView: View {
 // Backend Model
 struct BackendOrder: Decodable, Identifiable {
     let id: String
-    let plantId: String
     let status: String
     let totalAmountCents: Int
     let createdAt: String
