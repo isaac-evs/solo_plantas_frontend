@@ -6,6 +6,7 @@ struct ProfileView: View {
     @AppStorage("profileUsername") private var storedUsername: String = ""
     @AppStorage("profileIconName") private var storedIcon: String = ""
     @State private var activeOrdersCount: Int = 0
+    @State private var appeared: Bool = false
 
     private let accent     = Color(hex: "#4A7C59")
     private let dark       = Color(hex: "#1A2E1A")
