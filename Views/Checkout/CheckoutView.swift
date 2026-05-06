@@ -59,6 +59,19 @@ struct CheckoutView: View {
                             
                             // RIGHT SIDE: Forms & Totals
                             VStack(alignment: .leading, spacing: 20) {
+                                // Stock Indicator
+                                if let stock = viewModel.availableStock {
+                                    HStack {
+                                        Image(systemName: stock > 0 ? "checkmark.seal.fill" : "xmark.octagon.fill")
+                                        Text(stock > 0 ? "\(stock) in stock" : "Out of stock")
+                                    }
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(stock > 0 ? Color(hex: "#4A7C59") : .red)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background((stock > 0 ? Color(hex: "#4A7C59") : Color.red).opacity(0.1))
+                                    .cornerRadius(8)
+                                }
                                 // Toggle for Shipping Type
                                 Picker("Delivery Method", selection: $shippingType) {
                                     Text("Delivery").tag("delivery")
@@ -142,6 +155,13 @@ struct CheckoutView: View {
                     
                     Spacer()
                     
+                    if let err = viewModel.errorMessage {
+                        Text(err)
+                            .foregroundColor(.red)
+                            .font(.system(size: 14, weight: .bold))
+                            .padding(.horizontal, 24)
+                    }
+                    
                     Button {
                         guard let plantId = cart.items.first?.plant.id else { return }
                         
@@ -190,6 +210,11 @@ struct CheckoutView: View {
                 }
             }
             .navigationBarHidden(true)
+            .onAppear {
+                if let plantId = cart.items.first?.plant.id {
+                    Task { await viewModel.fetchStock(plantId: plantId) }
+                }
+            }
         }
     }
     
@@ -217,6 +242,8 @@ class CheckoutViewModel: ObservableObject {
     @Published var checkoutSuccess: Bool = false
     @Published var checkoutUrl: URL?
     @Published var showSafari: Bool = false
+    @Published var errorMessage: String?
+    @Published var availableStock: Int?
     
     struct PaymentBody: Encodable {
         let plantId: String
@@ -236,8 +263,27 @@ class CheckoutViewModel: ObservableObject {
     
     struct ReserveResponse: Decodable {}
     
+    struct StockResponse: Decodable {
+        let quantity: Int
+    }
+    
+    func fetchStock(plantId: String) async {
+        do {
+            let response: StockResponse? = try await NetworkManager.shared.request(
+                endpoint: "/inventory/\(plantId)",
+                method: "GET"
+            )
+            if let qty = response?.quantity {
+                self.availableStock = qty
+            }
+        } catch {
+            print("Could not fetch stock: \(error)")
+        }
+    }
+    
     func prepareCheckoutSession(plantId: String, shippingType: String, nurseryId: String?, street: String, city: String, zipCode: String) async {
         isProcessing = true
+        errorMessage = nil
         
         let addressDict: [String: String]? = shippingType == "delivery" ? [
             "street": street, "city": city, "zipCode": zipCode
@@ -268,8 +314,10 @@ class CheckoutViewModel: ObservableObject {
                 self.checkoutUrl = url
                 self.showSafari = true
             }
+        } catch NetworkError.serverError(let msg) {
+            self.errorMessage = msg
         } catch {
-            print("Checkout session failed: \(error)")
+            self.errorMessage = "Out of stock or server error."
         }
         
         isProcessing = false
