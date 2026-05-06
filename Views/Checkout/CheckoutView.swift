@@ -216,6 +216,7 @@ struct CheckoutView: View {
                 }
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
     
     private func formatMXN(_ value: Double) -> String {
