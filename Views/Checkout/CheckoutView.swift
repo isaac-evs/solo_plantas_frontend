@@ -521,6 +521,14 @@ struct CheckoutView: View {
         .opacity(disabled ? 0.45 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: disabled)
         .fullScreenCover(isPresented: $viewModel.showSafari, onDismiss: {
+            // HACK for MVP: Since we don't have webhooks working on Azure, we intercept the closing
+            // of the Safari view and tell the backend to forcefully "confirm" the payment anyway.
+            if let pendingId = viewModel.pendingOrderId {
+                Task {
+                    await viewModel.mockConfirmPayment(orderId: pendingId)
+                }
+            }
+            
             withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                 viewModel.checkoutSuccess = true
             }
@@ -594,10 +602,13 @@ class CheckoutViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var availableStock: Int?
     @Published var nurseries: [RemoteNursery] = []
+    
+    // MVP Hack: Store the order ID so we can mock confirm it when safari closes
+    var pendingOrderId: String?
 
     struct RemoteNursery: Decodable, Identifiable { let id: String; let name: String }
     struct PaymentBody: Encodable { let plantId: String; let shippingType: String; let nurseryId: String?; let address: [String: String]? }
-    struct PaymentResponse: Decodable { let url: String }
+    struct PaymentResponse: Decodable { let url: String; let orderId: String? }
     struct ReserveBody: Encodable { let plantId: String; let quantity: Int }
     struct ReserveResponse: Decodable {}
     struct StockResponse: Decodable { let quantity: Int }
@@ -631,6 +642,7 @@ class CheckoutViewModel: ObservableObject {
             let response: PaymentResponse? = try await NetworkManager.shared.request(endpoint: "/payments/checkout-session", method: "POST", body: bodyData)
             if let urlString = response?.url, let url = URL(string: urlString) {
                 self.checkoutUrl = url
+                self.pendingOrderId = response?.orderId
                 self.showSafari = true
             }
         } catch NetworkError.serverError(let msg) {
@@ -641,4 +653,20 @@ class CheckoutViewModel: ObservableObject {
 
         isProcessing = false
     }
+    
+    // MVP Hack: Bypass Stripe webhooks and manually hit the order status endpoint
+    func mockConfirmPayment(orderId: String) async {
+        do {
+            let body = try JSONSerialization.data(withJSONObject: ["status": "confirmed"])
+            let _: EmptyResponse? = try await NetworkManager.shared.request(
+                endpoint: "/orders/\(orderId)/status",
+                method: "PATCH",
+                body: body
+            )
+        } catch {
+            print("Failed to mock confirm payment: \(error)")
+        }
+    }
 }
+
+struct EmptyResponse: Decodable {}
