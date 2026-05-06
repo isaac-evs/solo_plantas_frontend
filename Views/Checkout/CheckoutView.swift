@@ -127,7 +127,7 @@ struct CheckoutView: View {
                         .background(Color(hex: "#635BFF")) // STRIPE BLURPPLE
                         .cornerRadius(16)
                     }
-                    .disabled(viewModel.isProcessing || viewModel.checkoutSuccess || cart.items.isEmpty)
+                    .disabled(viewModel.isProcessing || viewModel.checkoutSuccess || cart.items.isEmpty || streetAddress.trimmingCharacters(in: .whitespaces).isEmpty || city.trimmingCharacters(in: .whitespaces).isEmpty || zipCode.trimmingCharacters(in: .whitespaces).isEmpty)
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
                     .sheet(isPresented: $viewModel.showSafari, onDismiss: {
