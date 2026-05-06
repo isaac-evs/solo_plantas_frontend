@@ -13,6 +13,7 @@ struct CatalogGridView: View {
     @EnvironmentObject var cart: CartManager
     @StateObject private var viewModel = CatalogViewModel()
     @State private var showingCart = false
+    @State private var showLimitAlert = false
     @State private var selectedPlant: PlantSpecies?
 
     @Environment(\.accessibilityReduceMotion)       private var reduceMotion
@@ -102,10 +103,12 @@ struct CatalogGridView: View {
                             
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: isIpad ? 24 : 16) {
-                                    ForEach(viewModel.recommendedPlants.prefix(3)) { plant in
-                                        CatalogCell(plant: plant) {
+                                     ForEach(viewModel.recommendedPlants.prefix(3)) { plant in
+                                        CatalogCell(plant: plant, action: {
                                             selectedPlant = plant
-                                        }
+                                        }, onAddLimitReached: {
+                                            showLimitAlert = true
+                                        })
                                         .frame(width: isIpad ? 300 : 220)
                                     }
                                 }
@@ -129,9 +132,11 @@ struct CatalogGridView: View {
                     // Grid
                     LazyVGrid(columns: columns, spacing: isIpad ? 24 : 14) {
                         ForEach(viewModel.filteredPlants) { plant in
-                            CatalogCell(plant: plant) {
+                            CatalogCell(plant: plant, action: {
                                 selectedPlant = plant
-                            }
+                            }, onAddLimitReached: {
+                                showLimitAlert = true
+                            })
                         }
                     }
                     .padding(.horizontal, isIpad ? 40 : 24)
@@ -150,6 +155,11 @@ struct CatalogGridView: View {
             PlantDetailView(plant: plant)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+        }
+        .alert("Cart Limit Reached", isPresented: $showLimitAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You can only buy one native plant species at a time. Please remove your current plant from the cart to add a different one.")
         }
         .accessibilityLabel("Field Guide. Browse and discover native plants.")
     }
@@ -188,6 +198,7 @@ struct CatalogGridView: View {
 struct CatalogCell: View {
     let plant: PlantSpecies
     let action: () -> Void
+    let onAddLimitReached: () -> Void
     @EnvironmentObject var cart: CartManager
     @EnvironmentObject var appState: AppState
 
@@ -290,7 +301,11 @@ struct CatalogCell: View {
                         Spacer()
                         
                         Button {
-                            cart.addToCart(plant: plant)
+                            if cart.items.isEmpty || cart.items.first?.plant.id == plant.id {
+                                cart.addToCart(plant: plant)
+                            } else {
+                                onAddLimitReached()
+                            }
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: isIpad ? 36 : 28))

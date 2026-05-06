@@ -44,100 +44,98 @@ struct CheckoutView: View {
                     .padding(.top, 24)
                     
                     if let plant = cart.items.first?.plant {
-                        HStack(spacing: 20) {
-                            VStack(spacing: 12) {
-                                HStack {
-                                    Text("Subtotal")
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(formatMXN(subtotal))
-                                }
-                                
-                                HStack {
-                                    Text("Shipping")
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(formatMXN(shipping))
-                                }
-                                
-                                Divider().padding(.vertical, 8)
-                                
-                                HStack {
-                                    Text("Total")
-                                        .font(.headline)
-                                    Spacer()
-                                    Text(formatMXN(total))
-                                        .font(.headline)
-                                }
+                        HStack(alignment: .top, spacing: 32) {
+                            
+                            // LEFT SIDE: SeedPacketCard
+                            ZStack {
+                                SeedPacketCard(
+                                    plant: plant,
+                                    theme: seedTheme(for: plant.id),
+                                    screenSize: UIScreen.main.bounds.size
+                                )
+                                .scaleEffect(0.5)
                             }
-                            .padding(20)
-                            .background(Color.white)
-                            .cornerRadius(16)
+                            .frame(width: 180, height: 260)
                             
-                            WatercolorCard(
-                                status: PlantGrowthStatus(
-                                    plant: plant, 
-                                    daysElapsed: 0, 
-                                    currentIteration: 0, 
-                                    stageName: "Seed", 
-                                    daysUntilNextStage: plant.growthMilestones.first
-                                ),
-                                screenSize: CGSize(width: 200, height: 300),
-                                onARTap: {}
-                            )
-                            .scaleEffect(0.65)
-                            .frame(width: 140, height: 200)
-                        }
-                        .padding(.horizontal, 24)
-                    }
-                    
+                            // RIGHT SIDE: Forms & Totals
+                            VStack(alignment: .leading, spacing: 20) {
+                                // Toggle for Shipping Type
+                                Picker("Delivery Method", selection: $shippingType) {
+                                    Text("Delivery").tag("delivery")
+                                    Text("Store Pickup").tag("pickup")
+                                }
+                                .pickerStyle(SegmentedPickerStyle())
 
-                    // Toggle for Shipping Type
-                    Picker("Delivery Method", selection: $shippingType) {
-                        Text("Delivery").tag("delivery")
-                        Text("Store Pickup").tag("pickup")
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .padding(.horizontal, 24)
-
-                    if shippingType == "delivery" {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Delivery Address")
-                                .font(.headline)
-                            
-                            TextField("Street Address", text: $streetAddress)
-                                .padding()
-                                .background(Color.black.opacity(0.05))
-                                .cornerRadius(10)
+                                if shippingType == "delivery" {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text("Delivery Address")
+                                            .font(.headline)
+                                        
+                                        TextField("Street Address", text: $streetAddress)
+                                            .padding()
+                                            .background(Color.black.opacity(0.05))
+                                            .cornerRadius(10)
+                                            
+                                        HStack {
+                                            TextField("City", text: $city)
+                                                .padding()
+                                                .background(Color.black.opacity(0.05))
+                                                .cornerRadius(10)
+                                                
+                                            TextField("Zip Code", text: $zipCode)
+                                                .keyboardType(.numberPad)
+                                                .padding()
+                                                .background(Color.black.opacity(0.05))
+                                                .cornerRadius(10)
+                                        }
+                                    }
+                                } else {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text("Select Nursery")
+                                            .font(.headline)
+                                        
+                                        Picker("Nursery", selection: $selectedNurseryId) {
+                                            Text("Select a nursery").tag("")
+                                            ForEach(DataService.shared.localNurseries) { nursery in
+                                                Text(nursery.name).tag(nursery.id.uuidString)
+                                            }
+                                        }
+                                        .padding()
+                                        .background(Color.black.opacity(0.05))
+                                        .cornerRadius(10)
+                                    }
+                                }
                                 
-                            HStack {
-                                TextField("City", text: $city)
-                                    .padding()
-                                    .background(Color.black.opacity(0.05))
-                                    .cornerRadius(10)
+                                // Totals
+                                VStack(spacing: 12) {
+                                    HStack {
+                                        Text("Subtotal")
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text(formatMXN(subtotal))
+                                    }
                                     
-                                TextField("Zip Code", text: $zipCode)
-                                    .keyboardType(.numberPad)
-                                    .padding()
-                                    .background(Color.black.opacity(0.05))
-                                    .cornerRadius(10)
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                    } else {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Select Nursery")
-                                .font(.headline)
-                            
-                            Picker("Nursery", selection: $selectedNurseryId) {
-                                Text("Select a nursery").tag("")
-                                ForEach(DataService.shared.localNurseries) { nursery in
-                                    Text(nursery.name).tag(nursery.id.uuidString)
+                                    HStack {
+                                        Text("Shipping")
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text(formatMXN(shipping))
+                                    }
+                                    
+                                    Divider().padding(.vertical, 8)
+                                    
+                                    HStack {
+                                        Text("Total")
+                                            .font(.headline)
+                                        Spacer()
+                                        Text(formatMXN(total))
+                                            .font(.headline)
+                                    }
                                 }
+                                .padding(20)
+                                .background(Color.white)
+                                .cornerRadius(16)
                             }
-                            .padding()
-                            .background(Color.black.opacity(0.05))
-                            .cornerRadius(10)
                         }
                         .padding(.horizontal, 24)
                     }
