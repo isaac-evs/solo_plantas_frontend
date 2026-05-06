@@ -10,6 +10,8 @@ struct CheckoutView: View {
     @State private var streetAddress: String = ""
     @State private var city: String = ""
     @State private var zipCode: String = ""
+    @State private var shippingType: String = "delivery"
+    @State private var selectedNurseryId: String = ""
     
     let subtotal: Double
     var shipping: Double { 99.00 }
@@ -72,6 +74,15 @@ struct CheckoutView: View {
                     .padding(.horizontal, 24)
                     
 
+                    // Toggle for Shipping Type
+                    Picker("Delivery Method", selection: $shippingType) {
+                        Text("Delivery").tag("delivery")
+                        Text("Store Pickup").tag("pickup")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.horizontal, 24)
+
+                    if shippingType == "delivery" {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Delivery Address")
                                 .font(.headline)
@@ -95,18 +106,34 @@ struct CheckoutView: View {
                             }
                         }
                         .padding(.horizontal, 24)
+                    } else {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Select Nursery")
+                                .font(.headline)
+                            
+                            Picker("Nursery", selection: $selectedNurseryId) {
+                                Text("Select a nursery").tag("")
+                                ForEach(DataService.shared.localNurseries) { nursery in
+                                    Text(nursery.name).tag(nursery.id.uuidString)
+                                }
+                            }
+                            .padding()
+                            .background(Color.black.opacity(0.05))
+                            .cornerRadius(10)
+                        }
+                        .padding(.horizontal, 24)
+                    }
                     
                     Spacer()
                     
                     Button {
                         guard let plantId = cart.items.first?.plant.id else { return }
-                        let shippingType = "delivery"
                         
                         Task { 
                             await viewModel.prepareCheckoutSession(
                                 plantId: plantId,
                                 shippingType: shippingType,
-                                nurseryId: nil,
+                                nurseryId: shippingType == "pickup" ? selectedNurseryId : nil,
                                 street: streetAddress,
                                 city: city,
                                 zipCode: zipCode
@@ -127,7 +154,13 @@ struct CheckoutView: View {
                         .background(Color(hex: "#635BFF")) // STRIPE BLURPPLE
                         .cornerRadius(16)
                     }
-                    .disabled(viewModel.isProcessing || viewModel.checkoutSuccess || cart.items.isEmpty || streetAddress.trimmingCharacters(in: .whitespaces).isEmpty || city.trimmingCharacters(in: .whitespaces).isEmpty || zipCode.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(
+                        viewModel.isProcessing || 
+                        viewModel.checkoutSuccess || 
+                        cart.items.isEmpty || 
+                        (shippingType == "delivery" && (streetAddress.trimmingCharacters(in: .whitespaces).isEmpty || city.trimmingCharacters(in: .whitespaces).isEmpty || zipCode.trimmingCharacters(in: .whitespaces).isEmpty)) ||
+                        (shippingType == "pickup" && selectedNurseryId.isEmpty)
+                    )
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
                     .sheet(isPresented: $viewModel.showSafari, onDismiss: {
