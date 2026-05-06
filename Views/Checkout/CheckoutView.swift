@@ -75,7 +75,13 @@ struct CheckoutView: View {
                             .cornerRadius(16)
                             
                             WatercolorCard(
-                                status: PlantGrowthStatus(plant: plant, daysElapsed: 0),
+                                status: PlantGrowthStatus(
+                                    plant: plant, 
+                                    daysElapsed: 0, 
+                                    currentIteration: 0, 
+                                    stageName: "Seed", 
+                                    daysUntilNextStage: plant.growthMilestones.first
+                                ),
                                 screenSize: CGSize(width: 200, height: 300),
                                 onARTap: {}
                             )
