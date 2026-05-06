@@ -33,11 +33,7 @@ class AuthViewModel: ObservableObject {
                 body: body
             )
             KeychainHelper.shared.saveToken(response.token)
-            if !appState.hasSeenOnboarding {
-                appState.currentScreen = .onboarding
-            } else {
-                appState.currentScreen = .plantHome
-            }
+            appState.currentScreen = .plantHome
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg
         } catch {
