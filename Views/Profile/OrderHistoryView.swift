@@ -116,6 +116,7 @@ struct OrderCardView: View {
                 switch order.status {
                 case "pending": return .preparing
                 case "confirmed": return .shipped
+                case "out_for_delivery": return .outForDelivery
                 case "cancelled": return .preparing // Or add a cancelled state
                 default: return .delivered
                 }

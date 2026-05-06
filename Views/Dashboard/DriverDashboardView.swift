@@ -9,6 +9,7 @@ struct DriverDashboardView: View {
     @State private var enteredCode = ""
     @State private var pendingCompletionOrder: BackendOrder? = nil
     @State private var showError = false
+    @State private var showSuccessToast = false
     
     private let dark = Color(hex: "#1A2E1A")
     private let accent = Color(hex: "#4A7C59")
@@ -131,13 +132,37 @@ struct DriverDashboardView: View {
                 }
             }
         }
+        .overlay(
+            VStack {
+                if showSuccessToast {
+                    Text("DELIVERY COMPLETE")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(Color(hex: "#4A7C59"))
+                        .cornerRadius(30)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding(.top, isIpad ? 80 : 50)
+                }
+                Spacer()
+            }
+            .animation(.spring(), value: showSuccessToast)
+            .allowsHitTesting(false)
+        )
         .alert("Verify Handshake", isPresented: $showVerification) {
             TextField("Secret Code (e.g. 7D507340)", text: $enteredCode)
                 .textInputAutocapitalization(.characters)
             Button("Verify & Complete", action: {
                 if let order = pendingCompletionOrder {
                     if enteredCode.uppercased() == String(order.id.prefix(8)).uppercased() {
-                        Task { await viewModel.completeDelivery(orderId: order.id) }
+                        Task { 
+                            await viewModel.completeDelivery(orderId: order.id) 
+                            showSuccessToast = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                                showSuccessToast = false
+                            }
+                        }
                     } else {
                         showError = true
                     }
@@ -287,7 +312,9 @@ class DriverViewModel: ObservableObject {
     
     var displayOrders: [BackendOrder] {
         if activeDeliveryId.isEmpty {
-            return orders.filter { $0.status == "pending" || $0.status == "confirmed" }
+            // Only show fully paid (confirmed) orders to the courier. 
+            // "pending" means the user clicked checkout but hasn't paid yet!
+            return orders.filter { $0.status == "confirmed" }
         } else {
             return orders.filter { $0.id == activeDeliveryId }
         }
