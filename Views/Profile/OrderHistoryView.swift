@@ -97,7 +97,7 @@ struct OrderHistoryView: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("Your Orders".uppercased())
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .tracking(3)
                     .foregroundColor(accent.opacity(0.65))
 
@@ -242,7 +242,7 @@ struct OrderCardView: View {
                     // Order number capsule
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Order".uppercased())
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .tracking(2)
                             .foregroundColor(.white.opacity(0.55))
 
@@ -326,7 +326,7 @@ struct OrderCardView: View {
         HStack(spacing: 5) {
             Circle().fill(color).frame(width: 6, height: 6)
             Text(label)
-                .font(.system(size: 11, weight: .bold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(color)
         }
         .padding(.horizontal, 10)
@@ -387,7 +387,7 @@ struct OrderTimelineView: View {
 
                     // Label
                     Text(status.rawValue)
-                        .font(.system(size: isIpad ? 11 : 9, weight: isCurrent ? .bold : .medium))
+                        .font(.system(size: isIpad ? 14 : 12, weight: isCurrent ? .bold : .medium))
                         .foregroundColor(isDone ? theme.accent : Color(hex: "#1A2E1A").opacity(0.35))
                         .multilineTextAlignment(.center)
                         .frame(width: isIpad ? 72 : 58)

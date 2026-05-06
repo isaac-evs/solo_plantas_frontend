@@ -110,7 +110,7 @@ struct DriverDashboardView: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Botanical Courier".uppercased())
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .tracking(3)
                     .foregroundColor(accent.opacity(0.75))
 
@@ -125,7 +125,7 @@ struct DriverDashboardView: View {
             // Earnings card
             VStack(alignment: .trailing, spacing: 3) {
                 Text("Earnings".uppercased())
-                    .font(.system(size: 9, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .tracking(2)
                     .foregroundColor(dark.opacity(0.4))
                 Text("$\(String(format: "%.2f", viewModel.courierEarnings))")
@@ -149,6 +149,7 @@ struct DriverDashboardView: View {
                 KeychainHelper.shared.deleteToken()
                 UserDefaults.standard.removeObject(forKey: "currentUserId")
                 UserDefaults.standard.set(false, forKey: "isDriverMode")
+                UserDefaults.standard.removeObject(forKey: "activeDeliveryId")
                 appState.routeAfterSplash()
             } label: {
                 ZStack {
@@ -196,10 +197,10 @@ struct DriverDashboardView: View {
 
             HStack(spacing: 5) {
                 Image(systemName: "shippingbox.fill")
-                    .font(.system(size: 11))
+                    .font(.system(size: 16))
                     .foregroundColor(dark.opacity(0.6))
                 Text("\(viewModel.displayOrders.count) \(viewModel.displayOrders.count == 1 ? "plant" : "plants")")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(dark)
             }
             .padding(.horizontal, 12)
@@ -384,7 +385,7 @@ struct CourierOrderCard: View {
                 HStack(spacing: 0) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(isActive ? "Active Mission".uppercased() : "Available".uppercased())
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .tracking(2.5)
                             .foregroundColor(.white.opacity(0.6))
                         Text(order.plant?.name ?? "Unknown Specimen")
@@ -398,7 +399,7 @@ struct CourierOrderCard: View {
                     // Reward badge
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("Reward".uppercased())
-                            .font(.system(size: 8, weight: .bold))
+                            .font(.system(size: 13, weight: .bold))
                             .tracking(2)
                             .foregroundColor(.white.opacity(0.6))
                         Text(rewardFormatted)
@@ -437,8 +438,8 @@ struct CourierOrderCard: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("#\(order.id.prefix(8).uppercased())")
-                            .font(.system(size: 12, weight: .bold))
+                        Text(isActive ? "ID: PROTECTED" : "ID: AVAILABLE")
+                            .font(.system(size: 14, weight: .bold))
                             .tracking(1)
                             .foregroundColor(dark.opacity(0.35))
 
@@ -488,14 +489,14 @@ struct CourierOrderCard: View {
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Delivery Address".uppercased())
-                                    .font(.system(size: 9, weight: .bold))
+                                    .font(.system(size: 14, weight: .bold))
                                     .tracking(2)
                                     .foregroundColor(dark.opacity(0.35))
                                 Text(address.street)
-                                    .font(.system(size: 15, weight: .bold))
+                                    .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(dark)
                                 Text("\(address.city), \(address.zipCode)")
-                                    .font(.system(size: 13, weight: .medium))
+                                    .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(dark.opacity(0.55))
                             }
                         }
@@ -513,11 +514,11 @@ struct CourierOrderCard: View {
                             }
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Delivery Method".uppercased())
-                                    .font(.system(size: 9, weight: .bold))
+                                    .font(.system(size: 14, weight: .bold))
                                     .tracking(2)
                                     .foregroundColor(dark.opacity(0.35))
                                 Text("Store Pickup")
-                                    .font(.system(size: 15, weight: .bold))
+                                    .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(dark)
                             }
                         }
