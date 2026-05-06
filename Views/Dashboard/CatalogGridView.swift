@@ -147,13 +147,13 @@ struct CatalogGridView: View {
     private var headerBar: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Catálogo Nativo".uppercased())
-                    .font(.system(size: 11, weight: .bold))
+                Text("Native Catalog".uppercased())
+                    .font(.system(size: 13, weight: .bold))
                     .tracking(3)
                     .foregroundColor(accent.opacity(0.7))
 
                 Text("Field Guide")
-                    .font(.system(size: isIpad ? 46 : 36, weight: .heavy))
+                    .font(.system(size: isIpad ? 54 : 42, weight: .heavy))
                     .foregroundColor(dark)
                     .accessibilityAddTraits(.isHeader)
             }
@@ -165,12 +165,12 @@ struct CatalogGridView: View {
                 HStack(spacing: 5) {
                     Circle()
                         .fill(accent)
-                        .frame(width: 6, height: 6)
+                        .frame(width: 8, height: 8)
                     Text("\(viewModel.totalCatalogSize)")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(dark)
                     Text("spp.")
-                        .font(.system(size: 12, weight: .regular))
+                        .font(.system(size: 14, weight: .regular))
                         .italic()
                         .foregroundColor(dark.opacity(0.5))
                 }
@@ -196,7 +196,7 @@ struct CatalogGridView: View {
                                 .frame(width: isIpad ? 46 : 40, height: isIpad ? 46 : 40)
 
                             Image(systemName: "bag.fill")
-                                .font(.system(size: isIpad ? 20 : 17))
+                                .font(.system(size: isIpad ? 24 : 20))
                                 .foregroundColor(dark)
                         }
 
@@ -257,7 +257,7 @@ struct CatalogGridView: View {
                         Image(systemName: "sparkles")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundColor(Color(hex: "#7AAF8E"))
-                        Text("Nuevas llegadas".uppercased())
+                        Text("New arrivals".uppercased())
                             .font(.system(size: 11, weight: .bold))
                             .tracking(2.5)
                             .foregroundColor(Color(hex: "#7AAF8E"))

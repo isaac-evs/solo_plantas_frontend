@@ -3,8 +3,8 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var cart: CartManager
-    @State private var appeared: Bool = false
-    @State private var randomUsername = ["HappyRadish", "AngryTomato", "SleepyCactus", "BraveAgave", "MysticFern", "ZenBonsai", "CosmicMonstera", "WildOrchid", "ChubbySucculent", "NeonPothos"].randomElement() ?? "HappyRadish"
+    @AppStorage("profileUsername") private var storedUsername: String = ""
+    @AppStorage("profileIconName") private var storedIcon: String = ""
     @State private var activeOrdersCount: Int = 0
 
     private let accent     = Color(hex: "#4A7C59")
@@ -44,11 +44,11 @@ struct ProfileView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Your Garden")
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(.system(size: 15, weight: .semibold))
                                     .tracking(3)
                                     .foregroundColor(accent.opacity(0.7))
                                 Text("Profile")
-                                    .font(.system(size: isIpad ? 42 : 34, weight: .heavy))
+                                    .font(.system(size: isIpad ? 54 : 42, weight: .heavy))
                                     .foregroundColor(dark)
                             }
                             Spacer()
@@ -105,6 +105,12 @@ struct ProfileView: View {
             }
             .navigationBarHidden(true)
             .onAppear {
+                if storedUsername.isEmpty {
+                    storedUsername = ["HappyRadish", "AngryTomato", "SleepyCactus", "BraveAgave", "MysticFern", "ZenBonsai", "CosmicMonstera", "WildOrchid", "ChubbySucculent", "NeonPothos"].randomElement() ?? "HappyRadish"
+                }
+                if storedIcon.isEmpty {
+                    storedIcon = ["leaf.fill", "tree.fill", "ant.fill", "ladybug.fill", "bird.fill", "tortoise.fill", "pawprint.fill"].randomElement() ?? "leaf.fill"
+                }
                 Task { await fetchActiveOrders() }
                 withAnimation { appeared = true }
             }
@@ -145,11 +151,11 @@ struct ProfileView: View {
             .accessibilityHidden(true)
 
             // Large illustrative leaf ghost top-right
-            Image("cempasuchil")
+            Image(systemName: storedIcon.isEmpty ? "leaf.fill" : storedIcon)
                 .resizable()
-                .scaledToFill()
+                .scaledToFit()
                 .frame(width: isIpad ? 160 : 130, height: isIpad ? 160 : 130)
-                .clipShape(Circle())
+                .foregroundColor(.white)
                 .opacity(0.12)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 .padding(24)
@@ -162,9 +168,11 @@ struct ProfileView: View {
                     Circle()
                         .fill(Color(hex: "#4A7C59"))
                         .frame(width: isIpad ? 80 : 66, height: isIpad ? 80 : 66)
-                    Image("cempasuchil")
+                    Image(systemName: storedIcon.isEmpty ? "leaf.fill" : storedIcon)
                         .resizable()
-                        .scaledToFill()
+                        .scaledToFit()
+                        .padding(16)
+                        .foregroundColor(.white)
                         .frame(width: isIpad ? 80 : 66, height: isIpad ? 80 : 66)
                         .clipShape(Circle())
                 }
@@ -175,7 +183,7 @@ struct ProfileView: View {
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(randomUsername)
+                    Text(storedUsername.isEmpty ? "HappyRadish" : storedUsername)
                         .font(.system(size: isIpad ? 26 : 22, weight: .bold))
                         .foregroundColor(.white)
 
