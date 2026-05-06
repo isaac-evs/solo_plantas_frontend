@@ -192,7 +192,7 @@ struct OrderCardView: View {
     private var uiStatus: OrderStatus {
         switch order.status {
         case "pending":           return .preparing
-        case "confirmed":         return .shipped
+        case "confirmed":         return .confirmed
         case "out_for_delivery":  return .outForDelivery
         default:                  return .delivered
         }
@@ -337,7 +337,7 @@ struct OrderCardView: View {
     private func statusMeta(_ status: OrderStatus) -> (String, Color) {
         switch status {
         case .preparing:       return ("Preparing",       Color(hex: "#C8A800"))
-        case .shipped:         return ("Shipped",          Color(hex: "#4A7C59"))
+        case .confirmed:         return ("Confirmed",          Color(hex: "#4A7C59"))
         case .outForDelivery:  return ("Out for Delivery", Color(hex: "#E05C00"))
         case .delivered:       return ("Delivered",        Color(hex: "#4A7C59"))
         }
@@ -352,7 +352,7 @@ struct OrderTimelineView: View {
     let currentStatus: OrderStatus
     let theme: SeedPacketTheme
 
-    private let statuses: [OrderStatus] = [.preparing, .shipped, .outForDelivery, .delivered]
+    private let statuses: [OrderStatus] = [.preparing, .confirmed, .outForDelivery, .delivered]
 
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
