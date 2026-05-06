@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var cart: CartManager
     @State private var showOrderHistory = false
     @State private var randomUsername = ["HappyRadish", "AngryTomato", "SleepyCactus", "BraveAgave", "MysticFern", "ZenBonsai", "CosmicMonstera", "WildOrchid", "ChubbySucculent", "NeonPothos"].randomElement() ?? "HappyRadish"
     @State private var activeOrdersCount: Int = 0
@@ -99,6 +100,8 @@ struct ProfileView: View {
             }
             .navigationBarItems(trailing: Button {
                 KeychainHelper.shared.deleteToken()
+                cart.items.removeAll()
+                appState.plantedDates.removeAll()
                 appState.routeAfterSplash()
             } label: {
                 Text("Log Out")
