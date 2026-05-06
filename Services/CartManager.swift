@@ -28,21 +28,11 @@ class CartManager: ObservableObject {
     private init() {}
     
     func addToCart(plant: PlantSpecies) {
-        if let index = items.firstIndex(where: { $0.id == plant.id }) {
-            items[index].quantity += 1
-        } else {
-            items.append(CartItem(plant: plant, quantity: 1))
-        }
+        items = [CartItem(plant: plant, quantity: 1)]
     }
     
     func decreaseQuantity(plant: PlantSpecies) {
-        if let index = items.firstIndex(where: { $0.id == plant.id }) {
-            if items[index].quantity > 1 {
-                items[index].quantity -= 1
-            } else {
-                items.remove(at: index)
-            }
-        }
+        removeFromCart(plant: plant)
     }
     
     func removeFromCart(plant: PlantSpecies) {

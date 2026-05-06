@@ -143,22 +143,11 @@ struct CartItemRow: View {
 
             Spacer()
 
-            // Quantity Editor
+            // Quantity Editor (Delete Only)
             HStack(spacing: 14) {
-                Button(action: { cart.decreaseQuantity(plant: item.plant) }) {
-                    Image(systemName: item.quantity == 1 ? "trash" : "minus")
-                        .foregroundColor(item.quantity == 1 ? .red : .primary)
-                        .frame(width: 32, height: 32)
-                        .background(Color(hex: "#EAE6DF"), in: Circle())
-                }
-
-                Text("\(item.quantity)")
-                    .font(.system(size: 16, weight: .bold))
-                    .frame(width: 20, alignment: .center)
-
-                Button(action: { cart.addToCart(plant: item.plant) }) {
-                    Image(systemName: "plus")
-                        .foregroundColor(.primary)
+                Button(action: { cart.removeFromCart(plant: item.plant) }) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
                         .frame(width: 32, height: 32)
                         .background(Color(hex: "#EAE6DF"), in: Circle())
                 }
