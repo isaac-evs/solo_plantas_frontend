@@ -1,5 +1,13 @@
 import SwiftUI
 
+extension BackendOrder {
+    var courierRewardCents: Int {
+        let shipping = shippingFeeCents ?? 0
+        let plantPrice = max(0, totalAmountCents - shipping)
+        return shipping + Int(Double(plantPrice) * 0.15)
+    }
+}
+
 struct DriverDashboardView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = DriverViewModel()
@@ -47,7 +55,17 @@ struct DriverDashboardView: View {
                             .foregroundColor(dark)
                     }
                     
-                    Spacer()
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("EARNINGS")
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(2)
+                            .foregroundColor(dark.opacity(0.5))
+                        
+                        Text("$\(String(format: "%.2f", viewModel.courierEarnings))")
+                            .font(.system(size: 20, weight: .heavy))
+                            .foregroundColor(accent)
+                    }
+                    .padding(.trailing, 10)
                     
                     Button {
                         KeychainHelper.shared.deleteToken()
@@ -211,7 +229,7 @@ struct CourierOrderCard: View {
                 
                 Spacer()
                 
-                Text("REWARD: $\(String(format: "%.2f", Double(order.totalAmountCents) / 100.0))")
+                Text("REWARD: $\(String(format: "%.2f", Double(order.courierRewardCents) / 100.0))")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(accent)
             }
@@ -249,6 +267,38 @@ struct CourierOrderCard: View {
                 Spacer()
             }
             .padding(20)
+            
+            // Address Info (Only visible when active)
+            if isActive {
+                if let address = order.parsedAddress {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("DELIVERY ADDRESS")
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(2)
+                            .foregroundColor(dark.opacity(0.5))
+                        Text(address.street)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(dark)
+                        Text("\(address.city), \(address.zipCode)")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(dark.opacity(0.8))
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                } else if order.shippingType == "pickup" {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("DELIVERY ADDRESS")
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(2)
+                            .foregroundColor(dark.opacity(0.5))
+                        Text("Store Pickup")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(dark)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+            }
             
             // Action Area
             HStack {
@@ -309,6 +359,7 @@ class DriverViewModel: ObservableObject {
     @Published var orders: [BackendOrder] = []
     @Published var isLoading = false
     @AppStorage("activeDeliveryId") var activeDeliveryId: String = ""
+    @AppStorage("courierEarnings") var courierEarnings: Double = 0.0
     
     var displayOrders: [BackendOrder] {
         if activeDeliveryId.isEmpty {
@@ -341,6 +392,12 @@ class DriverViewModel: ObservableObject {
     
     func completeDelivery(orderId: String) async {
         await updateStatus(orderId: orderId, status: "delivered")
+        
+        // Add to earnings
+        if let order = orders.first(where: { $0.id == orderId }) {
+            courierEarnings += Double(order.courierRewardCents) / 100.0
+        }
+        
         activeDeliveryId = ""
     }
     
