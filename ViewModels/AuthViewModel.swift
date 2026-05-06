@@ -33,6 +33,9 @@ class AuthViewModel: ObservableObject {
                 body: body
             )
             KeychainHelper.shared.saveToken(response.token)
+            UserDefaults.standard.set(response.user.id, forKey: "currentUserId")
+            appState.plantedDates = PersistenceService.shared.loadGarden()
+            appState.switchTab(.home)
             appState.currentScreen = .plantHome
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg
@@ -57,6 +60,9 @@ class AuthViewModel: ObservableObject {
                 body: body
             )
             KeychainHelper.shared.saveToken(response.token)
+            UserDefaults.standard.set(response.user.id, forKey: "currentUserId")
+            appState.plantedDates = PersistenceService.shared.loadGarden()
+            appState.switchTab(.home)
             appState.currentScreen = .onboarding
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg

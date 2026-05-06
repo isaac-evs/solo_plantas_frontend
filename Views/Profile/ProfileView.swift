@@ -100,8 +100,9 @@ struct ProfileView: View {
             }
             .navigationBarItems(trailing: Button {
                 KeychainHelper.shared.deleteToken()
+                UserDefaults.standard.removeObject(forKey: "currentUserId")
                 cart.items.removeAll()
-                appState.plantedDates.removeAll()
+                appState.plantedDates = PersistenceService.shared.loadGarden()
                 appState.routeAfterSplash()
             } label: {
                 Text("Log Out")

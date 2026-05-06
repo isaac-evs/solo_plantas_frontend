@@ -12,7 +12,10 @@ final class PersistenceService: Sendable {
     static let shared = PersistenceService()
     
     // Key
-    private let storageKey = "virtual_garden_save_data"
+    private var storageKey: String {
+        let userId = UserDefaults.standard.string(forKey: "currentUserId") ?? "default"
+        return "virtual_garden_save_data_\(userId)"
+    }
     
     private init() {}
     
