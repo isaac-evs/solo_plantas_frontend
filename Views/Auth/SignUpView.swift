@@ -3,6 +3,7 @@ import SwiftUI
 struct SignUpView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = AuthViewModel()
+    @AppStorage("isDriverMode") private var isDriverMode: Bool = false
     
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
@@ -71,6 +72,18 @@ struct SignUpView: View {
             .foregroundColor(Color(hex: "#4A7C59"))
             
             Spacer()
+            
+            Button(action: {
+                withAnimation { isDriverMode.toggle() }
+            }) {
+                HStack {
+                    Image(systemName: isDriverMode ? "car.fill" : "person.fill")
+                    Text(isDriverMode ? "Driver Mode: ON (F1 Race)" : "Are you a driver?")
+                }
+                .font(.system(size: isIpad ? 18 : 14, weight: .bold))
+                .foregroundColor(isDriverMode ? .red : Color(hex: "#4A7C59").opacity(0.6))
+            }
+            .padding(.bottom, 20)
         }
     }
 }

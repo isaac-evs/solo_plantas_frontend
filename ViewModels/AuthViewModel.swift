@@ -34,9 +34,14 @@ class AuthViewModel: ObservableObject {
             )
             KeychainHelper.shared.saveToken(response.token)
             UserDefaults.standard.set(response.user.id, forKey: "currentUserId")
-            appState.plantedDates = PersistenceService.shared.loadGarden()
-            appState.switchTab(.home)
-            appState.currentScreen = .plantHome
+            let isDriver = UserDefaults.standard.bool(forKey: "isDriverMode")
+            if isDriver {
+                appState.currentScreen = .driverDashboard
+            } else {
+                appState.plantedDates = PersistenceService.shared.loadGarden()
+                appState.switchTab(.home)
+                appState.currentScreen = .plantHome
+            }
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg
         } catch {
@@ -61,9 +66,14 @@ class AuthViewModel: ObservableObject {
             )
             KeychainHelper.shared.saveToken(response.token)
             UserDefaults.standard.set(response.user.id, forKey: "currentUserId")
-            appState.plantedDates = PersistenceService.shared.loadGarden()
-            appState.switchTab(.home)
-            appState.currentScreen = .onboarding
+            let isDriver = UserDefaults.standard.bool(forKey: "isDriverMode")
+            if isDriver {
+                appState.currentScreen = .driverDashboard
+            } else {
+                appState.plantedDates = PersistenceService.shared.loadGarden()
+                appState.switchTab(.home)
+                appState.currentScreen = .onboarding
+            }
         } catch NetworkError.serverError(let msg) {
             errorMessage = msg
         } catch {

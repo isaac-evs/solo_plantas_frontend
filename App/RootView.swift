@@ -31,6 +31,7 @@ struct RootView: View {
                 case .profile:                ProfileView()
                 case .assistant:              ChatbotView()
                 case .plantUnlock(let plant): PlantUnlockView(plant: plant)
+                case .driverDashboard:        DriverDashboardView()
                 }
             }
             .ignoresSafeArea()

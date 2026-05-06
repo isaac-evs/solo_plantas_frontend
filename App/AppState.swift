@@ -24,6 +24,7 @@ enum AppScreen: Equatable {
     case scan
     case plantUnlock(PlantSpecies)
     case assistant
+    case driverDashboard
 }
 
 enum AppTab {
@@ -62,7 +63,12 @@ class AppState: ObservableObject {
 
     func routeAfterSplash() {
         if KeychainHelper.shared.getToken() != nil {
-            currentScreen = .plantHome
+            let isDriver = UserDefaults.standard.bool(forKey: "isDriverMode")
+            if isDriver {
+                currentScreen = .driverDashboard
+            } else {
+                currentScreen = .plantHome
+            }
         } else {
             currentScreen = .login
         }
