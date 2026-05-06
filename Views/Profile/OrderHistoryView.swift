@@ -466,6 +466,7 @@ struct BackendOrder: Decodable, Identifiable {
     let status: String
     let totalAmountCents: Int
     let shippingFeeCents: Int?
+    let shippingType: String?
     let shippingAddress: String?
     let createdAt: String
     let plant: PlantBrief?
