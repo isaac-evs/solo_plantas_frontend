@@ -43,35 +43,47 @@ struct CheckoutView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 24)
                     
-                    VStack(spacing: 12) {
-                        HStack {
-                            Text("Subtotal")
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(formatMXN(subtotal))
+                    if let plant = cart.items.first?.plant {
+                        HStack(spacing: 20) {
+                            VStack(spacing: 12) {
+                                HStack {
+                                    Text("Subtotal")
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(formatMXN(subtotal))
+                                }
+                                
+                                HStack {
+                                    Text("Shipping")
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(formatMXN(shipping))
+                                }
+                                
+                                Divider().padding(.vertical, 8)
+                                
+                                HStack {
+                                    Text("Total")
+                                        .font(.headline)
+                                    Spacer()
+                                    Text(formatMXN(total))
+                                        .font(.headline)
+                                }
+                            }
+                            .padding(20)
+                            .background(Color.white)
+                            .cornerRadius(16)
+                            
+                            WatercolorCard(
+                                status: PlantGrowthStatus(plant: plant, daysElapsed: 0),
+                                screenSize: CGSize(width: 200, height: 300),
+                                onARTap: {}
+                            )
+                            .scaleEffect(0.65)
+                            .frame(width: 140, height: 200)
                         }
-                        
-                        HStack {
-                            Text("Shipping")
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(formatMXN(shipping))
-                        }
-                        
-                        Divider().padding(.vertical, 8)
-                        
-                        HStack {
-                            Text("Total")
-                                .font(.headline)
-                            Spacer()
-                            Text(formatMXN(total))
-                                .font(.headline)
-                        }
+                        .padding(.horizontal, 24)
                     }
-                    .padding(20)
-                    .background(Color.white)
-                    .cornerRadius(16)
-                    .padding(.horizontal, 24)
                     
 
                     // Toggle for Shipping Type
