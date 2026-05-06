@@ -5,30 +5,29 @@ struct DriverDashboardView: View {
     @StateObject private var viewModel = DriverViewModel()
     @State private var appeared = false
     
-    private let raceRed = Color(hex: "#FF2A00")
-    private let darkGrey = Color(hex: "#1A1A1A")
-    private let neonYellow = Color(hex: "#CCFF00")
+    @State private var showVerification = false
+    @State private var enteredCode = ""
+    @State private var pendingCompletionOrder: BackendOrder? = nil
+    @State private var showError = false
+    
+    private let dark = Color(hex: "#1A2E1A")
+    private let accent = Color(hex: "#4A7C59")
+    private let bg = Color(hex: "#F5F0E8")
+    private let paperBg = Color(hex: "#E8DEC5")
     
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
     
     var body: some View {
         ZStack {
-            darkGrey.ignoresSafeArea()
+            bg.ignoresSafeArea()
             
-            // F1 Grid pattern background
+            // Atmospheric botanical background
             GeometryReader { geo in
-                Path { path in
-                    let step: CGFloat = 40
-                    for x in stride(from: 0, to: geo.size.width, by: step) {
-                        path.move(to: CGPoint(x: x, y: 0))
-                        path.addLine(to: CGPoint(x: x, y: geo.size.height))
-                    }
-                    for y in stride(from: 0, to: geo.size.height, by: step) {
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: geo.size.width, y: y))
-                    }
-                }
-                .stroke(Color.white.opacity(0.03), lineWidth: 1)
+                Circle()
+                    .fill(accent.opacity(0.1))
+                    .frame(width: geo.size.width * 0.9)
+                    .offset(x: geo.size.width * 0.3, y: -geo.size.height * 0.1)
+                    .blur(radius: 60)
             }
             .ignoresSafeArea()
             
@@ -36,16 +35,15 @@ struct DriverDashboardView: View {
                 
                 // Header
                 HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("GIG ECONOMY // RACE MODE")
-                            .font(.system(size: 11, weight: .black))
-                            .tracking(4)
-                            .foregroundColor(neonYellow)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Botanical Courier".uppercased())
+                            .font(.system(size: 13, weight: .bold))
+                            .tracking(3)
+                            .foregroundColor(accent)
                         
-                        Text("Driver Hub")
-                            .font(.system(size: isIpad ? 48 : 38, weight: .heavy, design: .monospaced))
-                            .foregroundColor(.white)
-                            .italic()
+                        Text(viewModel.activeDeliveryId.isEmpty ? "Field Requests" : "Active Mission")
+                            .font(.system(size: isIpad ? 48 : 36, weight: .heavy))
+                            .foregroundColor(dark)
                     }
                     
                     Spacer()
@@ -56,54 +54,75 @@ struct DriverDashboardView: View {
                         UserDefaults.standard.set(false, forKey: "isDriverMode")
                         appState.routeAfterSplash()
                     } label: {
-                        Image(systemName: "power")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
+                        Image(systemName: "door.left.hand.open")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(dark)
                             .padding(14)
-                            .background(Circle().fill(raceRed))
+                            .background(Circle().fill(Color.white))
+                            .shadow(color: .black.opacity(0.05), radius: 5)
                     }
                 }
                 .padding(.horizontal, isIpad ? 40 : 20)
                 .padding(.top, isIpad ? 40 : 20)
                 .padding(.bottom, 20)
                 
-                // Wild West Banner
+                // Status Strip
                 HStack {
-                    Image(systemName: "flag.checkered.2.crossed")
-                        .font(.system(size: 24))
-                    Text("THE WILD WEST POOL")
-                        .font(.system(size: 18, weight: .black, design: .monospaced))
-                        .italic()
-                    Spacer()
-                    Text("\(viewModel.orders.count) JOBS")
+                    Image(systemName: viewModel.activeDeliveryId.isEmpty ? "magnifyingglass" : "leaf.fill")
+                        .font(.system(size: 20))
+                    Text(viewModel.activeDeliveryId.isEmpty ? "AWAITING COURIER" : "IN TRANSIT")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(darkGrey)
+                        .tracking(1.5)
+                    Spacer()
+                    Text("\(viewModel.displayOrders.count) \(viewModel.displayOrders.count == 1 ? "PLANT" : "PLANTS")")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color.white)
+                        .background(dark)
                         .cornerRadius(6)
                 }
-                .foregroundColor(.white)
+                .foregroundColor(dark)
                 .padding(20)
-                .background(raceRed)
-                .padding(.bottom, 10)
+                .background(paperBg)
+                .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
                 
                 ScrollView {
-                    if viewModel.isLoading {
-                        ProgressView().colorInvert().padding(40)
-                    } else if viewModel.orders.isEmpty {
-                        Text("NO ACTIVE JOBS")
-                            .font(.system(size: 24, weight: .black))
-                            .foregroundColor(.white.opacity(0.3))
-                            .padding(.top, 100)
-                    } else {
+                    if viewModel.isLoading && viewModel.orders.isEmpty {
+                        ProgressView().padding(40)
+                    } else if viewModel.displayOrders.isEmpty {
                         VStack(spacing: 20) {
-                            ForEach(viewModel.orders) { order in
-                                DriverOrderCard(order: order, viewModel: viewModel)
+                            Image(systemName: "leaf.arrow.triangle.circlepath")
+                                .font(.system(size: 50))
+                                .foregroundColor(accent.opacity(0.3))
+                            Text("NO FIELD REQUESTS")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(dark.opacity(0.4))
+                        }
+                        .padding(.top, 100)
+                        .frame(maxWidth: .infinity)
+                    } else {
+                        VStack(spacing: 24) {
+                            ForEach(viewModel.displayOrders) { order in
+                                CourierOrderCard(
+                                    order: order,
+                                    isActive: !viewModel.activeDeliveryId.isEmpty,
+                                    onAccept: {
+                                        Task { await viewModel.acceptDelivery(orderId: order.id) }
+                                    },
+                                    onComplete: {
+                                        pendingCompletionOrder = order
+                                        enteredCode = ""
+                                        showVerification = true
+                                    },
+                                    onCancel: {
+                                        Task { await viewModel.cancelDelivery(orderId: order.id) }
+                                    }
+                                )
                             }
                         }
                         .padding(.horizontal, isIpad ? 40 : 20)
-                        .padding(.top, 10)
+                        .padding(.top, 24)
                         .padding(.bottom, 60)
                     }
                 }
@@ -112,6 +131,32 @@ struct DriverDashboardView: View {
                 }
             }
         }
+        .alert("Verify Handshake", isPresented: $showVerification) {
+            TextField("Secret Code (e.g. 7D507340)", text: $enteredCode)
+                .textInputAutocapitalization(.characters)
+            Button("Verify & Complete", action: {
+                if let order = pendingCompletionOrder {
+                    if enteredCode.uppercased() == String(order.id.prefix(8)).uppercased() {
+                        Task { await viewModel.completeDelivery(orderId: order.id) }
+                    } else {
+                        showError = true
+                    }
+                }
+            })
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Ask the botanist for the 8-character secret code shown in their Order History to finalize the delivery.")
+        }
+        .alert("Invalid Code", isPresented: $showError) {
+            Button("Try Again", role: .cancel) {
+                // Let them try again
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showVerification = true
+                }
+            }
+        } message: {
+            Text("The secret code did not match. Ensure they are giving you the first 8 characters of their Order ID.")
+        }
         .onAppear {
             Task { await viewModel.fetchOrders() }
             withAnimation { appeared = true }
@@ -119,85 +164,117 @@ struct DriverDashboardView: View {
     }
 }
 
-struct DriverOrderCard: View {
+struct CourierOrderCard: View {
     let order: BackendOrder
-    @ObservedObject var viewModel: DriverViewModel
+    let isActive: Bool
+    let onAccept: () -> Void
+    let onComplete: () -> Void
+    let onCancel: () -> Void
     
-    private let raceRed = Color(hex: "#FF2A00")
-    private let neonYellow = Color(hex: "#CCFF00")
-    private let statuses = ["pending", "confirmed", "out_for_delivery", "delivered", "cancelled"]
+    private let dark = Color(hex: "#1A2E1A")
+    private let accent = Color(hex: "#4A7C59")
+    private let paperBg = Color(hex: "#F9F6F0")
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            // "WANTED" Header
             HStack {
-                Text(order.id.prefix(8).uppercased())
-                    .font(.system(size: 20, weight: .black, design: .monospaced))
-                    .foregroundColor(neonYellow)
+                Text(isActive ? "ACTIVE MISSION" : "WANTED")
+                    .font(.system(size: 18, weight: .black, design: .serif))
+                    .tracking(2)
+                    .foregroundColor(dark)
                 
                 Spacer()
                 
-                Text("$\(String(format: "%.2f", Double(order.totalAmountCents) / 100.0))")
-                    .font(.system(size: 20, weight: .black))
-                    .foregroundColor(.white)
+                Text("REWARD: $\(String(format: "%.2f", Double(order.totalAmountCents) / 100.0))")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(accent)
             }
             .padding()
-            .background(Color.white.opacity(0.1))
+            .background(Color(hex: "#EADDC5"))
             
             // Info
-            HStack {
+            HStack(spacing: 20) {
+                // Stamp/Illustration placeholder
+                ZStack {
+                    Circle()
+                        .fill(accent.opacity(0.1))
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(accent.opacity(0.6))
+                }
+                
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(order.plant?.name.uppercased() ?? "UNKNOWN CARGO")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                    Text(order.plant?.name ?? "UNKNOWN SPECIMEN")
+                        .font(.system(size: 22, weight: .heavy, design: .serif))
+                        .foregroundColor(dark)
                     
-                    Text("TIME: \(order.createdAt.prefix(10))")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.5))
-                }
-                Spacer()
-            }
-            .padding()
-            
-            // Status update
-            HStack {
-                Text("STATUS:")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white.opacity(0.5))
-                
-                Spacer()
-                
-                Menu {
-                    ForEach(statuses, id: \.self) { status in
-                        Button(status.replacingOccurrences(of: "_", with: " ").uppercased()) {
-                            Task { await viewModel.updateStatus(orderId: order.id, status: status) }
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Text(order.status.replacingOccurrences(of: "_", with: " ").uppercased())
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                            .foregroundColor(.white)
-                        Image(systemName: "chevron.up.chevron.down")
+                    Text("Requested: \(order.createdAt.prefix(10))")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(dark.opacity(0.6))
+                        
+                    if isActive {
+                        Text("Secret Code Required")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(neonYellow)
+                            .foregroundColor(Color.orange)
+                            .padding(.top, 4)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(order.status == "delivered" ? Color.green.opacity(0.3) : raceRed.opacity(0.3))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6).stroke(order.status == "delivered" ? Color.green : raceRed, lineWidth: 2)
-                    )
-                    .cornerRadius(6)
+                }
+                Spacer()
+            }
+            .padding(20)
+            
+            // Action Area
+            HStack {
+                if isActive {
+                    Button(action: onCancel) {
+                        Text("ABANDON")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 14)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: onComplete) {
+                        HStack {
+                            Image(systemName: "lock.open.fill")
+                            Text("VERIFY & COMPLETE")
+                        }
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .background(accent)
+                        .cornerRadius(8)
+                        .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
+                    }
+                } else {
+                    Spacer()
+                    Button(action: onAccept) {
+                        Text("ACCEPT MISSION")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 14)
+                            .background(dark)
+                            .cornerRadius(8)
+                            .shadow(color: dark.opacity(0.3), radius: 8, y: 4)
+                    }
                 }
             }
-            .padding()
-            .background(Color.black.opacity(0.3))
+            .padding(20)
+            .background(Color.white)
         }
-        .background(Color(hex: "#222222"))
-        .cornerRadius(12)
+        .background(paperBg)
+        .cornerRadius(16)
+        .shadow(color: dark.opacity(0.08), radius: 15, y: 8)
         .overlay(
-            RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16).stroke(dark.opacity(0.05), lineWidth: 1)
         )
     }
 }
@@ -206,6 +283,15 @@ struct DriverOrderCard: View {
 class DriverViewModel: ObservableObject {
     @Published var orders: [BackendOrder] = []
     @Published var isLoading = false
+    @AppStorage("activeDeliveryId") var activeDeliveryId: String = ""
+    
+    var displayOrders: [BackendOrder] {
+        if activeDeliveryId.isEmpty {
+            return orders.filter { $0.status == "pending" || $0.status == "confirmed" }
+        } else {
+            return orders.filter { $0.id == activeDeliveryId }
+        }
+    }
     
     func fetchOrders() async {
         isLoading = true
@@ -221,7 +307,22 @@ class DriverViewModel: ObservableObject {
         isLoading = false
     }
     
-    func updateStatus(orderId: String, status: String) async {
+    func acceptDelivery(orderId: String) async {
+        activeDeliveryId = orderId
+        await updateStatus(orderId: orderId, status: "out_for_delivery")
+    }
+    
+    func completeDelivery(orderId: String) async {
+        await updateStatus(orderId: orderId, status: "delivered")
+        activeDeliveryId = ""
+    }
+    
+    func cancelDelivery(orderId: String) async {
+        await updateStatus(orderId: orderId, status: "confirmed") // Revert to pool
+        activeDeliveryId = ""
+    }
+    
+    private func updateStatus(orderId: String, status: String) async {
         do {
             let body = try JSONSerialization.data(withJSONObject: ["status": status])
             let updatedOrder: BackendOrder = try await NetworkManager.shared.request(

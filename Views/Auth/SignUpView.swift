@@ -77,11 +77,11 @@ struct SignUpView: View {
                 withAnimation { isDriverMode.toggle() }
             }) {
                 HStack {
-                    Image(systemName: isDriverMode ? "car.fill" : "person.fill")
-                    Text(isDriverMode ? "Driver Mode: ON (F1 Race)" : "Are you a driver?")
+                    Image(systemName: isDriverMode ? "leaf.fill" : "person.fill")
+                    Text(isDriverMode ? "Courier Mode: ON (Botanist)" : "Botanist Courier?")
                 }
                 .font(.system(size: isIpad ? 18 : 14, weight: .bold))
-                .foregroundColor(isDriverMode ? .red : Color(hex: "#4A7C59").opacity(0.6))
+                .foregroundColor(isDriverMode ? Color(hex: "#4A7C59") : Color(hex: "#4A7C59").opacity(0.6))
             }
             .padding(.bottom, 20)
         }
