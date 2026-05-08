@@ -11,7 +11,7 @@ import Foundation
 class CatalogViewModel: ObservableObject {
 
     @Published var allPlants: [PlantSpecies] = []
-    @Published var selectedFilter: SeasonFilter = .all
+    @Published var selectedFilter: SeasonFilter = .spring
 
     var totalCatalogSize: Int {
         allPlants.count
@@ -22,15 +22,13 @@ class CatalogViewModel: ObservableObject {
     }
 
     enum SeasonFilter: String, CaseIterable {
-        case all    = "All"
         case spring = "Spring"
         case summer = "Summer"
         case fall   = "Fall"
         case winter = "Winter"
 
-        var seasonCategory: SeasonCategory? {
+        var seasonCategory: SeasonCategory {
             switch self {
-            case .all:    return nil
             case .spring: return .spring
             case .summer: return .summer
             case .fall:   return .fall
@@ -40,7 +38,6 @@ class CatalogViewModel: ObservableObject {
 
         var icon: String {
             switch self {
-            case .all:    return "square.grid.2x2"
             case .spring: return "camera.macro"
             case .summer: return "sun.max"
             case .fall:   return "leaf"
@@ -50,8 +47,7 @@ class CatalogViewModel: ObservableObject {
     }
 
     var filteredPlants: [PlantSpecies] {
-        guard let category = selectedFilter.seasonCategory else { return allPlants }
-        return allPlants.filter { $0.seasonCategory == category }
+        allPlants.filter { $0.seasonCategory == selectedFilter.seasonCategory }
     }
 
     var availableThisSeason: [PlantSpecies] {
