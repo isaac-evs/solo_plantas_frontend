@@ -68,7 +68,6 @@ class AuthViewModel: ObservableObject {
             )
             KeychainHelper.shared.saveToken(response.token)
             UserDefaults.standard.set(response.user.id, forKey: "currentUserId")
-            let isDriver = UserDefaults.standard.bool(forKey: "isDriverMode")
             if isDriver {
                 appState.currentScreen = .driverDashboard
             } else {
