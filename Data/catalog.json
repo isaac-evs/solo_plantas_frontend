@@ -30,7 +30,8 @@
       "stemColor": "#4A3B2C",
       "leafColor": "#EBE02E",
       "flowerColor": "#EBE02E"
-    }
+    },
+    "price": 850.0
   },
   {
     "id": "guachumil",
@@ -63,7 +64,8 @@
       "stemColor": "#5C4A3D",
       "leafColor": "#3B7A2E",
       "flowerColor": "#FFFFFF"
-    }
+    },
+    "price": 650.0
   },
   {
     "id": "mezquite",
@@ -96,7 +98,8 @@
       "stemColor": "#3E362E",
       "leafColor": "#556B2F",
       "flowerColor": "#F5F5DC"
-    }
+    },
+    "price": 750.0
   },
   {
     "id": "salvia",
@@ -129,7 +132,8 @@
       "stemColor": "#6B8E23",
       "leafColor": "#4B0082",
       "flowerColor": "#4B0082"
-    }
+    },
+    "price": 320.0
   },
   {
     "id": "tronadora",
@@ -162,7 +166,8 @@
       "stemColor": "#8B7355",
       "leafColor": "#FFD700",
       "flowerColor": "#FFD700"
-    }
+    },
+    "price": 480.0
   },
   {
     "id": "cempasuchil",
@@ -195,6 +200,7 @@
       "stemColor": "#228B22",
       "leafColor": "#FFA500",
       "flowerColor": "#FFA500"
-    }
+    },
+    "price": 180.0
   }
 ]
