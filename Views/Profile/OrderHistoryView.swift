@@ -53,7 +53,7 @@ struct OrderHistoryView: View {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: isIpad ? 20 : 16) {
                             ForEach(Array(viewModel.orders.enumerated()), id: \.element.id) { index, order in
-                                OrderCardView(order: order)
+                                OrderCardView(order: order, viewModel: viewModel)
                                     .opacity(appeared ? 1 : 0)
                                     .offset(y: appeared ? 0 : 18)
                                     .animation(
@@ -176,6 +176,12 @@ struct OrderHistoryView: View {
 
 struct OrderCardView: View {
     let order: BackendOrder
+    @ObservedObject var viewModel: OrderHistoryViewModel
+
+    @State private var showCancelAlert = false
+    @State private var cancelAlertTitle = ""
+    @State private var cancelAlertMessage = ""
+    @State private var cancelIsDestructive = false
 
     private let dark   = Color(hex: "#1A2E1A")
     private let accent = Color(hex: "#4A7C59")
@@ -309,6 +315,9 @@ struct OrderCardView: View {
 
                 // Timeline
                 OrderTimelineView(currentStatus: uiStatus, theme: theme)
+
+                // Cancel button (status-conditional)
+                cancelButton
             }
             .padding(20)
             .background(Color.white.opacity(0.85))
@@ -318,6 +327,75 @@ struct OrderCardView: View {
             ))
         }
         .shadow(color: theme.accent.opacity(0.12), radius: 16, x: 0, y: 8)
+    }
+
+    // MARK: Cancel
+
+    @ViewBuilder
+    private var cancelButton: some View {
+        switch uiStatus {
+        case .delivered, .preparing where order.status == "cancelled":
+            EmptyView()
+        case .outForDelivery:
+            Button {
+                cancelAlertTitle   = "Can't Cancel"
+                cancelAlertMessage = "Your order is already on its way. Please contact us once it arrives if there\'s an issue."
+                cancelIsDestructive = false
+                showCancelAlert = true
+            } label: {
+                Label("Cannot Cancel", systemImage: "xmark.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Color.gray.opacity(0.1)))
+            }
+            .alert(cancelAlertTitle, isPresented: $showCancelAlert) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(cancelAlertMessage) }
+
+        case .confirmed:
+            Button {
+                cancelAlertTitle    = "Cancel & Refund"
+                cancelAlertMessage  = "Your payment will be refunded within 5–10 business days to your original payment method. Proceed?"
+                cancelIsDestructive = true
+                showCancelAlert = true
+            } label: {
+                Label("Cancel Order", systemImage: "arrow.uturn.backward.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(hex: "#C0392B"))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Color(hex: "#C0392B").opacity(0.10)))
+            }
+            .alert(cancelAlertTitle, isPresented: $showCancelAlert) {
+                Button("Cancel Order", role: .destructive) {
+                    Task { await viewModel.cancelOrder(id: order.id) }
+                }
+                Button("Keep Order", role: .cancel) {}
+            } message: { Text(cancelAlertMessage) }
+
+        case .preparing:
+            Button {
+                cancelAlertTitle    = "Cancel Order"
+                cancelAlertMessage  = "Are you sure you want to cancel this order?"
+                cancelIsDestructive = true
+                showCancelAlert = true
+            } label: {
+                Label("Cancel Order", systemImage: "xmark.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(hex: "#C0392B"))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Color(hex: "#C0392B").opacity(0.10)))
+            }
+            .alert(cancelAlertTitle, isPresented: $showCancelAlert) {
+                Button("Cancel Order", role: .destructive) {
+                    Task { await viewModel.cancelOrder(id: order.id) }
+                }
+                Button("Keep Order", role: .cancel) {}
+            } message: { Text(cancelAlertMessage) }
+        }
     }
 
     @ViewBuilder
@@ -505,5 +583,22 @@ class OrderHistoryViewModel: ObservableObject {
             print("Failed to fetch orders: \(error)")
         }
         isLoading = false
+    }
+
+    func cancelOrder(id: String) async {
+        do {
+            let body = try JSONSerialization.data(withJSONObject: ["status": "cancelled"])
+            let _: BackendOrder? = try await NetworkManager.shared.request(
+                endpoint: "/orders/\(id)/status",
+                method: "PATCH",
+                body: body
+            )
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            // Refresh the list so the cancelled status is reflected
+            await fetchOrders()
+        } catch {
+            print("Failed to cancel order: \(error)")
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+        }
     }
 }

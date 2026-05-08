@@ -54,55 +54,59 @@ struct AuthView: View {
             .accessibilityHidden(true)
 
             // ── Main card ─────────────────────────────────────────
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    Spacer(minLength: isIpad ? 80 : 60)
-
-                    // Logo / brand mark
-                    brandMark
-                        .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : -20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(0.05), value: appeared)
-
-                    // Card
+            GeometryReader { proxy in
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        tabSwitcher
-                            .padding(.top, 28)
-                            .padding(.horizontal, 24)
+                        Spacer(minLength: 0)
 
-                        formFields
-                            .padding(.top, 24)
-                            .padding(.horizontal, 24)
+                        VStack(spacing: 28) {
+                            brandMark
+                                .opacity(appeared ? 1 : 0)
+                                .offset(y: appeared ? 0 : -20)
+                                .animation(.spring(response: 0.6, dampingFraction: 0.75).delay(0.05), value: appeared)
 
-                        errorBanner
-                            .padding(.top, 12)
-                            .padding(.horizontal, 24)
+                            // Card
+                            VStack(spacing: 0) {
+                                tabSwitcher
+                                    .padding(.top, 28)
+                                    .padding(.horizontal, 24)
 
-                        primaryButton
-                            .padding(.top, 20)
-                            .padding(.horizontal, 24)
+                                formFields
+                                    .padding(.top, 24)
+                                    .padding(.horizontal, 24)
 
-                        driverToggle
-                            .padding(.top, 24)
-                            .padding(.bottom, 32)
+                                errorBanner
+                                    .padding(.top, 12)
+                                    .padding(.horizontal, 24)
+
+                                primaryButton
+                                    .padding(.top, 20)
+                                    .padding(.horizontal, 24)
+
+                                driverToggle
+                                    .padding(.top, 24)
+                                    .padding(.bottom, 32)
+                            }
+                            .background(
+                                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                                    .fill(cardBg.opacity(0.88))
+                                    .shadow(color: dark.opacity(0.08), radius: 24, x: 0, y: 8)
+                            )
+                            .padding(.horizontal, isIpad ? 80 : 24)
+                            .frame(maxWidth: isIpad ? 520 : .infinity)
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 30)
+                            .animation(.spring(response: 0.65, dampingFraction: 0.78).delay(0.12), value: appeared)
+                        }
+                        .frame(minHeight: proxy.size.height)
+                        .frame(maxWidth: .infinity)
+
+                        Spacer(minLength: 0)
                     }
-                    .background(
-                        RoundedRectangle(cornerRadius: 32, style: .continuous)
-                            .fill(cardBg.opacity(0.88))
-                            .shadow(color: dark.opacity(0.08), radius: 24, x: 0, y: 8)
-                    )
-                    .padding(.horizontal, isIpad ? 80 : 24)
-                    .frame(maxWidth: isIpad ? 520 : .infinity)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 30)
-                    .animation(.spring(response: 0.65, dampingFraction: 0.78).delay(0.12), value: appeared)
-
-                    Spacer(minLength: 60)
                 }
-                .frame(maxWidth: .infinity)
+                // Tap background to dismiss keyboard
+                .onTapGesture { focusedField = nil }
             }
-            // Tap background to dismiss keyboard
-            .onTapGesture { focusedField = nil }
 
             // ── Success burst overlay ─────────────────────────────
             if showSuccess {
@@ -131,7 +135,7 @@ struct AuthView: View {
                     .foregroundColor(accent)
             }
 
-            Text("Solo Plantas")
+            Text("Milpa")
                 .font(.system(size: isIpad ? 36 : 26, weight: .heavy))
                 .foregroundColor(dark)
 
