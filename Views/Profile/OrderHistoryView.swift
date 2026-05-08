@@ -52,7 +52,7 @@ struct OrderHistoryView: View {
                 } else {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: isIpad ? 20 : 16) {
-                            ForEach(Array(viewModel.orders.enumerated()), id: \.element.id) { index, order in
+                            ForEach(Array(viewModel.orders.filter { $0.status != "cancelled" }.enumerated()), id: \.element.id) { index, order in
                                 OrderCardView(order: order, viewModel: viewModel)
                                     .opacity(appeared ? 1 : 0)
                                     .offset(y: appeared ? 0 : 18)
@@ -578,7 +578,9 @@ class OrderHistoryViewModel: ObservableObject {
             let response: [BackendOrder]? = try await NetworkManager.shared.request(
                 endpoint: "/orders", method: "GET"
             )
-            self.orders = response ?? []
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                self.orders = response ?? []
+            }
         } catch {
             print("Failed to fetch orders: \(error)")
         }
