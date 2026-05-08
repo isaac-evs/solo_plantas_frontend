@@ -521,22 +521,13 @@ struct CheckoutView: View {
         .opacity(disabled ? 0.45 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: disabled)
         .fullScreenCover(isPresented: $viewModel.showSafari, onDismiss: {
-            // HACK for MVP: Since we don't have webhooks working on Azure, we intercept the closing
-            // of the Safari view and tell the backend to forcefully "confirm" the payment anyway.
             if let pendingId = viewModel.pendingOrderId {
                 Task {
-                    await viewModel.mockConfirmPayment(orderId: pendingId)
+                    await viewModel.pollForConfirmation(orderId: pendingId)
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                    cart.items.removeAll()
+                    appState.switchTab(.profile)
                 }
-            }
-            
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                viewModel.checkoutSuccess = true
-            }
-            
-            // Wait for the animation to play before navigating away
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                cart.items.removeAll()
-                appState.switchTab(.profile) // Go to profile to see the new order
             }
         }) {
             if let url = viewModel.checkoutUrl {
@@ -602,8 +593,8 @@ class CheckoutViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var availableStock: Int?
     @Published var nurseries: [RemoteNursery] = []
-    
-    // MVP Hack: Store the order ID so we can mock confirm it when safari closes
+    @Published var isVerifying: Bool = false
+
     var pendingOrderId: String?
 
     struct RemoteNursery: Decodable, Identifiable { let id: String; let name: String }
@@ -653,19 +644,31 @@ class CheckoutViewModel: ObservableObject {
 
         isProcessing = false
     }
-    
-    // MVP Hack: Bypass Stripe webhooks and manually hit the order status endpoint
-    func mockConfirmPayment(orderId: String) async {
-        do {
-            let body = try JSONSerialization.data(withJSONObject: ["status": "confirmed"])
-            let _: EmptyResponse? = try await NetworkManager.shared.request(
-                endpoint: "/orders/\(orderId)/status",
-                method: "PATCH",
-                body: body
-            )
-        } catch {
-            print("Failed to mock confirm payment: \(error)")
+
+    /// Polls GET /orders every 2s for up to 30s waiting for the Stripe webhook
+    /// to confirm the order. Falls back to showing success after timeout.
+    func pollForConfirmation(orderId: String) async {
+        isVerifying = true
+        for _ in 0..<15 {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            do {
+                let orders: [BackendOrder]? = try await NetworkManager.shared.request(
+                    endpoint: "/orders", method: "GET"
+                )
+                let paid = (orders ?? []).first {
+                    $0.id == orderId &&
+                    ["confirmed", "out_for_delivery", "delivered"].contains($0.status)
+                }
+                if paid != nil {
+                    isVerifying = false
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) { checkoutSuccess = true }
+                    return
+                }
+            } catch { break }
         }
+        // Webhook didn't arrive in 30s — Order History will reflect truth once Stripe fires
+        isVerifying = false
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) { checkoutSuccess = true }
     }
 }
 
