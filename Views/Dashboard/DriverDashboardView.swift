@@ -164,7 +164,7 @@ struct DriverDashboardView: View {
             }
         }
         .padding(.horizontal, isIpad ? 40 : 20)
-        .padding(.top, isIpad ? 44 : 20)
+        .padding(.top, isIpad ? 44 : 60)
         .padding(.bottom, 16)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : -8)

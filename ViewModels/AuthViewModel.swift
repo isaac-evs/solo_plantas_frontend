@@ -54,9 +54,11 @@ class AuthViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
+            let isDriver = UserDefaults.standard.bool(forKey: "isDriverMode")
             let body = try JSONSerialization.data(withJSONObject: [
                 "email": email,
-                "password": password
+                "password": password,
+                "role": isDriver ? "driver" : "user"
             ])
             let response: AuthResponse = try await NetworkManager.shared.request(
                 endpoint: "/auth/register",
