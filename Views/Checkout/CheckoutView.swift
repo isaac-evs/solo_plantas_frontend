@@ -1,6 +1,332 @@
 import SwiftUI
 import SafariServices
 
+// ─────────────────────────────────────────────────────────────
+// MARK: Holographic Card Effect
+// ─────────────────────────────────────────────────────────────
+
+struct HoloCardModifier: ViewModifier {
+    @State private var dragOffset: CGSize = .zero
+    @State private var isHovered: Bool = false
+
+    private var rotateX: Double { Double(-dragOffset.height / 20).clamped(to: -12...12) }
+    private var rotateY: Double { Double(dragOffset.width / 20).clamped(to: -12...12) }
+    private var shimmerX: Double { (dragOffset.width + 80) / 160 }
+    private var shimmerY: Double { (dragOffset.height + 120) / 240 }
+
+    func body(content: Content) -> some View {
+        content
+            .rotation3DEffect(.degrees(rotateX), axis: (x: 1, y: 0, z: 0), perspective: 0.6)
+            .rotation3DEffect(.degrees(rotateY), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+            .overlay(
+                // Rainbow holographic sheen
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(hex: "#FF006E").opacity(0.0), location: 0),
+                        .init(color: Color(hex: "#8338EC").opacity(0.18), location: shimmerX * 0.3),
+                        .init(color: Color(hex: "#3A86FF").opacity(0.22), location: shimmerX * 0.5),
+                        .init(color: Color(hex: "#06D6A0").opacity(0.18), location: shimmerX * 0.75),
+                        .init(color: Color(hex: "#FFD166").opacity(0.0), location: 1),
+                    ],
+                    startPoint: UnitPoint(x: shimmerX - 0.4, y: shimmerY - 0.4),
+                    endPoint:   UnitPoint(x: shimmerX + 0.4, y: shimmerY + 0.4)
+                )
+                .blendMode(.screen)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .allowsHitTesting(false)
+            )
+            .overlay(
+                // Fine diagonal glitter lines
+                LinearGradient(
+                    colors: [
+                        .white.opacity(0.0),
+                        .white.opacity(0.07),
+                        .white.opacity(0.0),
+                        .white.opacity(0.05),
+                        .white.opacity(0.0),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .allowsHitTesting(false)
+            )
+            .shadow(color: Color(hex: "#8338EC").opacity(isHovered ? 0.45 : 0.2), radius: isHovered ? 32 : 18, x: rotateY * 2, y: 12)
+            .shadow(color: Color(hex: "#3A86FF").opacity(isHovered ? 0.3 : 0.1), radius: 8, x: -rotateY, y: 4)
+            .scaleEffect(isHovered ? 1.04 : 1.0)
+            .animation(.spring(response: 0.35, dampingFraction: 0.65), value: dragOffset)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { v in
+                        dragOffset = v.translation
+                        isHovered = true
+                    }
+                    .onEnded { _ in
+                        withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                            dragOffset = .zero
+                            isHovered = false
+                        }
+                    }
+            )
+    }
+}
+
+extension View {
+    func holoCard() -> some View { modifier(HoloCardModifier()) }
+}
+
+extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MARK: Pokémon-Style Plant Card
+// ─────────────────────────────────────────────────────────────
+
+struct PokeCardView: View {
+    let plant: PlantSpecies
+    let theme: SeedPacketTheme
+
+    private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
+    var body: some View {
+        ZStack {
+            // Card base – rich dark gradient like a holographic Pokémon card
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            theme.accent.opacity(0.95),
+                            theme.textColor,
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            // Gold border ring
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: "#FFD700"),
+                            Color(hex: "#FFA500"),
+                            Color(hex: "#FFD700"),
+                            Color(hex: "#B8860B"),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 3
+                )
+
+            // Inner border
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .padding(5)
+
+            // Card content
+            VStack(spacing: 0) {
+
+                // ── TOP BAR ──────────────────────────────────
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(plant.name.uppercased())
+                            .font(.system(size: isIpad ? 15 : 11, weight: .black))
+                            .tracking(1.5)
+                            .foregroundColor(Color(hex: "#FFD700"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+
+                        Text("Native Species · \(plant.season)")
+                            .font(.system(size: isIpad ? 9 : 7, weight: .semibold))
+                            .tracking(1.2)
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+
+                    Spacer()
+
+                    // HP badge
+                    HStack(spacing: 2) {
+                        Text("HP")
+                            .font(.system(size: isIpad ? 8 : 6, weight: .black))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text("100")
+                            .font(.system(size: isIpad ? 18 : 13, weight: .black))
+                            .foregroundColor(Color(hex: "#FFD700"))
+                    }
+                }
+                .padding(.horizontal, isIpad ? 16 : 12)
+                .padding(.top, isIpad ? 14 : 10)
+                .padding(.bottom, 8)
+
+                // ── ILLUSTRATION PANEL ───────────────────────
+                ZStack {
+                    // Panel BG
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    theme.patternColor.opacity(0.35),
+                                    theme.accent.opacity(0.2),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color(hex: "#FFD700").opacity(0.3), lineWidth: 1)
+                        )
+
+                    // Dot texture
+                    Canvas { ctx, size in
+                        let sp: CGFloat = 12; let r: CGFloat = 1.0
+                        var row: CGFloat = sp / 2
+                        while row < size.height {
+                            var col: CGFloat = sp / 2
+                            while col < size.width {
+                                var p = Path()
+                                p.addEllipse(in: CGRect(x: col-r, y: row-r, width: r*2, height: r*2))
+                                ctx.fill(p, with: .color(.white.opacity(0.08)))
+                                col += sp
+                            }
+                            row += sp
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityHidden(true)
+
+                    // Plant image
+                    Image(plant.illustrationName)
+                        .resizable()
+                        .scaledToFit()
+                        .padding(isIpad ? 14 : 10)
+                        .shadow(color: theme.accent.opacity(0.6), radius: 12, x: 0, y: 6)
+                }
+                .frame(height: isIpad ? 180 : 130)
+                .padding(.horizontal, isIpad ? 16 : 12)
+
+                // ── TYPE BAR ─────────────────────────────────
+                HStack(spacing: 6) {
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: isIpad ? 9 : 7, weight: .bold))
+                        .foregroundColor(Color(hex: "#06D6A0"))
+
+                    Text("PLANT")
+                        .font(.system(size: isIpad ? 8 : 6, weight: .black))
+                        .tracking(2)
+                        .foregroundColor(Color(hex: "#06D6A0"))
+
+                    Spacer()
+
+                    Text("NO. \(String(format: "%03d", abs(plant.id.hashValue) % 1000))")
+                        .font(.system(size: isIpad ? 8 : 6, weight: .bold))
+                        .tracking(1.5)
+                        .foregroundColor(.white.opacity(0.4))
+                }
+                .padding(.horizontal, isIpad ? 16 : 12)
+                .padding(.vertical, 6)
+
+                // ── DESCRIPTION BOX ───────────────────────────
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.black.opacity(0.3))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .stroke(Color(hex: "#FFD700").opacity(0.2), lineWidth: 1)
+                        )
+
+                    VStack(alignment: .leading, spacing: isIpad ? 8 : 5) {
+                        // "Ability"
+                        HStack(spacing: 6) {
+                            Text("🌿")
+                                .font(.system(size: isIpad ? 11 : 8))
+                            Text("Native Resilience")
+                                .font(.system(size: isIpad ? 10 : 7, weight: .black))
+                                .tracking(0.5)
+                                .foregroundColor(Color(hex: "#FFD700"))
+                        }
+
+                        Text(plant.scientificName)
+                            .font(.system(size: isIpad ? 9 : 6.5, weight: .regular))
+                            .italic()
+                            .foregroundColor(.white.opacity(0.45))
+                            .lineLimit(1)
+
+                        Divider()
+                            .background(Color.white.opacity(0.1))
+
+                        // "Attack"
+                        HStack(alignment: .top, spacing: isIpad ? 8 : 6) {
+                            // Cost dots
+                            HStack(spacing: 2) {
+                                ForEach(0..<3) { _ in
+                                    Circle()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [Color(hex: "#06D6A0"), Color(hex: "#3A86FF")],
+                                                startPoint: .top, endPoint: .bottom
+                                            )
+                                        )
+                                        .frame(width: isIpad ? 10 : 7, height: isIpad ? 10 : 7)
+                                }
+                            }
+
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Ecological Growth")
+                                    .font(.system(size: isIpad ? 10 : 7, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("Thrives in native soil conditions")
+                                    .font(.system(size: isIpad ? 8 : 5.5, weight: .regular))
+                                    .foregroundColor(.white.opacity(0.45))
+                                    .lineLimit(2)
+                            }
+
+                            Spacer()
+
+                            Text("60")
+                                .font(.system(size: isIpad ? 16 : 11, weight: .black))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .padding(isIpad ? 10 : 8)
+                }
+                .padding(.horizontal, isIpad ? 16 : 12)
+
+                // ── BOTTOM STRIP ──────────────────────────────
+                HStack {
+                    Text("Illustrated · Native Series")
+                        .font(.system(size: isIpad ? 7 : 5.5, weight: .medium))
+                        .foregroundColor(.white.opacity(0.25))
+
+                    Spacer()
+
+                    // Rarity stars
+                    HStack(spacing: 2) {
+                        ForEach(0..<5) { i in
+                            Image(systemName: i < 4 ? "star.fill" : "star")
+                                .font(.system(size: isIpad ? 7 : 5))
+                                .foregroundColor(Color(hex: "#FFD700").opacity(i < 4 ? 1 : 0.3))
+                        }
+                    }
+                }
+                .padding(.horizontal, isIpad ? 16 : 12)
+                .padding(.top, 6)
+                .padding(.bottom, isIpad ? 14 : 10)
+            }
+        }
+        .holoCard()
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MARK: CheckoutView
+// ─────────────────────────────────────────────────────────────
+
 struct CheckoutView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appState: AppState
@@ -20,7 +346,6 @@ struct CheckoutView: View {
 
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
-    // Derive theme from the current plant so the whole screen breathes its palette
     private var theme: SeedPacketTheme {
         guard let id = cart.items.first?.plant.id else {
             return SeedPacketTheme(
@@ -36,21 +361,19 @@ struct CheckoutView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // ── Layered background: theme tint + subtle noise texture feel ──
                 theme.background.ignoresSafeArea()
 
-                // Decorative large blurred circle – feels like a botanical print wash
                 GeometryReader { geo in
                     Circle()
                         .fill(theme.patternColor.opacity(0.18))
-                        .frame(width: geo.size.width * 1.2, height: geo.size.width * 1.2)
+                        .frame(width: geo.size.width * 1.2)
                         .offset(x: geo.size.width * 0.3, y: -geo.size.width * 0.25)
                         .blur(radius: 80)
                         .allowsHitTesting(false)
 
                     Circle()
                         .fill(theme.accent.opacity(0.08))
-                        .frame(width: geo.size.width * 0.8, height: geo.size.width * 0.8)
+                        .frame(width: geo.size.width * 0.8)
                         .offset(x: -geo.size.width * 0.2, y: geo.size.height * 0.55)
                         .blur(radius: 60)
                         .allowsHitTesting(false)
@@ -63,21 +386,16 @@ struct CheckoutView: View {
                 } else {
                     phoneLayout
                 }
-                
-                // ── Loading / Verifying Overlay ──
+
+                // ── Loading Overlay ──
                 if viewModel.isVerifying {
                     ZStack {
                         Color.black.opacity(0.6).ignoresSafeArea()
-                        
                         VStack(spacing: 20) {
-                            ProgressView()
-                                .tint(.white)
-                                .scaleEffect(1.5)
-                            
+                            ProgressView().tint(.white).scaleEffect(1.5)
                             Text("Confirming Payment...")
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
-                            
                             Text("Please don't close the app")
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.7))
@@ -86,27 +404,22 @@ struct CheckoutView: View {
                     .transition(.opacity)
                     .zIndex(20)
                 }
-                
-                // ── Success Overlay Animation ──
+
+                // ── Success Overlay ──
                 if viewModel.checkoutSuccess {
                     ZStack {
                         Color.black.opacity(0.7).ignoresSafeArea()
-                        
                         VStack(spacing: 32) {
                             ZStack {
-                                Circle()
-                                    .fill(theme.accent)
-                                    .frame(width: 100, height: 100)
+                                Circle().fill(theme.accent).frame(width: 100, height: 100)
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 40, weight: .bold))
                                     .foregroundColor(.white)
                             }
-                            
                             VStack(spacing: 12) {
                                 Text("Order Confirmed!")
                                     .font(.system(size: 32, weight: .heavy))
                                     .foregroundColor(.white)
-                                    
                                 Text("Your botanical companion is being prepared.\nRedirecting you to your garden...")
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(.white.opacity(0.8))
@@ -117,7 +430,7 @@ struct CheckoutView: View {
                         .padding(40)
                         .background(
                             RoundedRectangle(cornerRadius: 32, style: .continuous)
-                                .fill(theme.textColor) // Usually the dark color
+                                .fill(theme.textColor)
                                 .shadow(color: .black.opacity(0.4), radius: 30, y: 15)
                         )
                         .padding(.horizontal, 24)
@@ -139,22 +452,20 @@ struct CheckoutView: View {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // MARK: iPad – side-by-side, dramatic proportions
+    // MARK: iPad layout
     // ─────────────────────────────────────────────────────────────
+
     @ViewBuilder
     private var ipadLayout: some View {
         GeometryReader { geo in
             HStack(spacing: 0) {
 
-                // LEFT PANEL – dark accent strip with card
+                // LEFT – dark panel with Pokémon card
                 ZStack {
-                    theme.accent
-                        .ignoresSafeArea()
+                    theme.accent.ignoresSafeArea()
 
-                    // Subtle dot pattern on dark panel
                     Canvas { ctx, size in
-                        let spacing: CGFloat = 28
-                        let dotR: CGFloat = 1.8
+                        let spacing: CGFloat = 28; let dotR: CGFloat = 1.8
                         for row in stride(from: spacing / 2, through: size.height, by: spacing) {
                             for col in stride(from: spacing / 2, through: size.width, by: spacing) {
                                 var path = Path()
@@ -170,25 +481,36 @@ struct CheckoutView: View {
                         Spacer()
 
                         if let plant = cart.items.first?.plant {
-                            // Oversized card – the hero
-                            SeedPacketCard(
-                                plant: plant,
-                                theme: seedTheme(for: plant.id),
-                                screenSize: geo.size
-                            )
-                            .frame(width: min(geo.size.width * 0.42, 460),
-                                   height: min(geo.size.height * 0.72, 640))
-                            .shadow(color: .black.opacity(0.28), radius: 48, x: 0, y: 24)
-                            .scaleEffect(appeared ? 1.0 : 0.88)
+                            // Collector label
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(Color(hex: "#FFD700").opacity(0.7))
+                                Text("RARE BOTANICAL CARD".uppercased())
+                                    .font(.system(size: 10, weight: .black))
+                                    .tracking(3)
+                                    .foregroundColor(Color(hex: "#FFD700").opacity(0.7))
+                            }
+                            .padding(.bottom, 16)
                             .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.65, dampingFraction: 0.78), value: appeared)
+                            .animation(.easeOut(duration: 0.4).delay(0.2), value: appeared)
 
-                            // Small tagline under card
-                            Text("One of a kind · Native species")
-                                .font(.system(size: 13, weight: .semibold))
-                                .tracking(3)
-                                .foregroundColor(.white.opacity(0.5))
-                                .padding(.top, 24)
+                            PokeCardView(plant: plant, theme: seedTheme(for: plant.id))
+                                .frame(
+                                    width: min(geo.size.width * 0.38, 380),
+                                    height: min(geo.size.height * 0.72, 580)
+                                )
+                                .scaleEffect(appeared ? 1.0 : 0.85)
+                                .opacity(appeared ? 1 : 0)
+                                .animation(.spring(response: 0.65, dampingFraction: 0.78), value: appeared)
+
+                            Text("Drag to tilt · Touch to shimmer")
+                                .font(.system(size: 11, weight: .medium))
+                                .tracking(1.5)
+                                .foregroundColor(.white.opacity(0.3))
+                                .padding(.top, 20)
+                                .opacity(appeared ? 1 : 0)
+                                .animation(.easeOut(duration: 0.4).delay(0.5), value: appeared)
                         }
 
                         Spacer()
@@ -197,30 +519,16 @@ struct CheckoutView: View {
                 }
                 .frame(width: geo.size.width * 0.46)
 
-                // RIGHT PANEL – checkout form
+                // RIGHT – checkout form
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
-                        checkoutHeader
-                            .padding(.top, 52)
-
-                        stockBadge
-                            .padding(.top, 20)
-
-                        methodPicker
-                            .padding(.top, 28)
-
-                        deliveryOrPickupForm
-                            .padding(.top, 20)
-
-                        totalsCard
-                            .padding(.top, 28)
-
-                        errorLabel
-                            .padding(.top, 12)
-
-                        payButton
-                            .padding(.top, 32)
-                            .padding(.bottom, 52)
+                        checkoutHeader.padding(.top, 52)
+                        stockBadge.padding(.top, 20)
+                        methodPicker.padding(.top, 28)
+                        deliveryOrPickupForm.padding(.top, 20)
+                        totalsCard.padding(.top, 28)
+                        errorLabel.padding(.top, 12)
+                        payButton.padding(.top, 32).padding(.bottom, 52)
                     }
                     .padding(.horizontal, 40)
                 }
@@ -231,69 +539,78 @@ struct CheckoutView: View {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // MARK: iPhone – vertical scroll
+    // MARK: iPhone layout — card flows in scroll, no overlap
     // ─────────────────────────────────────────────────────────────
+
     @ViewBuilder
     private var phoneLayout: some View {
-        GeometryReader { geo in
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
 
-                    checkoutHeader
-                        .padding(.horizontal, 24)
-                        .padding(.top, 24)
+                // Header
+                checkoutHeader
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
 
-                    // Card hero – full-bleed with accent backdrop
-                    if let plant = cart.items.first?.plant {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                                .fill(theme.accent)
-                                .padding(.horizontal, 16)
-                                .frame(height: geo.size.height * 0.33)
-
-                            SeedPacketCard(
-                                plant: plant,
-                                theme: seedTheme(for: plant.id),
-                                screenSize: geo.size
-                            )
-                            .frame(
-                                width: geo.size.width * 0.55,
-                                height: geo.size.height * 0.31
-                            )
-                            .shadow(color: .black.opacity(0.2), radius: 28, x: 0, y: 14)
-                            .scaleEffect(appeared ? 1.0 : 0.9)
-                            .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: appeared)
+                // ── Pokémon Card Hero ─────────────────────────
+                if let plant = cart.items.first?.plant {
+                    VStack(spacing: 10) {
+                        // Collector label
+                        HStack(spacing: 5) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(Color(hex: "#FFD700").opacity(0.8))
+                            Text("RARE BOTANICAL CARD")
+                                .font(.system(size: 9, weight: .black))
+                                .tracking(2.5)
+                                .foregroundColor(Color(hex: "#FFD700").opacity(0.8))
                         }
-                        .padding(.top, 16)
-                        .padding(.bottom, 12)
+                        .padding(.top, 28)
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.easeOut(duration: 0.35).delay(0.15), value: appeared)
+
+                        // Card — fixed width, flows naturally in VStack
+                        PokeCardView(plant: plant, theme: seedTheme(for: plant.id))
+                            .frame(width: 240, height: 340)
+                            .scaleEffect(appeared ? 1.0 : 0.88)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.spring(response: 0.6, dampingFraction: 0.75), value: appeared)
+
+                        Text("Drag to tilt")
+                            .font(.system(size: 10, weight: .medium))
+                            .tracking(1.5)
+                            .foregroundColor(theme.textColor.opacity(0.3))
+                            .padding(.bottom, 8)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.easeOut(duration: 0.4).delay(0.45), value: appeared)
                     }
-
-                    stockBadge
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-
-                    methodPicker
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-
-                    deliveryOrPickupForm
-                        .padding(.horizontal, 24)
-                        .padding(.top, 16)
-
-                    totalsCard
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-
-                    errorLabel
-                        .padding(.horizontal, 24)
-                        .padding(.top, 10)
-
-                    payButton
-                        .padding(.horizontal, 24)
-                        .padding(.top, 24)
-                        .padding(.bottom, 40)
+                    .frame(maxWidth: .infinity)
                 }
+
+                stockBadge
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+
+                methodPicker
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+
+                deliveryOrPickupForm
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+
+                totalsCard
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+
+                errorLabel
+                    .padding(.horizontal, 24)
+                    .padding(.top, 10)
+
+                payButton
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    .padding(.bottom, 40)
             }
         }
     }
@@ -323,7 +640,6 @@ struct CheckoutView: View {
                 Text("Order Summary")
                     .font(.system(size: isIpad ? 34 : 28, weight: .heavy))
                     .foregroundColor(theme.textColor)
-
                 Text("Complete your botanical purchase")
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(theme.textColor.opacity(0.5))
@@ -343,7 +659,6 @@ struct CheckoutView: View {
                 Circle()
                     .fill(stock > 0 ? Color(hex: "#4A7C59") : .red)
                     .frame(width: 8, height: 8)
-
                 Text(stock > 0 ? "\(stock) specimens available" : "Currently out of stock")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(stock > 0 ? Color(hex: "#4A7C59") : .red)
@@ -364,7 +679,6 @@ struct CheckoutView: View {
                 .font(.system(size: 11, weight: .bold))
                 .tracking(2.5)
                 .foregroundColor(theme.textColor.opacity(0.45))
-
             HStack(spacing: 10) {
                 methodTab(label: "Delivery", icon: "shippingbox.fill", tag: "delivery")
                 methodTab(label: "Store Pickup", icon: "storefront.fill", tag: "pickup")
@@ -375,12 +689,12 @@ struct CheckoutView: View {
     @ViewBuilder
     private func methodTab(label: String, icon: String, tag: String) -> some View {
         let selected = shippingType == tag
-        Button { withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) { shippingType = tag } } label: {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) { shippingType = tag }
+        } label: {
             HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                Text(label)
-                    .font(.system(size: 15, weight: .semibold))
+                Image(systemName: icon).font(.system(size: 14, weight: .semibold))
+                Text(label).font(.system(size: 15, weight: .semibold))
             }
             .foregroundColor(selected ? theme.background : theme.textColor.opacity(0.55))
             .padding(.horizontal, 18)
@@ -398,9 +712,7 @@ struct CheckoutView: View {
         if shippingType == "delivery" {
             VStack(alignment: .leading, spacing: 12) {
                 formLabel("Delivery Address")
-
                 styledField("Street Address", text: $streetAddress)
-
                 HStack(spacing: 10) {
                     styledField("City", text: $city)
                     styledField("ZIP", text: $zipCode, keyboard: .numberPad)
@@ -411,7 +723,6 @@ struct CheckoutView: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 formLabel("Select Nursery")
-
                 Menu {
                     ForEach(viewModel.nurseries) { nursery in
                         Button(nursery.name) { selectedNurseryId = nursery.id }
@@ -484,11 +795,8 @@ struct CheckoutView: View {
     private var errorLabel: some View {
         if let err = viewModel.errorMessage {
             HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.red)
-                Text(err)
-                    .foregroundColor(.red)
-                    .font(.system(size: 13, weight: .semibold))
+                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
+                Text(err).foregroundColor(.red).font(.system(size: 13, weight: .semibold))
             }
         }
     }
@@ -517,7 +825,6 @@ struct CheckoutView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(Color(hex: "#635BFF"))
-                    // Shimmer stripe on the button
                     .overlay(
                         LinearGradient(
                             colors: [.white.opacity(0.0), .white.opacity(0.08), .white.opacity(0.0)],
@@ -531,17 +838,13 @@ struct CheckoutView: View {
                     if viewModel.isProcessing {
                         ProgressView().tint(.white)
                     } else {
-                        // Stripe "S" wordmark feel – lock icon
                         Image(systemName: "lock.fill")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.white.opacity(0.7))
-
                         Text("Pay with Stripe")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
-
                         Spacer()
-
                         Text(formatMXN(total))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white.opacity(0.85))
@@ -610,7 +913,7 @@ struct CheckoutView: View {
 }
 
 // ─────────────────────────────────────────────────────────────
-// MARK: Safari + ViewModel (unchanged from original)
+// MARK: Safari + ViewModel
 // ─────────────────────────────────────────────────────────────
 
 struct SafariView: UIViewControllerRepresentable {
@@ -656,13 +959,11 @@ class CheckoutViewModel: ObservableObject {
     func prepareCheckoutSession(plantId: String, shippingType: String, nurseryId: String?, street: String, city: String, zipCode: String) async {
         isProcessing = true
         errorMessage = nil
-
         let addressDict: [String: String]? = shippingType == "delivery" ? ["street": street, "city": city, "zipCode": zipCode] : nil
         let body = PaymentBody(plantId: plantId, shippingType: shippingType, nurseryId: nurseryId, address: addressDict)
         let bodyData = try? JSONEncoder().encode(body)
         let reserveBody = ReserveBody(plantId: plantId, quantity: 1)
         let reserveData = try? JSONEncoder().encode(reserveBody)
-
         do {
             let _: ReserveResponse? = try await NetworkManager.shared.request(endpoint: "/cart/reserve", method: "POST", body: reserveData)
             let response: PaymentResponse? = try await NetworkManager.shared.request(endpoint: "/payments/checkout-session", method: "POST", body: bodyData)
@@ -676,20 +977,15 @@ class CheckoutViewModel: ObservableObject {
         } catch {
             self.errorMessage = "Out of stock or server error."
         }
-
         isProcessing = false
     }
 
-    /// Polls GET /orders every 2s for up to 30s waiting for the Stripe webhook
-    /// to confirm the order. Falls back to showing success after timeout.
     func pollForConfirmation(orderId: String) async {
         isVerifying = true
         for _ in 0..<15 {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             do {
-                let orders: [BackendOrder]? = try await NetworkManager.shared.request(
-                    endpoint: "/orders", method: "GET"
-                )
+                let orders: [BackendOrder]? = try await NetworkManager.shared.request(endpoint: "/orders", method: "GET")
                 let paid = (orders ?? []).first {
                     $0.id == orderId &&
                     ["confirmed", "out_for_delivery", "delivered"].contains($0.status)
@@ -701,7 +997,6 @@ class CheckoutViewModel: ObservableObject {
                 }
             } catch { break }
         }
-        // Webhook didn't arrive in 30s — Order History will reflect truth once Stripe fires
         isVerifying = false
         withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) { checkoutSuccess = true }
     }

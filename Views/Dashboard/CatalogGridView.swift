@@ -26,7 +26,7 @@ struct CatalogGridView: View {
     var columns: [GridItem] {
         isIpad
             ? [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)]
-            : [GridItem(.flexible())]
+            : [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
     }
 
     var body: some View {
@@ -115,7 +115,8 @@ struct CatalogGridView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, isIpad ? 40 : 16)
+                    .padding(.bottom, 8)
 
                     Spacer().frame(height: isIpad ? 120 : 100)
                 }
@@ -639,7 +640,7 @@ struct CatalogCell: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .frame(height: isIpad ? 290 : 200)
+            .frame(height: isIpad ? 290 : 220)
             .scaleEffect(pressed ? 0.97 : 1.0)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: pressed)
         }
