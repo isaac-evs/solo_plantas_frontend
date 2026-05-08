@@ -21,6 +21,7 @@ struct ApiErrorResponse: Decodable {
     let error: String?
     let details: [ApiErrorDetail]?
     let message: String?
+    let detail: String?   // FastAPI default format
 }
 
 struct ApiResponse<T: Decodable>: Decodable {
@@ -98,6 +99,8 @@ final class NetworkManager: Sendable {
                         throw NetworkError.serverError(errMsgs)
                     } else if let msg = apiError.message {
                         throw NetworkError.serverError(msg)
+                    } else if let detail = apiError.detail {
+                        throw NetworkError.serverError(detail)
                     }
                 }
                 throw NetworkError.serverError("Received status code \(httpResponse.statusCode)")
