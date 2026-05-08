@@ -26,7 +26,7 @@ struct CatalogGridView: View {
     var columns: [GridItem] {
         isIpad
             ? [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)]
-            : [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+            : [GridItem(.flexible())]
     }
 
     var body: some View {
@@ -115,7 +115,7 @@ struct CatalogGridView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, isIpad ? 40 : 16)
+                    .padding(.horizontal, 16)
 
                     Spacer().frame(height: isIpad ? 120 : 100)
                 }

@@ -249,7 +249,7 @@ struct CheckoutView: View {
                             RoundedRectangle(cornerRadius: 32, style: .continuous)
                                 .fill(theme.accent)
                                 .padding(.horizontal, 16)
-                                .frame(height: geo.size.height * 0.46)
+                                .frame(height: geo.size.height * 0.33)
 
                             SeedPacketCard(
                                 plant: plant,
@@ -257,8 +257,8 @@ struct CheckoutView: View {
                                 screenSize: geo.size
                             )
                             .frame(
-                                width: geo.size.width * 0.78,
-                                height: geo.size.height * 0.44
+                                width: geo.size.width * 0.55,
+                                height: geo.size.height * 0.31
                             )
                             .shadow(color: .black.opacity(0.2), radius: 28, x: 0, y: 14)
                             .scaleEffect(appeared ? 1.0 : 0.9)
