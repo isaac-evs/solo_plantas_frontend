@@ -22,7 +22,6 @@ struct CatalogGridView: View {
 
     private let feedbackLight = UIImpactFeedbackGenerator(style: .light)
 
-    // Staggered two-column on phone, three on iPad
     var columns: [GridItem] {
         isIpad
             ? [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)]
@@ -56,7 +55,6 @@ struct CatalogGridView: View {
                     // ── Header ──────────────────────────────────────────────
                     headerBar
                         .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : -8)
                         .animation(.easeOut(duration: 0.4), value: appeared)
 
                     // ── Editorial hero strip ─────────────────────────────────
@@ -64,7 +62,6 @@ struct CatalogGridView: View {
                         .padding(.horizontal, isIpad ? 40 : 20)
                         .padding(.bottom, 28)
                         .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : 12)
                         .animation(.easeOut(duration: 0.45).delay(0.08), value: appeared)
 
                     // ── Recommended – horizontal specimen cards ──────────────
@@ -99,7 +96,11 @@ struct CatalogGridView: View {
                     .animation(.easeOut(duration: 0.4).delay(0.2), value: appeared)
 
                     // ── Grid ─────────────────────────────────────────────────
-                    LazyVGrid(columns: columns, spacing: isIpad ? 20 : 12) {
+                    // KEY FIX: removed .offset(y:) from cells — offset shifts
+                    // views visually without affecting layout, so during the
+                    // entrance animation cards bleed into neighbouring rows.
+                    // Opacity-only fade-in is safe and looks just as good.
+                    LazyVGrid(columns: columns, spacing: isIpad ? 20 : 16) {
                         ForEach(Array(viewModel.filteredPlants.enumerated()), id: \.element.id) { index, plant in
                             CatalogCell(
                                 plant: plant,
@@ -108,7 +109,6 @@ struct CatalogGridView: View {
                                 onAddLimitReached: { showLimitAlert = true }
                             )
                             .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 14)
                             .animation(
                                 .easeOut(duration: 0.4).delay(0.22 + Double(index) * 0.03),
                                 value: appeared
@@ -162,7 +162,6 @@ struct CatalogGridView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                // Species count badge
                 HStack(spacing: 5) {
                     Circle()
                         .fill(accent)
@@ -184,7 +183,6 @@ struct CatalogGridView: View {
                 )
                 .accessibilityLabel("\(viewModel.totalCatalogSize) total species")
 
-                // Cart button
                 Button { showingCart = true } label: {
                     ZStack(alignment: .topTrailing) {
                         ZStack {
@@ -220,7 +218,7 @@ struct CatalogGridView: View {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // MARK: Hero strip (replaces generic banner)
+    // MARK: Hero strip
     // ─────────────────────────────────────────────────────────────
 
     @ViewBuilder
@@ -235,7 +233,6 @@ struct CatalogGridView: View {
                     )
                 )
 
-            // Dot grid texture
             Canvas { ctx, size in
                 let sp: CGFloat = 18; let r: CGFloat = 1.4
                 var row: CGFloat = r + 4
@@ -279,7 +276,6 @@ struct CatalogGridView: View {
 
                 Spacer()
 
-                // Ghost illustration cluster
                 if let first = viewModel.recommendedPlants.first {
                     ZStack {
                         Circle()
@@ -313,7 +309,6 @@ struct CatalogGridView: View {
                     .font(.system(size: 11, weight: .bold))
                     .tracking(3)
                     .foregroundColor(dark.opacity(0.35))
-
                 Spacer()
             }
             .padding(.horizontal, isIpad ? 40 : 20)
@@ -325,6 +320,8 @@ struct CatalogGridView: View {
                             .frame(width: isIpad ? 280 : 220, height: isIpad ? 120 : 100)
                             .opacity(appeared ? 1 : 0)
                             .offset(x: appeared ? 0 : 20)
+                            // horizontal offset is safe — only shifts left/right,
+                            // cannot bleed into vertical neighbours
                             .animation(.easeOut(duration: 0.4).delay(0.15 + Double(index) * 0.06), value: appeared)
                     }
                 }
@@ -404,7 +401,6 @@ struct RecommendedCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 0) {
-                // Colored slab with illustration
                 ZStack {
                     t.accent
                     Circle()
@@ -422,7 +418,6 @@ struct RecommendedCard: View {
                 .frame(width: isIpad ? 110 : 86)
                 .clipped()
 
-                // Info
                 VStack(alignment: .leading, spacing: 5) {
                     Text(plant.name)
                         .font(.system(size: isIpad ? 17 : 14, weight: .bold))
@@ -498,7 +493,7 @@ struct CatalogCell: View {
                     .shadow(color: t.accent.opacity(0.12), radius: pressed ? 4 : 12, x: 0, y: pressed ? 2 : 6)
 
                 // Background dot texture
-                GeometryReader { geo in
+                GeometryReader { _ in
                     let xs: [CGFloat] = [8, 55, 110, 25, 80, 140, 15, 68, 125]
                     let ys: [CGFloat] = [12, 35, 18,  80, 60, 90, 130, 110, 140]
                     let ds: [CGFloat] = [4,  8,  5,   10, 6,  7,   5,   9,   4]
@@ -513,7 +508,7 @@ struct CatalogCell: View {
                 .accessibilityHidden(true)
 
                 VStack(spacing: 0) {
-                    // Illustration area
+                    // ── Illustration area ──────────────────────
                     ZStack {
                         // Specimen number top-left
                         HStack {
@@ -523,16 +518,13 @@ struct CatalogCell: View {
                                 .foregroundColor(t.accent.opacity(0.5))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(t.accent.opacity(0.08))
-                                )
-                                .padding(12)
+                                .background(Capsule().fill(t.accent.opacity(0.08)))
+                                .padding(10)
                             Spacer()
                         }
                         .frame(maxHeight: .infinity, alignment: .top)
 
-                        // AR preview button top-right
+                        // AR button top-right
                         HStack {
                             Spacer()
                             Button {
@@ -541,23 +533,23 @@ struct CatalogCell: View {
                                 ZStack {
                                     Circle()
                                         .fill(Color.white.opacity(0.85))
-                                        .frame(width: isIpad ? 36 : 30, height: isIpad ? 36 : 30)
+                                        .frame(width: isIpad ? 36 : 28, height: isIpad ? 36 : 28)
                                         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                                     Image(systemName: "arkit")
-                                        .font(.system(size: isIpad ? 15 : 13, weight: .semibold))
+                                        .font(.system(size: isIpad ? 15 : 12, weight: .semibold))
                                         .foregroundColor(t.accent)
                                 }
                             }
-                            .padding(12)
+                            .padding(10)
                         }
                         .frame(maxHeight: .infinity, alignment: .top)
 
-                        // Illustration
-                        let circleSize: CGFloat = isIpad ? 110.0 : 82.0
+                        // Plant illustration
+                        let circleSize: CGFloat = isIpad ? 110.0 : 76.0
                         ZStack {
                             Circle()
                                 .fill(t.patternColor.opacity(0.18))
-                                .frame(width: circleSize + 16, height: circleSize + 16)
+                                .frame(width: circleSize + 14, height: circleSize + 14)
                                 .accessibilityHidden(true)
                             Image(plant.illustrationName)
                                 .resizable()
@@ -566,20 +558,20 @@ struct CatalogCell: View {
                                 .clipShape(Circle())
                                 .shadow(color: t.accent.opacity(0.2), radius: 8, x: 0, y: 4)
                         }
-                        .padding(.top, isIpad ? 12 : 8)
+                        .padding(.top, 4)
                         .accessibilityLabel("\(plant.name) illustration")
                     }
-                    .frame(height: isIpad ? 170 : 130)
+                    .frame(height: isIpad ? 170 : 118)
 
-                    // Thin divider
+                    // Divider
                     Rectangle()
                         .fill(t.accent.opacity(0.12))
                         .frame(height: 1)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 14)
                         .accessibilityHidden(true)
 
-                    // Info area
-                    VStack(alignment: .leading, spacing: 4) {
+                    // ── Info area — tight fixed padding, no dynamic Spacer ──
+                    VStack(alignment: .leading, spacing: 3) {
                         // Season tag
                         HStack(spacing: 4) {
                             Image(systemName: "circle.fill")
@@ -590,13 +582,13 @@ struct CatalogCell: View {
                                 .tracking(1.8)
                                 .foregroundColor(t.accent.opacity(0.7))
                         }
-                        .padding(.top, 12)
+                        .padding(.top, 9)
 
                         Text(plant.name)
-                            .font(.system(size: isIpad ? 20 : 15, weight: .heavy))
+                            .font(.system(size: isIpad ? 20 : 13, weight: .heavy))
                             .foregroundColor(t.textColor)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .minimumScaleFactor(0.75)
 
                         Text(plant.scientificName)
                             .font(.system(size: isIpad ? 11 : 9, weight: .regular))
@@ -604,19 +596,15 @@ struct CatalogCell: View {
                             .foregroundColor(t.textColor.opacity(0.45))
                             .lineLimit(1)
 
-                        Spacer(minLength: 8)
-
-                        // Price + add button row
+                        // Price + add button — top-padded, no Spacer that can grow
                         HStack(alignment: .center) {
                             if let price = plant.price,
                                let str = currencyFormatter.string(from: NSNumber(value: price)) {
                                 Text(str)
-                                    .font(.system(size: isIpad ? 15 : 13, weight: .bold))
+                                    .font(.system(size: isIpad ? 15 : 12, weight: .bold))
                                     .foregroundColor(t.textColor)
                             }
-
                             Spacer()
-
                             Button {
                                 if cart.items.isEmpty || inCart {
                                     cart.addToCart(plant: plant)
@@ -634,13 +622,15 @@ struct CatalogCell: View {
                                 }
                             }
                         }
-                        .padding(.bottom, 14)
+                        .padding(.top, 6)
+                        .padding(.bottom, 12)
                     }
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .frame(height: isIpad ? 290 : 220)
+            // illustration (118) + divider (1) + info section (~111) = 230
+            .frame(height: isIpad ? 290 : 230)
             .scaleEffect(pressed ? 0.97 : 1.0)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: pressed)
         }
