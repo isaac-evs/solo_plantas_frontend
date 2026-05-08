@@ -52,14 +52,17 @@ struct OrderHistoryView: View {
                 } else {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: isIpad ? 20 : 16) {
-                            ForEach(Array(viewModel.orders.filter { $0.status != "cancelled" }.enumerated()), id: \.element.id) { index, order in
+                            ForEach(viewModel.orders.filter { 
+                                let s = $0.status.lowercased()
+                                return s != "cancelled" && s != "canceled" 
+                            }) { order in
                                 OrderCardView(order: order, viewModel: viewModel)
+                                    .transition(.asymmetric(
+                                        insertion: .opacity.combined(with: .move(edge: .bottom)),
+                                        removal: .opacity.combined(with: .scale(scale: 0.9))
+                                    ))
                                     .opacity(appeared ? 1 : 0)
                                     .offset(y: appeared ? 0 : 18)
-                                    .animation(
-                                        .easeOut(duration: 0.4).delay(0.1 + Double(index) * 0.07),
-                                        value: appeared
-                                    )
                             }
                         }
                         .padding(.horizontal, isIpad ? 40 : 20)
@@ -584,7 +587,7 @@ class OrderHistoryViewModel: ObservableObject {
         } catch {
             print("Failed to fetch orders: \(error)")
         }
-        isLoading = false
+        withAnimation { isLoading = false }
     }
 
     func cancelOrder(id: String) async {
