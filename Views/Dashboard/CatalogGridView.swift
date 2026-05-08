@@ -99,7 +99,7 @@ struct CatalogGridView: View {
                     .animation(.easeOut(duration: 0.4).delay(0.2), value: appeared)
 
                     // ── Grid ─────────────────────────────────────────────────
-                    LazyVGrid(columns: columns, spacing: isIpad ? 20 : 14) {
+                    LazyVGrid(columns: columns, spacing: isIpad ? 20 : 12) {
                         ForEach(Array(viewModel.filteredPlants.enumerated()), id: \.element.id) { index, plant in
                             CatalogCell(
                                 plant: plant,
@@ -110,12 +110,12 @@ struct CatalogGridView: View {
                             .opacity(appeared ? 1 : 0)
                             .offset(y: appeared ? 0 : 14)
                             .animation(
-                                .easeOut(duration: 0.4).delay(0.22 + Double(index) * 0.04),
+                                .easeOut(duration: 0.4).delay(0.22 + Double(index) * 0.03),
                                 value: appeared
                             )
                         }
                     }
-                    .padding(.horizontal, isIpad ? 40 : 20)
+                    .padding(.horizontal, isIpad ? 40 : 16)
 
                     Spacer().frame(height: isIpad ? 120 : 100)
                 }
@@ -296,7 +296,7 @@ struct CatalogGridView: View {
                 }
             }
         }
-        .frame(height: isIpad ? 160 : 126)
+        .frame(height: isIpad ? 160 : 110)
         .shadow(color: Color(hex: "#1B4332").opacity(0.25), radius: 16, x: 0, y: 8)
     }
 
@@ -592,7 +592,7 @@ struct CatalogCell: View {
                         .padding(.top, 12)
 
                         Text(plant.name)
-                            .font(.system(size: isIpad ? 20 : 16, weight: .heavy))
+                            .font(.system(size: isIpad ? 20 : 15, weight: .heavy))
                             .foregroundColor(t.textColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -639,7 +639,7 @@ struct CatalogCell: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .frame(height: isIpad ? 290 : 220)
+            .frame(height: isIpad ? 290 : 200)
             .scaleEffect(pressed ? 0.97 : 1.0)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: pressed)
         }

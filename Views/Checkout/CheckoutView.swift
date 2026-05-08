@@ -64,32 +64,66 @@ struct CheckoutView: View {
                     phoneLayout
                 }
                 
+                // ── Loading / Verifying Overlay ──
+                if viewModel.isVerifying {
+                    ZStack {
+                        Color.black.opacity(0.6).ignoresSafeArea()
+                        
+                        VStack(spacing: 20) {
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(1.5)
+                            
+                            Text("Confirming Payment...")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text("Please don't close the app")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(20)
+                }
+                
                 // ── Success Overlay Animation ──
                 if viewModel.checkoutSuccess {
-                    Color.black.opacity(0.4).ignoresSafeArea()
-                        .transition(.opacity)
-                        .zIndex(10)
-                    
-                    VStack(spacing: 24) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(Color(hex: "#4A7C59"))
+                    ZStack {
+                        Color.black.opacity(0.7).ignoresSafeArea()
                         
-                        Text("Order Confirmed!")
-                            .font(.system(size: 32, weight: .heavy))
-                            .foregroundColor(.white)
+                        VStack(spacing: 32) {
+                            ZStack {
+                                Circle()
+                                    .fill(theme.accent)
+                                    .frame(width: 100, height: 100)
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 40, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
                             
-                        Text("Your botanical companion is being prepared.")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
-                            .multilineTextAlignment(.center)
+                            VStack(spacing: 12) {
+                                Text("Order Confirmed!")
+                                    .font(.system(size: 32, weight: .heavy))
+                                    .foregroundColor(.white)
+                                    
+                                Text("Your botanical companion is being prepared.\nRedirecting you to your garden...")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 20)
+                            }
+                        }
+                        .padding(40)
+                        .background(
+                            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                                .fill(theme.textColor) // Usually the dark color
+                                .shadow(color: .black.opacity(0.4), radius: 30, y: 15)
+                        )
+                        .padding(.horizontal, 24)
                     }
-                    .padding(40)
-                    .background(Color(hex: "#1A2E1A"))
-                    .cornerRadius(32)
-                    .shadow(color: .black.opacity(0.3), radius: 30, y: 15)
                     .transition(.scale.combined(with: .opacity))
-                    .zIndex(11)
+                    .zIndex(21)
                 }
             }
             .navigationBarHidden(true)
@@ -215,7 +249,7 @@ struct CheckoutView: View {
                             RoundedRectangle(cornerRadius: 32, style: .continuous)
                                 .fill(theme.accent)
                                 .padding(.horizontal, 16)
-                                .frame(height: geo.size.height * 0.44)
+                                .frame(height: geo.size.height * 0.46)
 
                             SeedPacketCard(
                                 plant: plant,
@@ -223,15 +257,16 @@ struct CheckoutView: View {
                                 screenSize: geo.size
                             )
                             .frame(
-                                width: geo.size.width * 0.74,
-                                height: geo.size.height * 0.42
+                                width: geo.size.width * 0.78,
+                                height: geo.size.height * 0.44
                             )
                             .shadow(color: .black.opacity(0.2), radius: 28, x: 0, y: 14)
                             .scaleEffect(appeared ? 1.0 : 0.9)
                             .opacity(appeared ? 1 : 0)
                             .animation(.spring(response: 0.6, dampingFraction: 0.8), value: appeared)
                         }
-                        .padding(.top, 20)
+                        .padding(.top, 16)
+                        .padding(.bottom, 12)
                     }
 
                     stockBadge

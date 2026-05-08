@@ -44,7 +44,7 @@ struct SeedPacketCard: View {
     public let screenSize: CGSize
 
     private var isIpad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
-    private var s: CGFloat { isIpad ? 2.0 : 1.5 }
+    private var s: CGFloat { isIpad ? 2.0 : 1.25 }
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -82,15 +82,15 @@ struct SeedPacketCard: View {
                     .font(.system(size: 11 * s, weight: .semibold))
                     .tracking(2)
                     .foregroundColor(theme.accent.opacity(0.75))
-                    .padding(.horizontal, 28)
-                    .padding(.top, 28)
-                    .padding(.bottom, 16)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    .padding(.bottom, 12)
                     .accessibilityLabel("Blooming season: \(plant.season)")
 
                 Rectangle()
                     .fill(theme.accent.opacity(0.15))
                     .frame(height: 1)
-                    .padding(.horizontal, 28)
+                    .padding(.horizontal, 24)
                     .accessibilityHidden(true)
 
                 let circleSize = isIpad ? 240.0 : screenSize.width * 0.48
@@ -115,7 +115,7 @@ struct SeedPacketCard: View {
                 Rectangle()
                     .fill(theme.accent.opacity(0.15))
                     .frame(height: 1)
-                    .padding(.horizontal, 28)
+                    .padding(.horizontal, 24)
                     .accessibilityHidden(true)
 
                 // Plant name
@@ -135,9 +135,9 @@ struct SeedPacketCard: View {
                         .minimumScaleFactor(0.7)
                         .accessibilityLabel("Scientific name: \(plant.scientificName)")
                 }
-                .padding(.horizontal, 28)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+                .padding(.horizontal, 24)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
 
                 // Ecological role
                 Text(plant.ecologicalRole)
@@ -145,7 +145,8 @@ struct SeedPacketCard: View {
                     .foregroundColor(theme.textColor.opacity(0.65))
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
-                    .padding(.horizontal, 28)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
                     .accessibilityLabel("Ecological role: \(plant.ecologicalRole)")
 
                 Spacer()
