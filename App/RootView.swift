@@ -16,8 +16,7 @@ struct RootView: View {
             ZStack {
                 switch appState.currentScreen {
                 case .splash:                 SplashView()
-                case .login:                  LoginView()
-                case .signUp:                 SignUpView()
+                case .login:                  AuthView()
                 case .onboarding:             PlantSelectionView()
                 case .plantHome:              PlantHomeView()
                 case .catalog:                CatalogGridView()

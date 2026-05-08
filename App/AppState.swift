@@ -10,7 +10,6 @@ import SwiftUI
 enum AppScreen: Equatable {
     case splash
     case login
-    case signUp
     case onboarding
     case catalog
     case arGrowth(PlantSpecies)
